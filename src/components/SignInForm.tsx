@@ -59,7 +59,7 @@ const SignInForm = () => {
       
       <div className="text-sm text-center pt-4">
         <span className="text-foreground">New to SkillShareCampus? </span>
-        <a href="#" className="text-[hsl(var(--link-blue))] font-semibold hover:underline">
+        <a href="/join" className="text-[hsl(var(--link-blue))] font-semibold hover:underline">
           Join now
         </a>
       </div>
