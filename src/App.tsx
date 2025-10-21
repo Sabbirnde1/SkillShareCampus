@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import SignIn from "./pages/SignIn";
 import Join from "./pages/Join";
 import Campus from "./pages/Campus";
+import Friends from "./pages/Friends";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/signin" element={<SignIn />} />
           <Route path="/join" element={<Join />} />
           <Route path="/campus" element={<Campus />} />
+          <Route path="/friends" element={<Friends />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
