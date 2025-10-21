@@ -4,12 +4,11 @@ import { Card } from "@/components/ui/card";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 
-const Friends = () => {
-  const friends = [
+const PendingRequests = () => {
+  const pendingRequests = [
     {
       id: 1,
       name: "Md. Didarul Islam",
-      course: "WEB Development",
       degree: "Undergraduate CSE Student",
       interests: "Entrepreneurship | B2C E-commerce",
       location: "Brilla, Savar, Dhaka",
@@ -18,7 +17,6 @@ const Friends = () => {
     {
       id: 2,
       name: "Md. Didarul Islam",
-      course: "WEB Development",
       degree: "Undergraduate CSE Student",
       interests: "Entrepreneurship | B2C E-commerce",
       location: "Brilla, Savar, Dhaka",
@@ -27,52 +25,6 @@ const Friends = () => {
     {
       id: 3,
       name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 4,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 5,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 6,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 7,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 8,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
       degree: "Undergraduate CSE Student",
       interests: "Entrepreneurship | B2C E-commerce",
       location: "Brilla, Savar, Dhaka",
@@ -81,7 +33,7 @@ const Friends = () => {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-[#f0f6ff]">
       {/* Header */}
       <header className="bg-white border-b px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -106,7 +58,7 @@ const Friends = () => {
               <Home className="h-5 w-5" />
               <span className="text-xs">Home</span>
             </Link>
-            <Link to="/friends" className="flex flex-col items-center gap-1 text-primary">
+            <Link to="/pending-requests" className="flex flex-col items-center gap-1 text-primary">
               <Users className="h-5 w-5" />
               <span className="text-xs font-medium">Requests</span>
             </Link>
@@ -137,45 +89,41 @@ const Friends = () => {
           <div className="flex items-center justify-between mb-6">
             <h2 className="text-2xl font-semibold text-foreground">Catch up with my friends</h2>
             <div className="flex gap-3">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Friends
-              </Button>
-              <Link to="/pending-requests">
+              <Link to="/friends">
                 <Button variant="outline">
-                  Pending Requests
+                  Friends
                 </Button>
               </Link>
+              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
+                Pending Requests
+              </Button>
             </div>
           </div>
 
-          {/* Friends Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {friends.map((friend) => (
-              <Card key={friend.id} className="overflow-hidden">
-                <div className="relative h-24 bg-gradient-to-r from-blue-600 to-blue-800">
-                  <div className="absolute inset-0 opacity-30" 
-                    style={{
-                      backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
-                    }}
-                  />
-                  <div className="absolute top-2 left-2">
-                    <span className="text-white font-semibold text-sm">{friend.course}</span>
+          {/* Pending Requests Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {pendingRequests.map((request) => (
+              <Card key={request.id} className="p-6 bg-white">
+                <div className="flex items-start gap-4 mb-4">
+                  <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                    <User className="h-8 w-8 text-white" />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-foreground mb-1">{request.name}</h3>
+                    <p className="text-xs text-muted-foreground mb-0.5">{request.degree} | {request.interests}</p>
+                    <p className="text-xs text-muted-foreground mb-0.5">{request.location}</p>
+                    <p className="text-xs text-muted-foreground">{request.employer}</p>
                   </div>
                 </div>
                 
-                <div className="p-4 relative">
-                  <div className="absolute -top-8 left-4">
-                    <div className="w-16 h-16 rounded-full bg-gray-300 border-4 border-white flex items-center justify-center">
-                      <User className="h-8 w-8 text-gray-600" />
-                    </div>
-                  </div>
-                  
-                  <div className="mt-10">
-                    <h3 className="font-semibold text-foreground mb-1">{friend.name}</h3>
-                    <p className="text-xs text-muted-foreground mb-1">{friend.degree} | {friend.interests}</p>
-                    <p className="text-xs text-muted-foreground mb-1">{friend.location}</p>
-                    <p className="text-xs text-muted-foreground">{friend.employer}</p>
-                  </div>
+                <div className="flex gap-3">
+                  <Button variant="outline" className="flex-1">
+                    Cancel
+                  </Button>
+                  <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
+                    Accepted
+                  </Button>
                 </div>
               </Card>
             ))}
@@ -200,4 +148,4 @@ const Friends = () => {
   );
 };
 
-export default Friends;
+export default PendingRequests;
