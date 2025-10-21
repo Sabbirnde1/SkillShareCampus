@@ -9,6 +9,7 @@ import Join from "./pages/Join";
 import Campus from "./pages/Campus";
 import Friends from "./pages/Friends";
 import PendingRequests from "./pages/PendingRequests";
+import Messages from "./pages/Messages";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -26,6 +27,7 @@ const App = () => (
           <Route path="/campus" element={<Campus />} />
           <Route path="/friends" element={<Friends />} />
           <Route path="/pending-requests" element={<PendingRequests />} />
+          <Route path="/messages" element={<Messages />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
