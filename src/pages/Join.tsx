@@ -4,8 +4,59 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { toast } from "sonner";
+import { z } from "zod";
+
+const signUpSchema = z.object({
+  fullName: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  confirmPassword: z.string(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
 
 const Join = () => {
+  const { signUp, signInWithGoogle } = useAuth();
+  const [fullName, setFullName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    try {
+      signUpSchema.parse({ fullName, email, password, confirmPassword });
+      setIsLoading(true);
+      
+      const { error } = await signUp(email, password, fullName);
+      
+      if (error) {
+        toast.error(error.message || "Failed to sign up");
+      } else {
+        toast.success("Account created! Please check your email to verify.");
+      }
+    } catch (error) {
+      if (error instanceof z.ZodError) {
+        toast.error(error.errors[0].message);
+      }
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast.error("Failed to sign in with Google");
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Header />
@@ -17,7 +68,7 @@ const Join = () => {
           </h2>
           
           <div className="bg-white rounded-lg shadow-lg p-8">
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="fullname" className="text-sm font-normal text-foreground">
                   Full Name
@@ -27,6 +78,9 @@ const Join = () => {
                   type="text" 
                   placeholder="Enter your full name"
                   className="h-11 bg-white border-gray-300"
+                  value={fullName}
+                  onChange={(e) => setFullName(e.target.value)}
+                  required
                 />
               </div>
               
@@ -39,6 +93,9 @@ const Join = () => {
                   type="email" 
                   placeholder="Enter your company email"
                   className="h-11 bg-white border-gray-300"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
                 />
               </div>
               
@@ -51,6 +108,9 @@ const Join = () => {
                   type="password" 
                   placeholder="Enter your password"
                   className="h-11 bg-white border-gray-300"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
                 />
               </div>
               
@@ -63,14 +123,18 @@ const Join = () => {
                   type="password" 
                   placeholder="Re-enter your Password"
                   className="h-11 bg-white border-gray-300"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
                 />
               </div>
               
               <Button 
                 type="submit"
                 className="w-full h-11 bg-[hsl(var(--link-blue))] hover:bg-[hsl(var(--link-blue))]/90 text-white font-normal text-base mt-6"
+                disabled={isLoading}
               >
-                Register
+                {isLoading ? "Creating account..." : "Register"}
               </Button>
             </form>
             
@@ -86,6 +150,8 @@ const Join = () => {
             <Button 
               variant="outline" 
               className="w-full h-11 text-base font-normal bg-white border-gray-300 hover:bg-gray-50 justify-start pl-4"
+              onClick={handleGoogleSignIn}
+              type="button"
             >
               <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
                 <path

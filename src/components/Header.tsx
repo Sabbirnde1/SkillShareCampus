@@ -1,8 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Header = () => {
   const location = useLocation();
+  const { user, signOut } = useAuth();
   const isSignInPage = location.pathname === "/signin";
   const isJoinPage = location.pathname === "/join";
   
@@ -15,27 +17,61 @@ const Header = () => {
           </h1>
         </Link>
         <div className="flex items-center gap-3">
-          {!isJoinPage ? (
-            <Link to="/join">
-              <Button variant="ghost" className="text-foreground hover:bg-white/50">
-                Join Now
+          {user ? (
+            <>
+              <Link to="/campus">
+                <Button variant="ghost" className="text-foreground hover:bg-white/50">
+                  Campus
+                </Button>
+              </Link>
+              <Link to="/friends">
+                <Button variant="ghost" className="text-foreground hover:bg-white/50">
+                  Friends
+                </Button>
+              </Link>
+              <Link to="/messages">
+                <Button variant="ghost" className="text-foreground hover:bg-white/50">
+                  Messages
+                </Button>
+              </Link>
+              <Link to="/profile">
+                <Button variant="ghost" className="text-foreground hover:bg-white/50">
+                  Profile
+                </Button>
+              </Link>
+              <Button 
+                variant="secondary" 
+                className="bg-white text-foreground hover:bg-white/90"
+                onClick={() => signOut()}
+              >
+                Sign Out
               </Button>
-            </Link>
+            </>
           ) : (
-            <Button variant="ghost" className="text-foreground hover:bg-white/50">
-              Join Now
-            </Button>
-          )}
-          {!isSignInPage ? (
-            <Link to="/signin">
-              <Button variant="secondary" className="bg-white text-foreground hover:bg-white/90">
-                Sign In
-              </Button>
-            </Link>
-          ) : (
-            <Button variant="secondary" className="bg-white text-foreground hover:bg-white/90">
-              Sign In
-            </Button>
+            <>
+              {!isJoinPage ? (
+                <Link to="/join">
+                  <Button variant="ghost" className="text-foreground hover:bg-white/50">
+                    Join Now
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="ghost" className="text-foreground hover:bg-white/50">
+                  Join Now
+                </Button>
+              )}
+              {!isSignInPage ? (
+                <Link to="/signin">
+                  <Button variant="secondary" className="bg-white text-foreground hover:bg-white/90">
+                    Sign In
+                  </Button>
+                </Link>
+              ) : (
+                <Button variant="secondary" className="bg-white text-foreground hover:bg-white/90">
+                  Sign In
+                </Button>
+              )}
+            </>
           )}
         </div>
       </div>

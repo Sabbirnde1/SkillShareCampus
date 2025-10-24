@@ -1,6 +1,19 @@
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const SignInForm = () => {
+  const { signInWithGoogle } = useAuth();
+  const navigate = useNavigate();
+
+  const handleGoogleSignIn = async () => {
+    const { error } = await signInWithGoogle();
+    if (error) {
+      toast.error("Failed to sign in with Google");
+    }
+  };
+
   return (
     <div className="w-full max-w-md space-y-6">
       <h2 className="text-3xl font-semibold text-[hsl(var(--link-blue))] mb-8">
@@ -11,6 +24,7 @@ const SignInForm = () => {
         <Button 
           variant="outline" 
           className="w-full h-12 text-base font-normal bg-white border-gray-300 hover:bg-gray-50 justify-start pl-6"
+          onClick={handleGoogleSignIn}
         >
           <svg className="w-5 h-5 mr-3" viewBox="0 0 24 24">
             <path
@@ -36,6 +50,7 @@ const SignInForm = () => {
         <Button 
           variant="outline" 
           className="w-full h-12 text-base font-normal bg-white border-gray-300 hover:bg-gray-50"
+          onClick={() => navigate("/signin")}
         >
           Sign in email
         </Button>
