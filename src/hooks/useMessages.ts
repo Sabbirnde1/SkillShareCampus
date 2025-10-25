@@ -1,0 +1,182 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
+import { useEffect } from "react";
+
+export interface Message {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  is_read: boolean;
+  created_at: string;
+  sender?: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+  };
+  receiver?: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+  };
+}
+
+export interface Conversation {
+  user_id: string;
+  full_name: string;
+  avatar_url: string;
+  last_message: string;
+  last_message_time: string;
+  unread_count: number;
+}
+
+export const useMessages = (selectedUserId?: string) => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  const { data: conversations } = useQuery({
+    queryKey: ["conversations", user?.id],
+    queryFn: async () => {
+      if (!user) return [];
+
+      const { data: messages, error } = await supabase
+        .from("messages")
+        .select(`
+          id,
+          sender_id,
+          receiver_id,
+          content,
+          created_at,
+          is_read,
+          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url),
+          receiver:profiles!messages_receiver_id_fkey(id, full_name, avatar_url)
+        `)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Group messages by conversation
+      const conversationMap = new Map<string, Conversation>();
+      
+      messages?.forEach((msg: any) => {
+        const otherUserId = msg.sender_id === user.id ? msg.receiver_id : msg.sender_id;
+        const otherUser = msg.sender_id === user.id ? msg.receiver : msg.sender;
+
+        if (!conversationMap.has(otherUserId)) {
+          conversationMap.set(otherUserId, {
+            user_id: otherUserId,
+            full_name: otherUser.full_name || "Unknown",
+            avatar_url: otherUser.avatar_url || "",
+            last_message: msg.content,
+            last_message_time: msg.created_at,
+            unread_count: 0,
+          });
+        }
+
+        if (msg.receiver_id === user.id && !msg.is_read) {
+          const conv = conversationMap.get(otherUserId)!;
+          conv.unread_count++;
+        }
+      });
+
+      return Array.from(conversationMap.values());
+    },
+    enabled: !!user,
+  });
+
+  const { data: messages = [] } = useQuery({
+    queryKey: ["messages", user?.id, selectedUserId],
+    queryFn: async () => {
+      if (!user || !selectedUserId) return [];
+
+      const { data, error } = await supabase
+        .from("messages")
+        .select(`
+          id,
+          sender_id,
+          receiver_id,
+          content,
+          is_read,
+          created_at,
+          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
+        `)
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedUserId}),and(sender_id.eq.${selectedUserId},receiver_id.eq.${user.id})`)
+        .order("created_at", { ascending: true });
+
+      if (error) throw error;
+      return data as Message[];
+    },
+    enabled: !!user && !!selectedUserId,
+  });
+
+  // Real-time subscription
+  useEffect(() => {
+    if (!user || !selectedUserId) return;
+
+    const channel = supabase
+      .channel("messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["messages"] });
+          queryClient.invalidateQueries({ queryKey: ["conversations"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, selectedUserId, queryClient]);
+
+  const sendMessage = useMutation({
+    mutationFn: async ({ receiverId, content }: { receiverId: string; content: string }) => {
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase.from("messages").insert({
+        sender_id: user.id,
+        receiver_id: receiverId,
+        content,
+      });
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["messages"] });
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+    onError: () => {
+      toast.error("Failed to send message");
+    },
+  });
+
+  const markAsRead = useMutation({
+    mutationFn: async (messageId: string) => {
+      const { error } = await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("id", messageId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    },
+  });
+
+  return {
+    conversations: conversations || [],
+    messages,
+    sendMessage,
+    markAsRead,
+  };
+};

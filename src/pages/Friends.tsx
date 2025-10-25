@@ -3,82 +3,19 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useFriends } from "@/hooks/useFriends";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const Friends = () => {
-  const friends = [
-    {
-      id: 1,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 2,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 3,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 4,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 5,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 6,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 7,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 8,
-      name: "Md. Didarul Islam",
-      course: "WEB Development",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    }
-  ];
+  const { friends, isLoading } = useFriends();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading friends...</p>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -150,35 +87,45 @@ const Friends = () => {
 
           {/* Friends Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {friends.map((friend) => (
-              <Card key={friend.id} className="overflow-hidden">
-                <div className="relative h-24 bg-gradient-to-r from-blue-600 to-blue-800">
-                  <div className="absolute inset-0 opacity-30" 
-                    style={{
-                      backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
-                    }}
-                  />
-                  <div className="absolute top-2 left-2">
-                    <span className="text-white font-semibold text-sm">{friend.course}</span>
-                  </div>
-                </div>
-                
-                <div className="p-4 relative">
-                  <div className="absolute -top-8 left-4">
-                    <div className="w-16 h-16 rounded-full bg-gray-300 border-4 border-white flex items-center justify-center">
-                      <User className="h-8 w-8 text-gray-600" />
-                    </div>
+            {friends.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No friends yet. Start connecting with people!</p>
+              </div>
+            ) : (
+              friends.map((friend) => (
+                <Card key={friend.id} className="overflow-hidden">
+                  <div className="relative h-24 bg-gradient-to-r from-blue-600 to-blue-800">
+                    <div className="absolute inset-0 opacity-30" 
+                      style={{
+                        backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
+                      }}
+                    />
                   </div>
                   
-                  <div className="mt-10">
-                    <h3 className="font-semibold text-foreground mb-1">{friend.name}</h3>
-                    <p className="text-xs text-muted-foreground mb-1">{friend.degree} | {friend.interests}</p>
-                    <p className="text-xs text-muted-foreground mb-1">{friend.location}</p>
-                    <p className="text-xs text-muted-foreground">{friend.employer}</p>
+                  <div className="p-4 relative">
+                    <Link to={`/user/${friend.profile.id}`} className="absolute -top-8 left-4">
+                      <Avatar className="w-16 h-16 border-4 border-white">
+                        <AvatarImage src={friend.profile.avatar_url || ""} />
+                        <AvatarFallback>
+                          <User className="h-8 w-8" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </Link>
+                    
+                    <div className="mt-10">
+                      <Link to={`/user/${friend.profile.id}`}>
+                        <h3 className="font-semibold text-foreground mb-1 hover:text-primary">
+                          {friend.profile.full_name || "Unknown User"}
+                        </h3>
+                      </Link>
+                      <p className="text-xs text-muted-foreground mb-1">{friend.profile.bio || "No bio"}</p>
+                      <p className="text-xs text-muted-foreground mb-1">{friend.profile.location || "No location"}</p>
+                      <p className="text-xs text-muted-foreground">{friend.profile.company || "No company"}</p>
+                    </div>
                   </div>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </main>

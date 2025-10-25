@@ -2,31 +2,40 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, ThumbsUp, MessageCircle, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
+import { usePosts } from "@/hooks/usePosts";
+import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 
 const Activity = () => {
-  const posts = [
-    {
-      id: 1,
-      author: "Md. Didarul Islam",
-      subtitle: "Undergraduate CSE Student",
-      date: "Just now",
-      hashtags: ["#darul", "#madridcheathoffudaulavi", "#usc", "#dusc", "#a2cback", "#a2cude", "#fau", "#music"],
-      likes: 4,
-      comments: 2
-    },
-    {
-      id: 2,
-      author: "Md. Didarul Islam",
-      subtitle: "Undergraduate CSE Student",
-      date: "Just now",
-      hashtags: ["#darul", "#madridcheathoffudaulavi", "#usc", "#dusc", "#a2cback", "#a2cude", "#fau", "#music"],
-      likes: 4,
-      comments: 2
-    }
-  ];
+  const { posts, isLoading, createPost, likePost } = usePosts();
+  const [postContent, setPostContent] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleCreatePost = () => {
+    if (!postContent.trim()) return;
+
+    const hashtags = postContent.match(/#\w+/g) || [];
+    createPost.mutate(
+      { content: postContent, hashtags },
+      {
+        onSuccess: () => {
+          setPostContent("");
+          setIsDialogOpen(false);
+        },
+      }
+    );
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -92,58 +101,89 @@ const Activity = () => {
                     <Button variant="default" className="bg-green-600 hover:bg-green-700">
                       Posts
                     </Button>
-                    <Button variant="outline">
-                      Create a post
-                    </Button>
+                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline">Create a post</Button>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>Create a new post</DialogTitle>
+                        </DialogHeader>
+                        <div className="space-y-4">
+                          <Textarea
+                            placeholder="What's on your mind? Use hashtags to categorize your post..."
+                            value={postContent}
+                            onChange={(e) => setPostContent(e.target.value)}
+                            className="min-h-[120px]"
+                          />
+                          <Button
+                            onClick={handleCreatePost}
+                            disabled={!postContent.trim() || createPost.isPending}
+                            className="w-full"
+                          >
+                            {createPost.isPending ? "Posting..." : "Post"}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
                   </div>
 
                   {/* Posts */}
                   <div className="space-y-4">
-                    {posts.map((post) => (
-                      <Card key={post.id} className="border">
-                        <CardContent className="p-4">
-                          <div className="flex gap-3 mb-3">
-                            <Avatar className="h-12 w-12">
-                              <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
-                              <AvatarFallback>DI</AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1">
-                              <h3 className="font-semibold text-sm text-foreground">{post.author}</h3>
-                              <p className="text-xs text-muted-foreground">{post.subtitle}</p>
-                              <p className="text-xs text-muted-foreground">{post.date}</p>
+                    {isLoading ? (
+                      <p className="text-center text-muted-foreground">Loading posts...</p>
+                    ) : posts.length === 0 ? (
+                      <p className="text-center text-muted-foreground py-12">No posts yet. Be the first to post!</p>
+                    ) : (
+                      posts.map((post) => (
+                        <Card key={post.id} className="border">
+                          <CardContent className="p-4">
+                            <div className="flex gap-3 mb-3">
+                              <Avatar className="h-12 w-12">
+                                <AvatarImage src={post.author.avatar_url || ""} />
+                                <AvatarFallback>
+                                  {post.author.full_name?.charAt(0) || "U"}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1">
+                                <h3 className="font-semibold text-sm text-foreground">
+                                  {post.author.full_name || "Unknown User"}
+                                </h3>
+                                <p className="text-xs text-muted-foreground">{post.author.bio}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                                </p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="mb-4">
-                            <div className="flex flex-wrap gap-1">
-                              {post.hashtags.map((tag, index) => (
-                                <span key={index} className="text-xs text-primary">
-                                  {tag}
-                                </span>
-                              ))}
+                            <div className="mb-4">
+                              <p className="text-sm text-foreground mb-2">{post.content}</p>
+                              <div className="flex flex-wrap gap-1">
+                                {post.hashtags?.map((tag, index) => (
+                                  <span key={index} className="text-xs text-primary">
+                                    {tag}
+                                  </span>
+                                ))}
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="flex items-center gap-6 pt-3 border-t">
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <ThumbsUp className="h-4 w-4 fill-primary text-primary" />
-                              <span className="text-sm">{post.likes} likes</span>
+                            <div className="flex items-center gap-6 pt-3 border-t">
+                              <button
+                                onClick={() => likePost.mutate(post.id)}
+                                className="flex items-center gap-2 text-muted-foreground hover:text-primary transition-colors"
+                              >
+                                <ThumbsUp className="h-4 w-4" />
+                                <span className="text-sm">{post.likes_count} likes</span>
+                              </button>
+                              <div className="flex items-center gap-2 text-muted-foreground">
+                                <MessageCircle className="h-4 w-4" />
+                                <span className="text-sm">{post.comments_count} Comments</span>
+                              </div>
                             </div>
-                            <div className="flex items-center gap-2 text-muted-foreground">
-                              <MessageCircle className="h-4 w-4" />
-                              <span className="text-sm">{post.comments} Comments</span>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
-                  </div>
-
-                  <div className="flex justify-center mt-6">
-                    <Button variant="ghost" className="gap-2">
-                      Show All Post
-                      <ArrowRight className="h-4 w-4" />
-                    </Button>
+                          </CardContent>
+                        </Card>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>

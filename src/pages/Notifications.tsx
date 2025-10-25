@@ -3,22 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useNotifications } from "@/hooks/useNotifications";
+import { formatDistanceToNow } from "date-fns";
 
 const Notifications = () => {
-  const notifications = [
-    {
-      id: 1,
-      type: "friend_request",
-      message: "Abid Khan has sent you friend request",
-      time: "2 hours ago"
-    },
-    {
-      id: 2,
-      type: "comment",
-      message: "Abid Khan has commented on your post",
-      time: "5 hours ago"
-    }
-  ];
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   const newsItems = [
     { title: "Campus News", subtitle: "Top news" },
@@ -115,20 +104,51 @@ const Notifications = () => {
 
           {/* Center - Notifications */}
           <div className="col-span-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-xl font-semibold">
+                Notifications {unreadCount > 0 && `(${unreadCount} unread)`}
+              </h2>
+              {unreadCount > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => markAllAsRead.mutate()}
+                  disabled={markAllAsRead.isPending}
+                >
+                  Mark all as read
+                </Button>
+              )}
+            </div>
             <div className="space-y-4">
-              {notifications.map((notification) => (
-                <Card key={notification.id} className="p-4 bg-white">
-                  <div className="flex items-start gap-4">
-                    <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                      <User className="h-6 w-6 text-white" />
-                    </div>
-                    <div className="flex-1">
-                      <p className="text-sm text-foreground">{notification.message}</p>
-                      <p className="text-xs text-muted-foreground mt-1">{notification.time}</p>
-                    </div>
-                  </div>
+              {notifications.length === 0 ? (
+                <Card className="p-8 bg-white text-center">
+                  <p className="text-muted-foreground">No notifications yet</p>
                 </Card>
-              ))}
+              ) : (
+                notifications.map((notification) => (
+                  <Card
+                    key={notification.id}
+                    className={`p-4 bg-white cursor-pointer transition-colors ${
+                      !notification.is_read ? "border-l-4 border-l-primary" : ""
+                    }`}
+                    onClick={() => !notification.is_read && markAsRead.mutate(notification.id)}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
+                        <Bell className="h-6 w-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <p className={`text-sm ${!notification.is_read ? "font-semibold" : ""}`}>
+                          {notification.content}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
+                        </p>
+                      </div>
+                    </div>
+                  </Card>
+                ))
+              )}
             </div>
           </div>
 

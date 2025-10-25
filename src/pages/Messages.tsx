@@ -1,48 +1,32 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Image, Send } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { useMessages } from "@/hooks/useMessages";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useAuth } from "@/contexts/AuthContext";
+import { formatDistanceToNow } from "date-fns";
 
 const Messages = () => {
+  const { user } = useAuth();
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
   const [messageText, setMessageText] = useState("");
+  const { conversations, messages, sendMessage } = useMessages(selectedUserId);
 
-  const contacts = [
-    {
-      id: 1,
-      name: "Abid Khan",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship",
-      lastMessage: "Hi Didarul",
-      time: "01:43"
-    },
-    {
-      id: 2,
-      name: "Abid Khan",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship",
-      lastMessage: "",
-      time: ""
-    }
-  ];
+  const selectedConversation = conversations.find((c) => c.user_id === selectedUserId);
 
-  const messages = [
-    {
-      id: 1,
-      sender: "Abid Khan",
-      text: "Hi Didarul",
-      time: "01:43",
-      isSent: false
-    },
-    {
-      id: 2,
-      sender: "Didarul Islam",
-      text: "Hi Abid",
-      time: "01:45",
-      isSent: true
-    }
-  ];
+  const handleSendMessage = () => {
+    if (!messageText.trim() || !selectedUserId) return;
+    
+    sendMessage.mutate(
+      { receiverId: selectedUserId, content: messageText },
+      {
+        onSuccess: () => setMessageText(""),
+      }
+    );
+  };
 
   const newsItems = [
     { title: "Campus News", time: "Top news" },
@@ -107,79 +91,127 @@ const Messages = () => {
           {/* Left Sidebar - Contacts */}
           <div className="col-span-3">
             <Card className="p-4">
-              {contacts.map((contact) => (
-                <div key={contact.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer border-b last:border-b-0">
-                  <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                    <User className="h-6 w-6 text-white" />
+              {conversations.length === 0 ? (
+                <p className="text-center text-muted-foreground py-4">No conversations yet</p>
+              ) : (
+                conversations.map((conversation) => (
+                  <div
+                    key={conversation.user_id}
+                    onClick={() => setSelectedUserId(conversation.user_id)}
+                    className={`flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer border-b last:border-b-0 ${
+                      selectedUserId === conversation.user_id ? "bg-gray-50" : ""
+                    }`}
+                  >
+                    <Avatar className="w-12 h-12 flex-shrink-0">
+                      <AvatarImage src={conversation.avatar_url || ""} />
+                      <AvatarFallback>
+                        <User className="h-6 w-6" />
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-sm text-foreground">{conversation.full_name}</h3>
+                      <p className="text-xs text-muted-foreground truncate">{conversation.last_message}</p>
+                      {conversation.unread_count > 0 && (
+                        <span className="inline-block mt-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
+                          {conversation.unread_count}
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-sm text-foreground">{contact.name}</h3>
-                    <p className="text-xs text-muted-foreground truncate">
-                      {contact.degree} | {contact.interests}
-                    </p>
-                  </div>
-                </div>
-              ))}
+                ))
+              )}
             </Card>
           </div>
 
           {/* Center - Chat Area */}
           <div className="col-span-6">
             <Card className="flex flex-col h-[600px]">
-              {/* Chat Header */}
-              <div className="p-4 border-b">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center">
-                    <User className="h-6 w-6 text-white" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground">Abid Khan</h3>
-                    <p className="text-xs text-muted-foreground">Undergraduate CSE Student | Entrepreneurship</p>
-                  </div>
+              {!selectedUserId ? (
+                <div className="flex-1 flex items-center justify-center">
+                  <p className="text-muted-foreground">Select a conversation to start messaging</p>
                 </div>
-              </div>
-
-              {/* Messages */}
-              <div className="flex-1 p-4 overflow-y-auto space-y-4">
-                {messages.map((message) => (
-                  <div key={message.id} className={`flex ${message.isSent ? 'justify-end' : 'justify-start'}`}>
-                    <div className="flex items-start gap-2 max-w-[70%]">
-                      {!message.isSent && (
-                        <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                          <User className="h-4 w-4 text-white" />
-                        </div>
-                      )}
+              ) : (
+                <>
+                  {/* Chat Header */}
+                  <div className="p-4 border-b">
+                    <div className="flex items-center gap-3">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={selectedConversation?.avatar_url || ""} />
+                        <AvatarFallback>
+                          <User className="h-6 w-6" />
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
-                        {!message.isSent && (
-                          <p className="text-xs font-semibold text-foreground mb-1">{message.sender}</p>
-                        )}
-                        <div className={`p-3 rounded-lg ${message.isSent ? 'bg-primary text-primary-foreground' : 'bg-gray-100 text-foreground'}`}>
-                          <p className="text-sm">{message.text}</p>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">{message.time}</p>
+                        <h3 className="font-semibold text-foreground">
+                          {selectedConversation?.full_name || "Unknown User"}
+                        </h3>
                       </div>
                     </div>
                   </div>
-                ))}
-              </div>
 
-              {/* Message Input */}
-              <div className="p-4 border-t bg-gray-50">
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="icon" className="flex-shrink-0">
-                    <Image className="h-5 w-5" />
-                  </Button>
-                  <Input
-                    placeholder="Write a message"
-                    value={messageText}
-                    onChange={(e) => setMessageText(e.target.value)}
-                    className="flex-1"
-                  />
-                  <Button className="bg-primary hover:bg-primary/90 text-primary-foreground">
-                    <Send className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+                  {/* Messages */}
+                  <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                    {messages.length === 0 ? (
+                      <p className="text-center text-muted-foreground">No messages yet. Start the conversation!</p>
+                    ) : (
+                      messages.map((message) => {
+                        const isSent = message.sender_id === user?.id;
+                        return (
+                          <div key={message.id} className={`flex ${isSent ? "justify-end" : "justify-start"}`}>
+                            <div className="flex items-start gap-2 max-w-[70%]">
+                              {!isSent && (
+                                <Avatar className="w-8 h-8 flex-shrink-0">
+                                  <AvatarImage src={message.sender?.avatar_url || ""} />
+                                  <AvatarFallback>
+                                    <User className="h-4 w-4" />
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
+                              <div>
+                                {!isSent && (
+                                  <p className="text-xs font-semibold text-foreground mb-1">
+                                    {message.sender?.full_name}
+                                  </p>
+                                )}
+                                <div
+                                  className={`p-3 rounded-lg ${
+                                    isSent ? "bg-primary text-primary-foreground" : "bg-gray-100 text-foreground"
+                                  }`}
+                                >
+                                  <p className="text-sm">{message.content}</p>
+                                </div>
+                                <p className="text-xs text-muted-foreground mt-1">
+                                  {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {/* Message Input */}
+                  <div className="p-4 border-t bg-gray-50">
+                    <div className="flex items-center gap-2">
+                      <Input
+                        placeholder="Write a message"
+                        value={messageText}
+                        onChange={(e) => setMessageText(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                        className="flex-1"
+                      />
+                      <Button
+                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                        onClick={handleSendMessage}
+                        disabled={!messageText.trim() || sendMessage.isPending}
+                      >
+                        <Send className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </>
+              )}
             </Card>
           </div>
 

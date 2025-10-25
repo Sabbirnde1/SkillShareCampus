@@ -3,34 +3,11 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useFriends } from "@/hooks/useFriends";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const PendingRequests = () => {
-  const pendingRequests = [
-    {
-      id: 1,
-      name: "Md. Didarul Islam",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 2,
-      name: "Md. Didarul Islam",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    },
-    {
-      id: 3,
-      name: "Md. Didarul Islam",
-      degree: "Undergraduate CSE Student",
-      interests: "Entrepreneurship | B2C E-commerce",
-      location: "Brilla, Savar, Dhaka",
-      employer: "Empower NetiZen Ltd"
-    }
-  ];
+  const { pendingRequests, acceptFriendRequest, rejectFriendRequest } = useFriends();
 
   return (
     <div className="min-h-screen flex flex-col bg-[#f0f6ff]">
@@ -102,31 +79,51 @@ const PendingRequests = () => {
 
           {/* Pending Requests Cards */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {pendingRequests.map((request) => (
-              <Card key={request.id} className="p-6 bg-white">
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="w-16 h-16 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                    <User className="h-8 w-8 text-white" />
+            {pendingRequests.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No pending friend requests</p>
+              </div>
+            ) : (
+              pendingRequests.map((request: any) => (
+                <Card key={request.id} className="p-6 bg-white">
+                  <div className="flex items-start gap-4 mb-4">
+                    <Avatar className="w-16 h-16 flex-shrink-0">
+                      <AvatarImage src={request.profile?.avatar_url || ""} />
+                      <AvatarFallback>
+                        <User className="h-8 w-8" />
+                      </AvatarFallback>
+                    </Avatar>
+                    
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-semibold text-foreground mb-1">
+                        {request.profile?.full_name || "Unknown User"}
+                      </h3>
+                      <p className="text-xs text-muted-foreground mb-0.5">{request.profile?.bio || "No bio"}</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">{request.profile?.location || "No location"}</p>
+                      <p className="text-xs text-muted-foreground">{request.profile?.company || "No company"}</p>
+                    </div>
                   </div>
                   
-                  <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold text-foreground mb-1">{request.name}</h3>
-                    <p className="text-xs text-muted-foreground mb-0.5">{request.degree} | {request.interests}</p>
-                    <p className="text-xs text-muted-foreground mb-0.5">{request.location}</p>
-                    <p className="text-xs text-muted-foreground">{request.employer}</p>
+                  <div className="flex gap-3">
+                    <Button 
+                      variant="outline" 
+                      className="flex-1"
+                      onClick={() => rejectFriendRequest.mutate(request.id)}
+                      disabled={rejectFriendRequest.isPending}
+                    >
+                      Reject
+                    </Button>
+                    <Button 
+                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                      onClick={() => acceptFriendRequest.mutate(request.id)}
+                      disabled={acceptFriendRequest.isPending}
+                    >
+                      Accept
+                    </Button>
                   </div>
-                </div>
-                
-                <div className="flex gap-3">
-                  <Button variant="outline" className="flex-1">
-                    Cancel
-                  </Button>
-                  <Button className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90">
-                    Accepted
-                  </Button>
-                </div>
-              </Card>
-            ))}
+                </Card>
+              ))
+            )}
           </div>
         </div>
       </main>
