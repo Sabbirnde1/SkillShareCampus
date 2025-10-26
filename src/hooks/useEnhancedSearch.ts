@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 export type SearchType = "all" | "people" | "posts" | "hashtags";
 
@@ -17,12 +17,22 @@ export interface SearchResult {
 
 export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = "all") => {
   const { user } = useAuth();
+  const [debouncedQuery, setDebouncedQuery] = useState(searchQuery);
+
+  // Debounce search query (300ms)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
   // Search users
   const { data: userResults = [], isLoading: loadingUsers } = useQuery({
-    queryKey: ["search-users", searchQuery, searchType],
+    queryKey: ["search-users", debouncedQuery, searchType],
     queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) return [];
+      if (!debouncedQuery || debouncedQuery.length < 2) return [];
       if (searchType !== "all" && searchType !== "people") return [];
 
       const { data, error } = await supabase
@@ -37,7 +47,7 @@ export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = 
           last_seen_at
         `)
         .neq("id", user?.id || "")
-        .or(`full_name.ilike.%${searchQuery}%,company.ilike.%${searchQuery}%,location.ilike.%${searchQuery}%`)
+        .or(`full_name.ilike.%${debouncedQuery}%,company.ilike.%${debouncedQuery}%,location.ilike.%${debouncedQuery}%`)
         .limit(10);
 
       if (error) throw error;
@@ -57,7 +67,7 @@ export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = 
             last_seen_at
           )
         `)
-        .ilike("skill_name", `%${searchQuery}%`)
+        .ilike("skill_name", `%${debouncedQuery}%`)
         .limit(5);
 
       if (skillsError) throw skillsError;
@@ -79,14 +89,14 @@ export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = 
         metadata: user,
       }));
     },
-    enabled: !!user && searchQuery.length >= 2,
+    enabled: !!user && debouncedQuery.length >= 2,
   });
 
   // Search posts
   const { data: postResults = [], isLoading: loadingPosts } = useQuery({
-    queryKey: ["search-posts", searchQuery, searchType],
+    queryKey: ["search-posts", debouncedQuery, searchType],
     queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) return [];
+      if (!debouncedQuery || debouncedQuery.length < 2) return [];
       if (searchType !== "all" && searchType !== "posts") return [];
 
       const { data, error } = await supabase
@@ -101,7 +111,7 @@ export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = 
             avatar_url
           )
         `)
-        .ilike("content", `%${searchQuery}%`)
+        .ilike("content", `%${debouncedQuery}%`)
         .order("created_at", { ascending: false })
         .limit(10);
 
@@ -117,14 +127,14 @@ export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = 
         metadata: post,
       }));
     },
-    enabled: !!user && searchQuery.length >= 2,
+    enabled: !!user && debouncedQuery.length >= 2,
   });
 
   // Search hashtags
   const { data: hashtagResults = [], isLoading: loadingHashtags } = useQuery({
-    queryKey: ["search-hashtags", searchQuery, searchType],
+    queryKey: ["search-hashtags", debouncedQuery, searchType],
     queryFn: async () => {
-      if (!searchQuery || searchQuery.length < 2) return [];
+      if (!debouncedQuery || debouncedQuery.length < 2) return [];
       if (searchType !== "all" && searchType !== "hashtags") return [];
 
       const { data, error } = await supabase
@@ -138,7 +148,7 @@ export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = 
       const hashtagCounts: Record<string, number> = {};
       data.forEach((post: any) => {
         post.hashtags?.forEach((tag: string) => {
-          if (tag.toLowerCase().includes(searchQuery.toLowerCase())) {
+          if (tag.toLowerCase().includes(debouncedQuery.toLowerCase())) {
             hashtagCounts[tag] = (hashtagCounts[tag] || 0) + 1;
           }
         });
@@ -155,23 +165,24 @@ export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = 
           metadata: { tag, count },
         }));
     },
-    enabled: !!user && searchQuery.length >= 2,
+    enabled: !!user && debouncedQuery.length >= 2,
   });
 
   // Save recent searches
   useEffect(() => {
-    if (searchQuery.length >= 2 && (userResults.length > 0 || postResults.length > 0 || hashtagResults.length > 0)) {
+    if (debouncedQuery.length >= 2 && (userResults.length > 0 || postResults.length > 0 || hashtagResults.length > 0)) {
       const recentSearches = JSON.parse(localStorage.getItem("recentSearches") || "[]");
       const updatedSearches = [
-        searchQuery,
-        ...recentSearches.filter((s: string) => s !== searchQuery),
+        debouncedQuery,
+        ...recentSearches.filter((s: string) => s !== debouncedQuery),
       ].slice(0, 5);
       localStorage.setItem("recentSearches", JSON.stringify(updatedSearches));
     }
-  }, [searchQuery, userResults, postResults, hashtagResults]);
+  }, [debouncedQuery, userResults, postResults, hashtagResults]);
 
   const allResults = [...userResults, ...postResults, ...hashtagResults];
   const isLoading = loadingUsers || loadingPosts || loadingHashtags;
+  const isSearching = searchQuery !== debouncedQuery;
 
   return {
     results: allResults,
@@ -179,6 +190,8 @@ export const useEnhancedSearch = (searchQuery: string, searchType: SearchType = 
     postResults,
     hashtagResults,
     isLoading,
+    isSearching,
+    debouncedQuery,
   };
 };
 
