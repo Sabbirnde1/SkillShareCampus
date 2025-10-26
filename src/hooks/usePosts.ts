@@ -4,6 +4,13 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useEffect } from "react";
 
+export interface PostLike {
+  id: string;
+  post_id: string;
+  user_id: string;
+  created_at: string;
+}
+
 export interface Post {
   id: string;
   author_id: string;
@@ -18,6 +25,8 @@ export interface Post {
     avatar_url: string;
     bio: string;
   };
+  post_likes?: PostLike[];
+  user_has_liked?: boolean;
 }
 
 export const usePosts = () => {
@@ -25,7 +34,7 @@ export const usePosts = () => {
   const queryClient = useQueryClient();
 
   const { data: posts, isLoading } = useQuery({
-    queryKey: ["posts"],
+    queryKey: ["posts", user?.id],
     queryFn: async () => {
       const { data, error } = await supabase
         .from("posts")
@@ -42,12 +51,25 @@ export const usePosts = () => {
             full_name,
             avatar_url,
             bio
+          ),
+          post_likes(
+            id,
+            post_id,
+            user_id,
+            created_at
           )
         `)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      return data as Post[];
+      
+      // Add user_has_liked flag
+      const postsWithLikeStatus = data?.map(post => ({
+        ...post,
+        user_has_liked: user ? post.post_likes?.some(like => like.user_id === user.id) : false,
+      })) as Post[];
+      
+      return postsWithLikeStatus;
     },
   });
 
@@ -109,28 +131,36 @@ export const usePosts = () => {
     },
   });
 
-  const likePost = useMutation({
-    mutationFn: async (postId: string) => {
-      const { data: post } = await supabase
-        .from("posts")
-        .select("likes_count")
-        .eq("id", postId)
-        .single();
+  const toggleLike = useMutation({
+    mutationFn: async ({ postId, isLiked }: { postId: string; isLiked: boolean }) => {
+      if (!user) throw new Error("Not authenticated");
 
-      if (!post) throw new Error("Post not found");
+      if (isLiked) {
+        // Unlike: delete the like
+        const { error } = await supabase
+          .from("post_likes")
+          .delete()
+          .eq("post_id", postId)
+          .eq("user_id", user.id);
 
-      const { error } = await supabase
-        .from("posts")
-        .update({ likes_count: post.likes_count + 1 })
-        .eq("id", postId);
+        if (error) throw error;
+      } else {
+        // Like: insert a new like
+        const { error } = await supabase
+          .from("post_likes")
+          .insert({
+            post_id: postId,
+            user_id: user.id,
+          });
 
-      if (error) throw error;
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
     onError: () => {
-      toast.error("Failed to like post");
+      toast.error("Failed to update like");
     },
   });
 
@@ -139,6 +169,6 @@ export const usePosts = () => {
     isLoading,
     createPost,
     deletePost,
-    likePost,
+    toggleLike,
   };
 };

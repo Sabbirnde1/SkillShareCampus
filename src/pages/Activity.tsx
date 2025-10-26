@@ -41,7 +41,7 @@ import {
 
 const Activity = () => {
   const { user } = useAuth();
-  const { posts, isLoading, createPost, likePost, deletePost } = usePosts();
+  const { posts, isLoading, createPost, toggleLike, deletePost } = usePosts();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
@@ -347,10 +347,14 @@ const Activity = () => {
                             <Button
                               variant="ghost"
                               size="sm"
-                              onClick={() => likePost.mutate(post.id)}
-                              className="gap-2 text-muted-foreground hover:text-primary"
+                              onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
+                              className={`gap-2 hover:text-primary ${
+                                post.user_has_liked 
+                                  ? 'text-primary font-semibold' 
+                                  : 'text-muted-foreground'
+                              }`}
                             >
-                              <ThumbsUp className="h-4 w-4" />
+                              <ThumbsUp className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
                               <span className="text-sm font-medium">
                                 {post.likes_count > 0 ? post.likes_count : "Like"}
                               </span>

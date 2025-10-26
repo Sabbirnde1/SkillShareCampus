@@ -26,7 +26,7 @@ import {
 
 const Campus = () => {
   const { user } = useAuth();
-  const { posts, isLoading, createPost, likePost, deletePost } = usePosts();
+  const { posts, isLoading, createPost, toggleLike, deletePost } = usePosts();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -267,11 +267,15 @@ const Campus = () => {
                     
                     <div className="flex items-center justify-around">
                       <button 
-                        onClick={() => likePost.mutate(post.id)}
-                        className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors"
+                        onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
+                        className={`flex items-center gap-2 hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors ${
+                          post.user_has_liked 
+                            ? 'text-[hsl(var(--link-blue))] font-semibold' 
+                            : 'text-muted-foreground'
+                        }`}
                       >
-                        <ThumbsUp className="w-5 h-5" />
-                        <span className="text-sm font-medium">Like</span>
+                        <ThumbsUp className={`w-5 h-5 ${post.user_has_liked ? 'fill-current' : ''}`} />
+                        <span className="text-sm font-medium">{post.user_has_liked ? 'Liked' : 'Like'}</span>
                       </button>
                       <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors">
                         <MessageCircle className="w-5 h-5" />
