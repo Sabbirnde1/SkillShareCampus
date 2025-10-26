@@ -27,6 +27,7 @@ import {
 import { PostComments } from "@/components/PostComments";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
+import { SharePostDialog } from "@/components/SharePostDialog";
 
 const Campus = () => {
   const { user } = useAuth();
@@ -34,6 +35,8 @@ const Campus = () => {
   const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
 
   const handleCreatePost = () => {
     if (!postContent.trim()) return;
@@ -280,9 +283,14 @@ const Campus = () => {
                         <ThumbsUp className="w-4 h-4" />
                         {post.likes_count} {post.likes_count === 1 ? "like" : "likes"}
                       </span>
-                      <span className="text-sm text-muted-foreground">
-                        {post.comments_count} {post.comments_count === 1 ? "comment" : "comments"}
-                      </span>
+                      <div className="flex gap-3">
+                        <span className="text-sm text-muted-foreground">
+                          {post.comments_count} {post.comments_count === 1 ? "comment" : "comments"}
+                        </span>
+                        <span className="text-sm text-muted-foreground">
+                          {post.shared_count || 0} {post.shared_count === 1 ? "share" : "shares"}
+                        </span>
+                      </div>
                     </div>
                     
                     <div className="flex items-center justify-around mb-3">
@@ -297,7 +305,13 @@ const Campus = () => {
                         <ThumbsUp className={`w-5 h-5 ${post.user_has_liked ? 'fill-current' : ''}`} />
                         <span className="text-sm font-medium">{post.user_has_liked ? 'Liked' : 'Like'}</span>
                       </button>
-                      <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors">
+                      <button 
+                        onClick={() => {
+                          setSelectedPostForShare(post);
+                          setShareDialogOpen(true);
+                        }}
+                        className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors"
+                      >
                         <Share2 className="w-5 h-5" />
                         <span className="text-sm font-medium">Share</span>
                       </button>
@@ -347,6 +361,15 @@ const Campus = () => {
           </aside>
         </div>
       </div>
+
+      {/* Share Dialog */}
+      {selectedPostForShare && (
+        <SharePostDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          post={selectedPostForShare}
+        />
+      )}
     </div>
   );
 };

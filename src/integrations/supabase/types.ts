@@ -352,6 +352,48 @@ export type Database = {
           },
         ]
       }
+      post_shares: {
+        Row: {
+          created_at: string
+          id: string
+          original_post_id: string | null
+          post_id: string
+          shared_via: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          original_post_id?: string | null
+          post_id: string
+          shared_via?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          original_post_id?: string | null
+          post_id?: string
+          shared_via?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_shares_original_post_id_fkey"
+            columns: ["original_post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "post_shares_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       posts: {
         Row: {
           author_id: string
@@ -361,6 +403,7 @@ export type Database = {
           hashtags: string[] | null
           id: string
           likes_count: number
+          shared_count: number
           updated_at: string
         }
         Insert: {
@@ -371,6 +414,7 @@ export type Database = {
           hashtags?: string[] | null
           id?: string
           likes_count?: number
+          shared_count?: number
           updated_at?: string
         }
         Update: {
@@ -381,6 +425,7 @@ export type Database = {
           hashtags?: string[] | null
           id?: string
           likes_count?: number
+          shared_count?: number
           updated_at?: string
         }
         Relationships: [

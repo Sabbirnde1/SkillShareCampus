@@ -19,6 +19,7 @@ export interface Post {
   hashtags: string[];
   likes_count: number;
   comments_count: number;
+  shared_count: number;
   created_at: string;
   author: {
     id: string;
@@ -46,6 +47,7 @@ export const usePosts = () => {
           hashtags,
           likes_count,
           comments_count,
+          shared_count,
           created_at,
           author:profiles!posts_author_id_fkey(
             id,

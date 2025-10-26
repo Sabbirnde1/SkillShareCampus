@@ -17,7 +17,8 @@ import {
   MessageCircle,
   Trash2,
   Image as ImageIcon,
-  Hash
+  Hash,
+  Share2
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
@@ -41,6 +42,7 @@ import {
 import { PostComments } from "@/components/PostComments";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
+import { SharePostDialog } from "@/components/SharePostDialog";
 
 const Activity = () => {
   const { user } = useAuth();
@@ -49,6 +51,8 @@ const Activity = () => {
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  const [shareDialogOpen, setShareDialogOpen] = useState(false);
+  const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
 
   const handleCreatePost = () => {
     if (!postContent.trim()) return;
@@ -375,6 +379,20 @@ const Activity = () => {
                             <ThumbsUp className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
                             <span className="text-sm font-medium">
                               {post.likes_count > 0 ? post.likes_count : "Like"}
+                            </span>
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => {
+                              setSelectedPostForShare(post);
+                              setShareDialogOpen(true);
+                            }}
+                            className="gap-2 text-muted-foreground hover:text-primary"
+                          >
+                            <Share2 className="h-4 w-4" />
+                            <span className="text-sm font-medium">
+                              {post.shared_count > 0 ? post.shared_count : "Share"}
                             </span>
                           </Button>
                         </div>
