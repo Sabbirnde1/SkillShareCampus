@@ -2,15 +2,44 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Pencil, LogOut } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Pencil, LogOut, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useRef, useState } from "react";
+import { toast } from "sonner";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
-  const { profile, friendCount, isLoading } = useUserProfile(user?.id);
+  const { profile, friendCount, isLoading, uploadAvatar } = useUserProfile(user?.id);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload immediately
+    try {
+      await uploadAvatar.mutateAsync(file);
+      setPreviewUrl(null);
+    } catch (error) {
+      setPreviewUrl(null);
+      // Error is handled in the mutation
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
 
   if (isLoading) {
     return (
@@ -97,17 +126,30 @@ const Profile = () => {
                   <div className="px-6 pb-6">
                     <div className="relative -mt-16 mb-4">
                       <Avatar className="h-32 w-32 border-4 border-background">
-                        <AvatarImage src={profile?.avatar_url || ""} />
+                        <AvatarImage src={previewUrl || profile?.avatar_url || ""} />
                         <AvatarFallback>
                           <User className="h-16 w-16" />
                         </AvatarFallback>
                       </Avatar>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/jpeg,image/jpg,image/png,image/webp"
+                        onChange={handleFileChange}
+                        className="hidden"
+                      />
                       <Button 
                         size="icon" 
                         variant="secondary" 
                         className="absolute bottom-0 right-0 rounded-full h-8 w-8"
+                        onClick={handleAvatarClick}
+                        disabled={uploadAvatar.isPending}
                       >
-                        <Pencil className="h-3 w-3" />
+                        {uploadAvatar.isPending ? (
+                          <div className="h-3 w-3 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                        ) : (
+                          <Camera className="h-3 w-3" />
+                        )}
                       </Button>
                     </div>
 

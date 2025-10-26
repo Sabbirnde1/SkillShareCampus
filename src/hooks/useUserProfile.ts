@@ -1,7 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 export const useUserProfile = (userId: string | undefined) => {
+  const queryClient = useQueryClient();
+
   const { data: profile, isLoading: profileLoading } = useQuery({
     queryKey: ["user-profile", userId],
     queryFn: async () => {
@@ -86,6 +89,69 @@ export const useUserProfile = (userId: string | undefined) => {
     enabled: !!userId,
   });
 
+  const uploadAvatar = useMutation({
+    mutationFn: async (file: File) => {
+      if (!userId) throw new Error("User ID not found");
+
+      // Validate file
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+      if (!validTypes.includes(file.type)) {
+        throw new Error("Invalid file type. Please upload a JPG, PNG, or WebP image.");
+      }
+
+      const maxSize = 2 * 1024 * 1024; // 2MB
+      if (file.size > maxSize) {
+        throw new Error("File size exceeds 2MB limit.");
+      }
+
+      // Create file path: userId/avatar.extension
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${userId}/avatar.${fileExt}`;
+
+      // Delete old avatar if exists
+      const { data: existingFiles } = await supabase.storage
+        .from("avatars")
+        .list(userId);
+
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles.map((file) => `${userId}/${file.name}`);
+        await supabase.storage.from("avatars").remove(filesToDelete);
+      }
+
+      // Upload new avatar
+      const { error: uploadError } = await supabase.storage
+        .from("avatars")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from("avatars")
+        .getPublicUrl(filePath);
+
+      // Update profile with new avatar URL
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ avatar_url: publicUrlData.publicUrl })
+        .eq("id", userId);
+
+      if (updateError) throw updateError;
+
+      return publicUrlData.publicUrl;
+    },
+    onSuccess: () => {
+      toast.success("Profile picture updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["user-profile", userId] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to upload profile picture");
+    },
+  });
+
   return {
     profile,
     education: education || [],
@@ -93,5 +159,6 @@ export const useUserProfile = (userId: string | undefined) => {
     experience: experience || [],
     friendCount: friendCount || 0,
     isLoading: profileLoading || educationLoading || skillsLoading || experienceLoading,
+    uploadAvatar,
   };
 };
