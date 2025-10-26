@@ -112,9 +112,17 @@ const SignIn = () => {
             </div>
             
             <div className="space-y-2">
-              <Label htmlFor="password" className="text-sm font-normal text-foreground">
-                Password
-              </Label>
+              <div className="flex justify-between items-center">
+                <Label htmlFor="password" className="text-sm font-normal text-foreground">
+                  Password
+                </Label>
+                <a 
+                  href="/forgot-password" 
+                  className="text-sm text-[hsl(var(--link-blue))] hover:underline"
+                >
+                  Forgot password?
+                </a>
+              </div>
               <Input 
                 id="password"
                 type="password" 
