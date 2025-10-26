@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PostComments } from "@/components/PostComments";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 const Campus = () => {
   const { user } = useAuth();
@@ -98,6 +99,7 @@ const Campus = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
+        <EmailVerificationBanner />
         <div className="grid grid-cols-12 gap-6">
           {/* Left Sidebar */}
           <aside className="col-span-3">

@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -129,6 +130,7 @@ const Profile = () => {
       {/* Main Content */}
       <main className="flex-1 py-6">
         <div className="max-w-7xl mx-auto px-6">
+          <EmailVerificationBanner />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Profile Section */}
             <div className="lg:col-span-2">

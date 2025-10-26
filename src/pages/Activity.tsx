@@ -39,6 +39,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PostComments } from "@/components/PostComments";
+import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 
 const Activity = () => {
   const { user } = useAuth();
@@ -127,6 +128,7 @@ const Activity = () => {
       {/* Main Content */}
       <main className="flex-1 py-6">
         <div className="max-w-7xl mx-auto px-6">
+          <EmailVerificationBanner />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Activity Section */}
             <div className="lg:col-span-2 space-y-6">
