@@ -9,6 +9,7 @@ export interface SearchUser {
   bio: string;
   location: string;
   company: string;
+  last_seen_at: string | null;
 }
 
 export const useUserSearch = (searchQuery: string) => {
@@ -21,7 +22,7 @@ export const useUserSearch = (searchQuery: string) => {
 
       const { data, error } = await supabase
         .from("profiles")
-        .select("id, full_name, avatar_url, bio, location, company")
+        .select("id, full_name, avatar_url, bio, location, company, last_seen_at")
         .neq("id", user?.id || "")
         .ilike("full_name", `%${searchQuery}%`)
         .limit(10);

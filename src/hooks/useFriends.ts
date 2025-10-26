@@ -15,6 +15,7 @@ export interface Friend {
     bio: string;
     location: string;
     company: string;
+    last_seen_at: string | null;
   };
 }
 
@@ -40,7 +41,8 @@ export const useFriends = () => {
             avatar_url,
             bio,
             location,
-            company
+            company,
+            last_seen_at
           )
         `)
         .eq("user_id", user.id)

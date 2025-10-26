@@ -7,6 +7,7 @@ import { Link } from "react-router-dom";
 import { useFriends } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNotifications } from "@/hooks/useNotifications";
+import OnlineStatus from "@/components/OnlineStatus";
 
 const Friends = () => {
   const { friends, isLoading } = useFriends();
@@ -120,12 +121,20 @@ const Friends = () => {
                   
                   <div className="p-4 relative">
                     <Link to={`/user/${friend.profile.id}`} className="absolute -top-8 left-4">
-                      <Avatar className="w-16 h-16 border-4 border-white">
-                        <AvatarImage src={friend.profile.avatar_url || ""} />
-                        <AvatarFallback>
-                          <User className="h-8 w-8" />
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="w-16 h-16 border-4 border-white">
+                          <AvatarImage src={friend.profile.avatar_url || ""} />
+                          <AvatarFallback>
+                            <User className="h-8 w-8" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <OnlineStatus 
+                          userId={friend.profile.id}
+                          lastSeenAt={friend.profile.last_seen_at}
+                          showText={false}
+                          className="absolute bottom-0 right-0"
+                        />
+                      </div>
                     </Link>
                     
                     <div className="mt-10">
@@ -134,6 +143,12 @@ const Friends = () => {
                           {friend.profile.full_name || "Unknown User"}
                         </h3>
                       </Link>
+                      <OnlineStatus 
+                        userId={friend.profile.id}
+                        lastSeenAt={friend.profile.last_seen_at}
+                        showDot={false}
+                        className="mb-1"
+                      />
                       <p className="text-xs text-muted-foreground mb-1">{friend.profile.bio || "No bio"}</p>
                       <p className="text-xs text-muted-foreground mb-1">{friend.profile.location || "No location"}</p>
                       <p className="text-xs text-muted-foreground">{friend.profile.company || "No company"}</p>

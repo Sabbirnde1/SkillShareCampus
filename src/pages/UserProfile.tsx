@@ -11,6 +11,7 @@ import { useFriends } from "@/hooks/useFriends";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { useFriendSuggestions } from "@/hooks/useFriendSuggestions";
+import OnlineStatus from "@/components/OnlineStatus";
 
 const UserProfile = () => {
   const { id: userId } = useParams();
@@ -168,6 +169,7 @@ const UserProfile = () => {
 
                     <div className="space-y-2">
                       <h2 className="text-2xl font-bold text-foreground">{profile.full_name || "Unknown User"}</h2>
+                      <OnlineStatus userId={userId} lastSeenAt={profile.last_seen_at} />
                       {profile.bio && (
                         <p className="text-sm text-muted-foreground">{profile.bio}</p>
                       )}

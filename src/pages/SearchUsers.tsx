@@ -7,6 +7,7 @@ import { useState } from "react";
 import { useUserSearch } from "@/hooks/useUserSearch";
 import { useFriends } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import OnlineStatus from "@/components/OnlineStatus";
 
 const SearchUsers = () => {
   const [searchQuery, setSearchQuery] = useState("");
@@ -90,12 +91,20 @@ const SearchUsers = () => {
                 <Card key={user.id} className="p-6 bg-white">
                   <div className="flex items-start gap-4 mb-4">
                     <Link to={`/user/${user.id}`}>
-                      <Avatar className="w-16 h-16 flex-shrink-0">
-                        <AvatarImage src={user.avatar_url || ""} />
-                        <AvatarFallback>
-                          <User className="h-8 w-8" />
-                        </AvatarFallback>
-                      </Avatar>
+                      <div className="relative">
+                        <Avatar className="w-16 h-16 flex-shrink-0">
+                          <AvatarImage src={user.avatar_url || ""} />
+                          <AvatarFallback>
+                            <User className="h-8 w-8" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <OnlineStatus 
+                          userId={user.id} 
+                          lastSeenAt={user.last_seen_at} 
+                          showText={false}
+                          className="absolute bottom-0 right-0"
+                        />
+                      </div>
                     </Link>
                     
                     <div className="flex-1 min-w-0">
@@ -104,6 +113,12 @@ const SearchUsers = () => {
                           {user.full_name || "Unknown User"}
                         </h3>
                       </Link>
+                      <OnlineStatus 
+                        userId={user.id} 
+                        lastSeenAt={user.last_seen_at}
+                        showDot={false}
+                        className="mb-1"
+                      />
                       <p className="text-xs text-muted-foreground mb-0.5">{user.bio || "No bio"}</p>
                       <p className="text-xs text-muted-foreground mb-0.5">{user.location || "No location"}</p>
                       <p className="text-xs text-muted-foreground">{user.company || "No company"}</p>
