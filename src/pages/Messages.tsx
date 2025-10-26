@@ -17,6 +17,7 @@ import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { MessagesSkeleton } from "@/components/MessagesSkeleton";
+import { AppHeader } from "@/components/AppHeader";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -175,55 +176,7 @@ const Messages = () => {
     <div className="min-h-screen flex flex-col bg-background">
       <OfflineBanner />
       {/* Header */}
-      <header className="bg-white border-b px-6 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-primary">
-              SkillShare<span className="text-sm align-top">Campus</span>
-            </h1>
-          </Link>
-          
-          <div className="flex-1 max-w-md mx-8">
-            <Link to="/search">
-              <div className="relative cursor-pointer">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search users..." 
-                  className="pl-10 bg-gray-50"
-                  readOnly
-                />
-              </div>
-            </Link>
-          </div>
-
-          <nav className="flex items-center gap-6">
-            <Link to="/campus" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Home className="h-5 w-5" />
-              <span className="text-xs">Home</span>
-            </Link>
-            <Link to="/friends" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Users className="h-5 w-5" />
-              <span className="text-xs">Requests</span>
-            </Link>
-            <Link to="/courses" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <BookOpen className="h-5 w-5" />
-              <span className="text-xs">Courses</span>
-            </Link>
-            <Link to="/messages" className="flex flex-col items-center gap-1 text-primary">
-              <MessageSquare className="h-5 w-5" />
-              <span className="text-xs font-medium">Messages</span>
-            </Link>
-            <div className="flex flex-col items-center gap-1">
-              <NotificationBadge />
-              <span className="text-xs text-muted-foreground">Notifications</span>
-            </div>
-            <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <User className="h-5 w-5" />
-              <span className="text-xs">Me</span>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <AppHeader currentPage="messages" />
 
       {/* Main Content */}
       <main className="flex-1 px-6 py-8">

@@ -50,6 +50,7 @@ import { EditPostDialog } from "@/components/EditPostDialog";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { PostsFeedSkeleton } from "@/components/PostsFeedSkeleton";
+import { AppHeader } from "@/components/AppHeader";
 
 const Activity = () => {
   const { user } = useAuth();
@@ -116,65 +117,7 @@ const Activity = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="bg-[hsl(var(--header-bg))] py-3 px-6 border-b">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-foreground">
-              SkillShare<span className="text-sm align-top">Campus</span>
-            </h1>
-          </Link>
-          
-          <div className="flex-1 max-w-md mx-8">
-            <Link to="/search">
-              <div className="relative cursor-pointer">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input 
-                  placeholder="Search users..." 
-                  className="pl-10 bg-background/50"
-                  readOnly
-                />
-              </div>
-            </Link>
-          </div>
-
-          <nav className="flex items-center gap-6">
-            <Link to="/campus" className="flex flex-col items-center gap-1 text-foreground/70 hover:text-foreground transition-colors">
-              <Home className="h-5 w-5" />
-              <span className="text-xs">Home</span>
-            </Link>
-            <Link to="/friends" className="flex flex-col items-center gap-1 text-foreground/70 hover:text-foreground transition-colors">
-              <Users className="h-5 w-5" />
-              <span className="text-xs">Requests</span>
-            </Link>
-            <Link to="/campus" className="flex flex-col items-center gap-1 text-foreground/70 hover:text-foreground transition-colors">
-              <BookOpen className="h-5 w-5" />
-              <span className="text-xs">Courses</span>
-            </Link>
-            <Link to="/messages" className="flex flex-col items-center gap-1 text-foreground/70 hover:text-foreground transition-colors">
-              <MessageSquare className="h-5 w-5" />
-              <span className="text-xs">Messages</span>
-            </Link>
-            <Link to="/notifications" className="flex flex-col items-center gap-1 text-foreground/70 hover:text-foreground transition-colors">
-              <div className="relative">
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                  >
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Badge>
-                )}
-              </div>
-              <span className="text-xs">Notifications</span>
-            </Link>
-            <Link to="/profile" className="flex flex-col items-center gap-1 text-primary">
-              <User className="h-5 w-5" />
-              <span className="text-xs font-semibold">Activity</span>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <AppHeader currentPage="activity" />
 
       {/* Main Content */}
       <main className="flex-1 py-6">

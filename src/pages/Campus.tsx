@@ -34,6 +34,7 @@ import { TrendingHashtags } from "@/components/TrendingHashtags";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { PostsFeedSkeleton } from "@/components/PostsFeedSkeleton";
+import { AppHeader } from "@/components/AppHeader";
 
 const Campus = () => {
   const { user } = useAuth();
@@ -83,63 +84,9 @@ const Campus = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <OfflineBanner />
       {/* Header */}
-      <header className="bg-white border-b border-gray-200 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-[hsl(var(--link-blue))] rounded-full flex items-center justify-center">
-                <span className="text-white font-bold text-sm">C</span>
-              </div>
-              <h1 className="text-xl font-semibold text-foreground">Campus</h1>
-            </Link>
-            <div className="relative w-96">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search" 
-                className="pl-10 bg-gray-50 border-gray-200"
-              />
-            </div>
-          </div>
-          
-          <nav className="flex items-center gap-6">
-            <Link to="/campus" className="flex flex-col items-center gap-1 text-[hsl(var(--link-blue))]">
-              <Home className="w-6 h-6" />
-              <span className="text-xs font-medium">Home</span>
-            </Link>
-            <Link to="/pending-requests" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <Users className="w-6 h-6" />
-              <span className="text-xs">Requests</span>
-            </Link>
-            <Link to="/campus" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <BookOpen className="w-6 h-6" />
-              <span className="text-xs">Courses</span>
-            </Link>
-            <Link to="/messages" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <MessageSquare className="w-6 h-6" />
-              <span className="text-xs">Messages</span>
-            </Link>
-            <Link to="/notifications" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <div className="relative">
-                <Bell className="w-6 h-6" />
-                {unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                  >
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Badge>
-                )}
-              </div>
-              <span className="text-xs">Notifications</span>
-            </Link>
-            <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <User className="w-6 h-6" />
-              <span className="text-xs">Me</span>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <AppHeader currentPage="campus" />
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">

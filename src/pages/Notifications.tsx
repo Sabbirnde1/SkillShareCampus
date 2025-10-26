@@ -22,6 +22,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 import { NotificationsSkeleton } from "@/components/NotificationsSkeleton";
+import { AppHeader } from "@/components/AppHeader";
 
 const Notifications = () => {
   const navigate = useNavigate();
@@ -84,60 +85,7 @@ const Notifications = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="bg-white border-b px-6 py-3">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
-            <h1 className="text-xl font-semibold text-primary">
-              SkillShare<span className="text-sm align-top">Campus</span>
-            </h1>
-          </Link>
-          
-          <div className="flex-1 max-w-md mx-8">
-            <Link to="/search">
-              <div className="relative cursor-pointer">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search users..." 
-                  className="pl-10 bg-gray-50"
-                  readOnly
-                />
-              </div>
-            </Link>
-          </div>
-
-          <nav className="flex items-center gap-6">
-            <Link to="/campus" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Home className="h-5 w-5" />
-              <span className="text-xs">Home</span>
-            </Link>
-            <Link to="/friends" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Users className="h-5 w-5" />
-              <span className="text-xs">Requests</span>
-            </Link>
-            <Link to="/campus" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <BookOpen className="h-5 w-5" />
-              <span className="text-xs">Courses</span>
-            </Link>
-            <Link to="/messages" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <MessageSquare className="h-5 w-5" />
-              <span className="text-xs">Messages</span>
-            </Link>
-            <Link to="/notifications" className="flex flex-col items-center gap-1 text-primary relative">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <Badge className="absolute -top-1 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
-                  {unreadCount}
-                </Badge>
-              )}
-              <span className="text-xs font-medium">Notifications</span>
-            </Link>
-            <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <User className="h-5 w-5" />
-              <span className="text-xs">Me</span>
-            </Link>
-          </nav>
-        </div>
-      </header>
+      <AppHeader currentPage="notifications" />
 
       {/* Main Content */}
       <main className="flex-1 px-6 py-8">
