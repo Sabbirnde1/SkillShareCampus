@@ -400,6 +400,7 @@ export type Database = {
           comments_count: number
           content: string
           created_at: string
+          edited_at: string | null
           hashtags: string[] | null
           id: string
           likes_count: number
@@ -411,6 +412,7 @@ export type Database = {
           comments_count?: number
           content: string
           created_at?: string
+          edited_at?: string | null
           hashtags?: string[] | null
           id?: string
           likes_count?: number
@@ -422,6 +424,7 @@ export type Database = {
           comments_count?: number
           content?: string
           created_at?: string
+          edited_at?: string | null
           hashtags?: string[] | null
           id?: string
           likes_count?: number

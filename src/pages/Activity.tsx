@@ -18,7 +18,8 @@ import {
   Trash2,
   Image as ImageIcon,
   Hash,
-  Share2
+  Share2,
+  Edit
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
@@ -44,16 +45,19 @@ import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { SharePostDialog } from "@/components/SharePostDialog";
 import { FriendSuggestions } from "@/components/FriendSuggestions";
+import { EditPostDialog } from "@/components/EditPostDialog";
 
 const Activity = () => {
   const { user } = useAuth();
-  const { posts, isLoading, createPost, toggleLike, deletePost } = usePosts();
+  const { posts, isLoading, createPost, toggleLike, deletePost, editPost } = usePosts();
   const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedPostForEdit, setSelectedPostForEdit] = useState<any>(null);
 
   const handleCreatePost = () => {
     if (!postContent.trim()) return;
@@ -68,6 +72,32 @@ const Activity = () => {
         },
       }
     );
+  };
+
+  const handleEditPost = (newContent: string) => {
+    if (!selectedPostForEdit) return;
+    
+    const hashtags = newContent.match(/#\w+/g) || [];
+    editPost.mutate(
+      {
+        postId: selectedPostForEdit.id,
+        content: newContent,
+        hashtags,
+      },
+      {
+        onSuccess: () => {
+          setEditDialogOpen(false);
+          setSelectedPostForEdit(null);
+        },
+      }
+    );
+  };
+
+  const canEditPost = (postCreatedAt: string) => {
+    const now = new Date();
+    const createdAt = new Date(postCreatedAt);
+    const diffMinutes = (now.getTime() - createdAt.getTime()) / 1000 / 60;
+    return diffMinutes <= 15; // 15-minute edit window
   };
 
   // Extract unique hashtags from all posts
@@ -312,14 +342,22 @@ const Activity = () => {
                                     {post.author.full_name || "Unknown User"}
                                   </h3>
                                 </Link>
-                                {post.author.bio && (
+                                 {post.author.bio && (
                                   <p className="text-xs text-muted-foreground line-clamp-1">
                                     {post.author.bio}
                                   </p>
                                 )}
-                                <p className="text-xs text-muted-foreground">
-                                  {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                                </p>
+                                <div className="flex items-center gap-2">
+                                  <p className="text-xs text-muted-foreground">
+                                    {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                                  </p>
+                                  {post.edited_at && (
+                                    <>
+                                      <span className="text-xs text-muted-foreground">•</span>
+                                      <span className="text-xs text-muted-foreground italic">Edited</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                               {user?.id === post.author_id && (
                                 <DropdownMenu>
@@ -330,6 +368,17 @@ const Activity = () => {
                                     </Button>
                                   </DropdownMenuTrigger>
                                   <DropdownMenuContent align="end">
+                                    {canEditPost(post.created_at) && (
+                                      <DropdownMenuItem
+                                        onClick={() => {
+                                          setSelectedPostForEdit(post);
+                                          setEditDialogOpen(true);
+                                        }}
+                                      >
+                                        <Edit className="h-4 w-4 mr-2" />
+                                        Edit post
+                                      </DropdownMenuItem>
+                                    )}
                                     <DropdownMenuItem
                                       onClick={() => deletePost.mutate(post.id)}
                                       className="text-destructive"
@@ -445,6 +494,26 @@ const Activity = () => {
           </div>
         </div>
       </main>
+
+      {/* Share Post Dialog */}
+      {selectedPostForShare && (
+        <SharePostDialog
+          open={shareDialogOpen}
+          onOpenChange={setShareDialogOpen}
+          post={selectedPostForShare}
+        />
+      )}
+
+      {/* Edit Post Dialog */}
+      {selectedPostForEdit && (
+        <EditPostDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          postId={selectedPostForEdit.id}
+          initialContent={selectedPostForEdit.content}
+          onEditSuccess={handleEditPost}
+        />
+      )}
 
       <Footer />
     </div>

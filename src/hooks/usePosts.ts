@@ -21,6 +21,7 @@ export interface Post {
   comments_count: number;
   shared_count: number;
   created_at: string;
+  edited_at: string | null;
   author: {
     id: string;
     full_name: string;
@@ -49,6 +50,7 @@ export const usePosts = () => {
           comments_count,
           shared_count,
           created_at,
+          edited_at,
           author:profiles!posts_author_id_fkey(
             id,
             full_name,
@@ -137,6 +139,34 @@ export const usePosts = () => {
     },
   });
 
+  const editPost = useMutation({
+    mutationFn: async ({ postId, content, hashtags }: { postId: string; content: string; hashtags: string[] }) => {
+      if (!user) throw new Error("Not authenticated");
+
+      // Validate and sanitize input
+      const validated = validatePost(content, hashtags);
+
+      const { error } = await supabase
+        .from("posts")
+        .update({
+          content: validated.content,
+          hashtags: validated.hashtags,
+          edited_at: new Date().toISOString(),
+        })
+        .eq("id", postId)
+        .eq("author_id", user.id); // Extra security: ensure user owns the post
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      toast.success("Post updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to update post");
+    },
+  });
+
   const toggleLike = useMutation({
     mutationFn: async ({ postId, isLiked }: { postId: string; isLiked: boolean }) => {
       if (!user) throw new Error("Not authenticated");
@@ -175,6 +205,7 @@ export const usePosts = () => {
     isLoading,
     createPost,
     deletePost,
+    editPost,
     toggleLike,
   };
 };
