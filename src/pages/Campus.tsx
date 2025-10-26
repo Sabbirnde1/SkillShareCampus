@@ -28,6 +28,7 @@ import { PostComments } from "@/components/PostComments";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { SharePostDialog } from "@/components/SharePostDialog";
+import { FriendSuggestions } from "@/components/FriendSuggestions";
 
 const Campus = () => {
   const { user } = useAuth();
@@ -326,7 +327,9 @@ const Campus = () => {
 
           {/* Right Sidebar */}
           <aside className="col-span-3">
-            <Card className="p-4">
+            <FriendSuggestions />
+
+            <Card className="p-4 mt-4">
               <h3 className="font-semibold text-sm mb-4">Campus News</h3>
               <div className="space-y-3">
                 <div className="text-xs">

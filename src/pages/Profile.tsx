@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Badge } from "@/components/ui/badge";
+import { FriendSuggestions } from "@/components/FriendSuggestions";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -264,6 +265,9 @@ const Profile = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Friend Suggestions */}
+              <FriendSuggestions />
+
               {/* Ad Card */}
               <Card>
                 <CardContent className="p-0">

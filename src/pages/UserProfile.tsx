@@ -10,6 +10,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useFriends } from "@/hooks/useFriends";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
+import { useFriendSuggestions } from "@/hooks/useFriendSuggestions";
 
 const UserProfile = () => {
   const { id: userId } = useParams();
@@ -17,11 +18,14 @@ const UserProfile = () => {
   const navigate = useNavigate();
   const { profile, education, skills, experience, friendCount, isLoading } = useUserProfile(userId);
   const { sendFriendRequest, removeFriend, checkFriendshipStatus } = useFriends();
+  const { getMutualFriends } = useFriendSuggestions();
   const [friendshipStatus, setFriendshipStatus] = useState<any>(null);
+  const [mutualFriends, setMutualFriends] = useState<any[]>([]);
 
   useEffect(() => {
     if (userId && user) {
       checkFriendshipStatus(userId).then(setFriendshipStatus);
+      getMutualFriends(userId).then(setMutualFriends);
     }
   }, [userId, user]);
 
@@ -170,10 +174,31 @@ const UserProfile = () => {
                       {profile.location && (
                         <p className="text-xs text-muted-foreground">{profile.location}</p>
                       )}
-                      {profile.company && (
+                       {profile.company && (
                         <p className="text-xs text-muted-foreground">{profile.company}</p>
                       )}
                       <p className="text-sm text-primary font-medium">{friendCount} connections</p>
+                      {mutualFriends.length > 0 && (
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground mt-2">
+                          <Users className="h-4 w-4" />
+                          <div className="flex items-center gap-1">
+                            <span className="font-semibold text-foreground">{mutualFriends.length}</span>
+                            <span>mutual {mutualFriends.length === 1 ? "friend" : "friends"}</span>
+                          </div>
+                          {mutualFriends.length <= 3 && (
+                            <div className="flex -space-x-2 ml-2">
+                              {mutualFriends.slice(0, 3).map((friend: any) => (
+                                <Avatar key={friend.friend_id} className="h-6 w-6 border-2 border-background">
+                                  <AvatarImage src={friend.profile?.avatar_url || ""} />
+                                  <AvatarFallback className="text-xs">
+                                    <User className="h-3 w-3" />
+                                  </AvatarFallback>
+                                </Avatar>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="flex gap-3 mt-4">

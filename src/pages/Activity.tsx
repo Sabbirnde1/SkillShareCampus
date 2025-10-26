@@ -43,6 +43,7 @@ import { PostComments } from "@/components/PostComments";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { SharePostDialog } from "@/components/SharePostDialog";
+import { FriendSuggestions } from "@/components/FriendSuggestions";
 
 const Activity = () => {
   const { user } = useAuth();
@@ -407,6 +408,9 @@ const Activity = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Friend Suggestions */}
+              <FriendSuggestions />
+
               {/* Ad Card */}
               <Card>
                 <CardContent className="p-0">
