@@ -13,10 +13,11 @@ import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Badge } from "@/components/ui/badge";
 import { FriendSuggestions } from "@/components/FriendSuggestions";
+import { ProfileCompletenessWidget } from "@/components/ProfileCompletenessWidget";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
-  const { profile, friendCount, isLoading, uploadAvatar, uploadCoverImage } = useUserProfile(user?.id);
+  const { profile, education, skills, experience, friendCount, isLoading, uploadAvatar, uploadCoverImage } = useUserProfile(user?.id);
   const { unreadCount } = useNotifications();
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const coverFileInputRef = useRef<HTMLInputElement>(null);
@@ -265,6 +266,14 @@ const Profile = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Profile Completeness */}
+              <ProfileCompletenessWidget 
+                profile={profile}
+                education={education}
+                skills={skills}
+                experience={experience}
+              />
+
               {/* Friend Suggestions */}
               <FriendSuggestions />
 
