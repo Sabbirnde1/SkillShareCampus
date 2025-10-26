@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
@@ -9,6 +10,7 @@ import { useMessages } from "@/hooks/useMessages";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -19,6 +21,7 @@ const Messages = () => {
   const [messageText, setMessageText] = useState("");
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { conversations, messages, sendMessage, markConversationAsRead } = useMessages(selectedUserId);
+  const { unreadCount } = useNotifications();
 
   const selectedConversation = conversations.find((c) => c.user_id === selectedUserId);
 
@@ -110,7 +113,17 @@ const Messages = () => {
               <span className="text-xs font-medium">Messages</span>
             </Link>
             <Link to="/notifications" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Bell className="h-5 w-5" />
+              <div className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+              </div>
               <span className="text-xs">Notifications</span>
             </Link>
             <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">

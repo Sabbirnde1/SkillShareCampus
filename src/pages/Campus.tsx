@@ -4,6 +4,7 @@ import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Badge } from "@/components/ui/badge";
 import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
@@ -25,10 +26,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PostComments } from "@/components/PostComments";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Campus = () => {
   const { user } = useAuth();
   const { posts, isLoading, createPost, toggleLike, deletePost } = usePosts();
+  const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
 
@@ -86,7 +89,17 @@ const Campus = () => {
               <span className="text-xs">Messages</span>
             </Link>
             <Link to="/notifications" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
-              <Bell className="w-6 h-6" />
+              <div className="relative">
+                <Bell className="w-6 h-6" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+              </div>
               <span className="text-xs">Notifications</span>
             </Link>
             <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">

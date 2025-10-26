@@ -40,10 +40,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { PostComments } from "@/components/PostComments";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Activity = () => {
   const { user } = useAuth();
   const { posts, isLoading, createPost, toggleLike, deletePost } = usePosts();
+  const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
@@ -114,7 +116,17 @@ const Activity = () => {
               <span className="text-xs">Messages</span>
             </Link>
             <Link to="/notifications" className="flex flex-col items-center gap-1 text-foreground/70 hover:text-foreground transition-colors">
-              <Bell className="h-5 w-5" />
+              <div className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+              </div>
               <span className="text-xs">Notifications</span>
             </Link>
             <Link to="/profile" className="flex flex-col items-center gap-1 text-primary">

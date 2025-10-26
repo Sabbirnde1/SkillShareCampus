@@ -1,13 +1,16 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useFriends } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const Friends = () => {
   const { friends, isLoading } = useFriends();
+  const { unreadCount } = useNotifications();
 
   if (isLoading) {
     return (
@@ -59,7 +62,17 @@ const Friends = () => {
               <span className="text-xs">Messages</span>
             </Link>
             <Link to="/notifications" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Bell className="h-5 w-5" />
+              <div className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge 
+                    variant="destructive" 
+                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
+                  >
+                    {unreadCount > 9 ? '9+' : unreadCount}
+                  </Badge>
+                )}
+              </div>
               <span className="text-xs">Notifications</span>
             </Link>
             <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
