@@ -178,7 +178,11 @@ const Campus = () => {
                         value={postContent}
                         onChange={(e) => setPostContent(e.target.value)}
                         className="min-h-[150px] text-base resize-none"
+                        maxLength={5000}
                       />
+                      <div className="flex items-center justify-between text-xs text-muted-foreground">
+                        <span>{postContent.length}/5000 characters</span>
+                      </div>
                       <div className="flex items-center justify-end pt-4 border-t">
                         <Button
                           onClick={handleCreatePost}

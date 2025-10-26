@@ -186,7 +186,11 @@ const Activity = () => {
                             value={postContent}
                             onChange={(e) => setPostContent(e.target.value)}
                             className="min-h-[150px] text-base resize-none border-0 focus-visible:ring-0 p-0"
+                            maxLength={5000}
                           />
+                          <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
+                            <span>{postContent.length}/5000 characters</span>
+                          </div>
                           <div className="flex items-center justify-between pt-4 border-t">
                             <div className="flex gap-2">
                               <Button variant="ghost" size="icon" disabled>

@@ -93,7 +93,7 @@ export const PostComments = ({ postId, commentsCount }: PostCommentsProps) => {
                 <AvatarImage src={user.user_metadata?.avatar_url} />
                 <AvatarFallback>{user.user_metadata?.full_name?.[0]}</AvatarFallback>
               </Avatar>
-              <div className="flex-1 flex gap-2">
+              <div className="flex-1 flex flex-col gap-2">
                 <Textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
@@ -101,14 +101,17 @@ export const PostComments = ({ postId, commentsCount }: PostCommentsProps) => {
                   className="min-h-[60px] resize-none"
                   maxLength={500}
                 />
-                <Button
-                  type="submit"
-                  size="icon"
-                  disabled={!newComment.trim() || isSubmitting}
-                  className="flex-shrink-0"
-                >
-                  <Send className="h-4 w-4" />
-                </Button>
+                <div className="flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">{newComment.length}/500 characters</span>
+                  <Button
+                    type="submit"
+                    size="sm"
+                    disabled={!newComment.trim() || isSubmitting}
+                  >
+                    <Send className="h-4 w-4 mr-2" />
+                    Comment
+                  </Button>
+                </div>
               </div>
             </form>
           )}

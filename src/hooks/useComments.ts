@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { validateComment } from "@/lib/validation";
 
 export interface Comment {
   id: string;
@@ -86,10 +87,13 @@ export const useComments = (postId: string) => {
     mutationFn: async ({ content, parentCommentId }: { content: string; parentCommentId?: string }) => {
       if (!user) throw new Error("Not authenticated");
 
+      // Validate and sanitize input
+      const validatedContent = validateComment(content);
+
       const { error } = await supabase.from("post_comments").insert({
         post_id: postId,
         author_id: user.id,
-        content,
+        content: validatedContent,
         parent_comment_id: parentCommentId || null,
       });
 
@@ -99,8 +103,8 @@ export const useComments = (postId: string) => {
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-    onError: () => {
-      toast.error("Failed to post comment");
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to post comment");
     },
   });
 

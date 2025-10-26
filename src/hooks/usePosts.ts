@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { validatePost } from "@/lib/validation";
 
 export interface PostLike {
   id: string;
@@ -99,10 +100,13 @@ export const usePosts = () => {
     mutationFn: async ({ content, hashtags }: { content: string; hashtags: string[] }) => {
       if (!user) throw new Error("Not authenticated");
 
+      // Validate and sanitize input
+      const validated = validatePost(content, hashtags);
+
       const { error } = await supabase.from("posts").insert({
         author_id: user.id,
-        content,
-        hashtags,
+        content: validated.content,
+        hashtags: validated.hashtags,
       });
 
       if (error) throw error;
@@ -111,8 +115,8 @@ export const usePosts = () => {
       toast.success("Post created successfully");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-    onError: () => {
-      toast.error("Failed to create post");
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to create post");
     },
   });
 

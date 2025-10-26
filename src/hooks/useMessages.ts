@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useEffect } from "react";
+import { validateMessage } from "@/lib/validation";
 
 export interface Message {
   id: string;
@@ -142,10 +143,13 @@ export const useMessages = (selectedUserId?: string) => {
     mutationFn: async ({ receiverId, content }: { receiverId: string; content: string }) => {
       if (!user) throw new Error("Not authenticated");
 
+      // Validate and sanitize input
+      const validatedContent = validateMessage(content);
+
       const { error } = await supabase.from("messages").insert({
         sender_id: user.id,
         receiver_id: receiverId,
-        content,
+        content: validatedContent,
       });
 
       if (error) throw error;
@@ -154,8 +158,8 @@ export const useMessages = (selectedUserId?: string) => {
       queryClient.invalidateQueries({ queryKey: ["messages"] });
       queryClient.invalidateQueries({ queryKey: ["conversations"] });
     },
-    onError: () => {
-      toast.error("Failed to send message");
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to send message");
     },
   });
 

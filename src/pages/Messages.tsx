@@ -305,8 +305,8 @@ const Messages = () => {
                   </ScrollArea>
 
                   {/* Message Input */}
-                  <div className="p-4 border-t bg-white">
-                    <div className="flex items-center gap-2">
+                  <div className="border-t bg-white">
+                    <div className="p-4 flex items-center gap-2">
                       <Input
                         placeholder="Type a message..."
                         value={messageText}
@@ -319,6 +319,7 @@ const Messages = () => {
                         }}
                         className="flex-1"
                         disabled={sendMessage.isPending}
+                        maxLength={2000}
                       />
                       <Button
                         size="icon"
@@ -327,6 +328,9 @@ const Messages = () => {
                       >
                         <Send className="h-4 w-4" />
                       </Button>
+                    </div>
+                    <div className="px-4 pb-2 text-xs text-muted-foreground">
+                      {messageText.length}/2000 characters
                     </div>
                   </div>
                 </>
