@@ -12,33 +12,60 @@ import { toast } from "sonner";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
-  const { profile, friendCount, isLoading, uploadAvatar } = useUserProfile(user?.id);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const { profile, friendCount, isLoading, uploadAvatar, uploadCoverImage } = useUserProfile(user?.id);
+  const avatarFileInputRef = useRef<HTMLInputElement>(null);
+  const coverFileInputRef = useRef<HTMLInputElement>(null);
+  const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
+  const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
 
-  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
-      setPreviewUrl(reader.result as string);
+      setAvatarPreviewUrl(reader.result as string);
     };
     reader.readAsDataURL(file);
 
     // Upload immediately
     try {
       await uploadAvatar.mutateAsync(file);
-      setPreviewUrl(null);
+      setAvatarPreviewUrl(null);
     } catch (error) {
-      setPreviewUrl(null);
+      setAvatarPreviewUrl(null);
+      // Error is handled in the mutation
+    }
+  };
+
+  const handleCoverFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCoverPreviewUrl(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+
+    // Upload immediately
+    try {
+      await uploadCoverImage.mutateAsync(file);
+      setCoverPreviewUrl(null);
+    } catch (error) {
+      setCoverPreviewUrl(null);
       // Error is handled in the mutation
     }
   };
 
   const handleAvatarClick = () => {
-    fileInputRef.current?.click();
+    avatarFileInputRef.current?.click();
+  };
+
+  const handleCoverClick = () => {
+    coverFileInputRef.current?.click();
   };
 
   if (isLoading) {
@@ -109,16 +136,39 @@ const Profile = () => {
                 <CardContent className="p-0">
                   {/* Cover Image */}
                   <div className="relative h-48 bg-gradient-to-r from-primary to-primary/80 rounded-t-lg overflow-hidden">
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-white text-4xl font-bold">WEB</div>
-                    </div>
-                    <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800')] bg-cover bg-center opacity-60"></div>
+                    {coverPreviewUrl || profile?.cover_image_url ? (
+                      <img 
+                        src={coverPreviewUrl || profile?.cover_image_url || ""} 
+                        alt="Cover" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <>
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="text-white text-4xl font-bold">WEB</div>
+                        </div>
+                        <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800')] bg-cover bg-center opacity-60"></div>
+                      </>
+                    )}
+                    <input
+                      ref={coverFileInputRef}
+                      type="file"
+                      accept="image/jpeg,image/jpg,image/png,image/webp"
+                      onChange={handleCoverFileChange}
+                      className="hidden"
+                    />
                     <Button 
                       size="icon" 
                       variant="secondary" 
                       className="absolute top-3 right-3 rounded-full"
+                      onClick={handleCoverClick}
+                      disabled={uploadCoverImage.isPending}
                     >
-                      <Pencil className="h-4 w-4" />
+                      {uploadCoverImage.isPending ? (
+                        <div className="h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin" />
+                      ) : (
+                        <Camera className="h-4 w-4" />
+                      )}
                     </Button>
                   </div>
 
@@ -126,16 +176,16 @@ const Profile = () => {
                   <div className="px-6 pb-6">
                     <div className="relative -mt-16 mb-4">
                       <Avatar className="h-32 w-32 border-4 border-background">
-                        <AvatarImage src={previewUrl || profile?.avatar_url || ""} />
+                        <AvatarImage src={avatarPreviewUrl || profile?.avatar_url || ""} />
                         <AvatarFallback>
                           <User className="h-16 w-16" />
                         </AvatarFallback>
                       </Avatar>
                       <input
-                        ref={fileInputRef}
+                        ref={avatarFileInputRef}
                         type="file"
                         accept="image/jpeg,image/jpg,image/png,image/webp"
-                        onChange={handleFileChange}
+                        onChange={handleAvatarFileChange}
                         className="hidden"
                       />
                       <Button 

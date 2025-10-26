@@ -152,6 +152,69 @@ export const useUserProfile = (userId: string | undefined) => {
     },
   });
 
+  const uploadCoverImage = useMutation({
+    mutationFn: async (file: File) => {
+      if (!userId) throw new Error("User ID not found");
+
+      // Validate file
+      const validTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+      if (!validTypes.includes(file.type)) {
+        throw new Error("Invalid file type. Please upload a JPG, PNG, or WebP image.");
+      }
+
+      const maxSize = 5 * 1024 * 1024; // 5MB for cover images
+      if (file.size > maxSize) {
+        throw new Error("File size exceeds 5MB limit.");
+      }
+
+      // Create file path: userId/cover.extension
+      const fileExt = file.name.split(".").pop();
+      const filePath = `${userId}/cover.${fileExt}`;
+
+      // Delete old cover if exists
+      const { data: existingFiles } = await supabase.storage
+        .from("covers")
+        .list(userId);
+
+      if (existingFiles && existingFiles.length > 0) {
+        const filesToDelete = existingFiles.map((file) => `${userId}/${file.name}`);
+        await supabase.storage.from("covers").remove(filesToDelete);
+      }
+
+      // Upload new cover
+      const { error: uploadError } = await supabase.storage
+        .from("covers")
+        .upload(filePath, file, {
+          cacheControl: "3600",
+          upsert: true,
+        });
+
+      if (uploadError) throw uploadError;
+
+      // Get public URL
+      const { data: publicUrlData } = supabase.storage
+        .from("covers")
+        .getPublicUrl(filePath);
+
+      // Update profile with new cover URL
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ cover_image_url: publicUrlData.publicUrl })
+        .eq("id", userId);
+
+      if (updateError) throw updateError;
+
+      return publicUrlData.publicUrl;
+    },
+    onSuccess: () => {
+      toast.success("Cover image updated successfully");
+      queryClient.invalidateQueries({ queryKey: ["user-profile", userId] });
+    },
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to upload cover image");
+    },
+  });
+
   return {
     profile,
     education: education || [],
@@ -160,5 +223,6 @@ export const useUserProfile = (userId: string | undefined) => {
     friendCount: friendCount || 0,
     isLoading: profileLoading || educationLoading || skillsLoading || experienceLoading,
     uploadAvatar,
+    uploadCoverImage,
   };
 };
