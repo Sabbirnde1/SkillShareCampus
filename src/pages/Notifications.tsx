@@ -1,23 +1,87 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { 
+  Home, 
+  Users, 
+  BookOpen, 
+  MessageSquare, 
+  Bell, 
+  User, 
+  Search,
+  UserPlus,
+  MessageCircle,
+  ThumbsUp,
+  CheckCircle2,
+  X
+} from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
 
 const Notifications = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const navigate = useNavigate();
+  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
-  const newsItems = [
-    { title: "Campus News", subtitle: "Top news" },
-    { title: "Appoint new VC", time: "1 days ago" },
-    { title: "Appoint new Department Head of CSE", time: "15 days ago" },
-    { title: "Lunch Micro-csential Courses", time: "5 days ago" }
-  ];
+  const getNotificationIcon = (type: string) => {
+    switch (type) {
+      case "friend_request":
+        return <UserPlus className="h-5 w-5" />;
+      case "friend_accepted":
+        return <CheckCircle2 className="h-5 w-5" />;
+      case "new_message":
+        return <MessageCircle className="h-5 w-5" />;
+      case "post_like":
+        return <ThumbsUp className="h-5 w-5" />;
+      default:
+        return <Bell className="h-5 w-5" />;
+    }
+  };
+
+  const getNotificationColor = (type: string) => {
+    switch (type) {
+      case "friend_request":
+        return "bg-blue-500";
+      case "friend_accepted":
+        return "bg-green-500";
+      case "new_message":
+        return "bg-primary";
+      case "post_like":
+        return "bg-red-500";
+      default:
+        return "bg-gray-500";
+    }
+  };
+
+  const getNotificationAction = (type: string) => {
+    switch (type) {
+      case "friend_request":
+        return { label: "View Requests", path: "/pending-requests" };
+      case "new_message":
+        return { label: "View Messages", path: "/messages" };
+      case "friend_accepted":
+        return { label: "View Friends", path: "/friends" };
+      default:
+        return null;
+    }
+  };
+
+  const handleNotificationClick = (notification: any) => {
+    if (!notification.is_read) {
+      markAsRead.mutate(notification.id);
+    }
+    
+    const action = getNotificationAction(notification.type);
+    if (action) {
+      navigate(action.path);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f0f6ff]">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
       <header className="bg-white border-b px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -28,13 +92,16 @@ const Notifications = () => {
           </Link>
           
           <div className="flex-1 max-w-md mx-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search" 
-                className="pl-10 bg-gray-50"
-              />
-            </div>
+            <Link to="/search">
+              <div className="relative cursor-pointer">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search users..." 
+                  className="pl-10 bg-gray-50"
+                  readOnly
+                />
+              </div>
+            </Link>
           </div>
 
           <nav className="flex items-center gap-6">
@@ -46,7 +113,7 @@ const Notifications = () => {
               <Users className="h-5 w-5" />
               <span className="text-xs">Requests</span>
             </Link>
-            <Link to="/courses" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            <Link to="/campus" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
               <BookOpen className="h-5 w-5" />
               <span className="text-xs">Courses</span>
             </Link>
@@ -54,8 +121,13 @@ const Notifications = () => {
               <MessageSquare className="h-5 w-5" />
               <span className="text-xs">Messages</span>
             </Link>
-            <Link to="/notifications" className="flex flex-col items-center gap-1 text-primary">
+            <Link to="/notifications" className="flex flex-col items-center gap-1 text-primary relative">
               <Bell className="h-5 w-5" />
+              {unreadCount > 0 && (
+                <Badge className="absolute -top-1 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs">
+                  {unreadCount}
+                </Badge>
+              )}
               <span className="text-xs font-medium">Notifications</span>
             </Link>
             <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
@@ -68,123 +140,107 @@ const Notifications = () => {
 
       {/* Main Content */}
       <main className="flex-1 px-6 py-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6">
-          {/* Left Sidebar - Course Card */}
-          <div className="col-span-3">
-            <Card className="overflow-hidden">
-              <div className="relative h-24 bg-gradient-to-r from-blue-600 to-blue-800">
-                <div className="absolute inset-0 opacity-30" 
-                  style={{
-                    backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
-                  }}
-                />
-                <div className="absolute top-2 left-2">
-                  <span className="text-white font-semibold text-sm">WEB</span>
-                  <br />
-                  <span className="text-white font-semibold text-sm">Development</span>
-                </div>
-              </div>
-              
-              <div className="p-4 relative">
-                <div className="absolute -top-8 left-4">
-                  <div className="w-16 h-16 rounded-full bg-gray-900 border-4 border-white flex items-center justify-center">
-                    <User className="h-8 w-8 text-white" />
-                  </div>
-                </div>
-                
-                <div className="mt-10">
-                  <h3 className="font-semibold text-foreground mb-1">Md. Didarul Islam</h3>
-                  <p className="text-xs text-muted-foreground mb-1">Undergraduate CSE Student | Entrepreneurship | B2C E-commerce</p>
-                  <p className="text-xs text-muted-foreground mb-1">Brilla, Savar, Dhaka</p>
-                  <p className="text-xs text-muted-foreground">Empower NetiZen Ltd</p>
-                </div>
-              </div>
-            </Card>
-          </div>
-
-          {/* Center - Notifications */}
-          <div className="col-span-6">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-semibold">
-                Notifications {unreadCount > 0 && `(${unreadCount} unread)`}
-              </h2>
+        <div className="max-w-4xl mx-auto">
+          {/* Header */}
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Notifications</h2>
               {unreadCount > 0 && (
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => markAllAsRead.mutate()}
-                  disabled={markAllAsRead.isPending}
-                >
-                  Mark all as read
-                </Button>
+                <p className="text-sm text-muted-foreground mt-1">
+                  You have {unreadCount} unread notification{unreadCount !== 1 ? 's' : ''}
+                </p>
               )}
             </div>
-            <div className="space-y-4">
-              {notifications.length === 0 ? (
-                <Card className="p-8 bg-white text-center">
-                  <p className="text-muted-foreground">No notifications yet</p>
-                </Card>
-              ) : (
-                notifications.map((notification) => (
+            {unreadCount > 0 && (
+              <Button
+                variant="outline"
+                onClick={() => markAllAsRead.mutate()}
+                disabled={markAllAsRead.isPending}
+              >
+                <CheckCircle2 className="h-4 w-4 mr-2" />
+                Mark all as read
+              </Button>
+            )}
+          </div>
+
+          {/* Notifications List */}
+          <div className="space-y-3">
+            {notifications.length === 0 ? (
+              <Card className="p-12 text-center">
+                <Bell className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+                <h3 className="text-lg font-semibold text-foreground mb-2">
+                  No notifications yet
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  When you get notifications, they'll show up here
+                </p>
+              </Card>
+            ) : (
+              notifications.map((notification) => {
+                const action = getNotificationAction(notification.type);
+                
+                return (
                   <Card
                     key={notification.id}
-                    className={`p-4 bg-white cursor-pointer transition-colors ${
-                      !notification.is_read ? "border-l-4 border-l-primary" : ""
+                    className={`transition-all hover:shadow-md ${
+                      !notification.is_read ? "bg-accent border-l-4 border-l-primary" : ""
                     }`}
-                    onClick={() => !notification.is_read && markAsRead.mutate(notification.id)}
                   >
-                    <div className="flex items-start gap-4">
-                      <div className="w-12 h-12 rounded-full bg-gray-900 flex items-center justify-center flex-shrink-0">
-                        <Bell className="h-6 w-6 text-white" />
-                      </div>
-                      <div className="flex-1">
-                        <p className={`text-sm ${!notification.is_read ? "font-semibold" : ""}`}>
-                          {notification.content}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-                        </p>
+                    <div className="p-4">
+                      <div className="flex items-start gap-4">
+                        <div
+                          className={`w-12 h-12 rounded-full ${getNotificationColor(
+                            notification.type
+                          )} flex items-center justify-center flex-shrink-0 text-white`}
+                        >
+                          {getNotificationIcon(notification.type)}
+                        </div>
+                        
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex-1">
+                              <p
+                                className={`text-sm ${
+                                  !notification.is_read ? "font-semibold" : ""
+                                }`}
+                              >
+                                {notification.content}
+                              </p>
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {formatDistanceToNow(new Date(notification.created_at), {
+                                  addSuffix: true,
+                                })}
+                              </p>
+                            </div>
+                            
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 flex-shrink-0"
+                              onClick={() => deleteNotification.mutate(notification.id)}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                          
+                          {action && (
+                            <div className="mt-3">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                onClick={() => handleNotificationClick(notification)}
+                              >
+                                {action.label}
+                              </Button>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </Card>
-                ))
-              )}
-            </div>
-          </div>
-
-          {/* Right Sidebar - Campus News & Ad */}
-          <div className="col-span-3">
-            <Card className="p-4 mb-4">
-              <h3 className="font-semibold text-foreground mb-1">{newsItems[0].title}</h3>
-              <p className="text-xs text-muted-foreground mb-4">{newsItems[0].subtitle}</p>
-              {newsItems.slice(1).map((news, index) => (
-                <div key={index} className="mb-3 last:mb-0">
-                  <p className="text-sm text-foreground font-medium">{news.title}</p>
-                  <p className="text-xs text-muted-foreground">{news.time}</p>
-                </div>
-              ))}
-            </Card>
-
-            {/* Advertisement */}
-            <Card className="p-0 overflow-hidden">
-              <div className="bg-gradient-to-br from-amber-100 to-amber-200 p-6 text-center">
-                <div className="mb-4">
-                  <BookOpen className="h-16 w-16 mx-auto text-amber-800" />
-                </div>
-                <h4 className="font-bold text-2xl text-amber-900 mb-2">MINDSET</h4>
-                <p className="text-sm text-amber-800 mb-1">Visit: www.nijgram.com</p>
-                <p className="text-sm text-amber-800 mb-4">Mail: nijgramrc@gmail.com</p>
-                <div className="bg-white rounded-full w-12 h-12 mx-auto flex items-center justify-center mb-3">
-                  <BookOpen className="h-6 w-6 text-amber-800" />
-                </div>
-                <p className="text-xs font-semibold text-amber-900 mb-2">Nijgram</p>
-                <p className="text-xs text-amber-800 mb-4">Old Books | Best Value | New Readers</p>
-                <p className="text-xs text-amber-800 mb-4">যে কোন প্রকৌণিক বইয়ের জন্য, সেরা মানের বইয়ের সংগ্রহ,<br />Nijgram'র সংগ্রহের জন্য আপনার কন্যাশ করুন</p>
-                <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">
-                  Explore
-                </Button>
-              </div>
-            </Card>
+                );
+              })
+            )}
           </div>
         </div>
       </main>

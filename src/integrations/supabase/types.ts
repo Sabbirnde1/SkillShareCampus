@@ -240,6 +240,7 @@ export type Database = {
           created_at: string
           id: string
           is_read: boolean
+          metadata: Json | null
           type: string
           user_id: string
         }
@@ -248,6 +249,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean
+          metadata?: Json | null
           type: string
           user_id: string
         }
@@ -256,6 +258,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_read?: boolean
+          metadata?: Json | null
           type?: string
           user_id?: string
         }
@@ -380,7 +383,16 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_notification: {
+        Args: {
+          p_content: string
+          p_related_id?: string
+          p_related_user_id?: string
+          p_type: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       [_ in never]: never

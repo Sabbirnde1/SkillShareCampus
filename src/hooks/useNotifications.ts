@@ -10,6 +10,7 @@ export interface Notification {
   content: string;
   is_read: boolean;
   created_at: string;
+  metadata?: Record<string, any>;
 }
 
 export const useNotifications = () => {
@@ -25,7 +26,8 @@ export const useNotifications = () => {
         .from("notifications")
         .select("*")
         .eq("user_id", user.id)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: false })
+        .limit(50);
 
       if (error) throw error;
       return data as Notification[];
@@ -35,16 +37,16 @@ export const useNotifications = () => {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Real-time subscription
+  // Real-time subscription for all notification events
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
-      .channel("notifications")
+      .channel("notifications-channel")
       .on(
         "postgres_changes",
         {
-          event: "INSERT",
+          event: "*",
           schema: "public",
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
@@ -91,11 +93,26 @@ export const useNotifications = () => {
     },
   });
 
+  const deleteNotification = useMutation({
+    mutationFn: async (notificationId: string) => {
+      const { error } = await supabase
+        .from("notifications")
+        .delete()
+        .eq("id", notificationId);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] });
+    },
+  });
+
   return {
     notifications,
     unreadCount,
     isLoading,
     markAsRead,
     markAllAsRead,
+    deleteNotification,
   };
 };
