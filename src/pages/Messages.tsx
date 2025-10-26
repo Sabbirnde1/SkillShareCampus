@@ -11,6 +11,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { useNotifications } from "@/hooks/useNotifications";
+import { usePresence } from "@/hooks/usePresence";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -22,6 +23,8 @@ const Messages = () => {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { conversations, messages, sendMessage, markConversationAsRead } = useMessages(selectedUserId);
   const { unreadCount } = useNotifications();
+  const { isUserOnline, isUserTyping, updateTypingStatus } = usePresence("messages-presence");
+  const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
 
   const selectedConversation = conversations.find((c) => c.user_id === selectedUserId);
 
@@ -45,12 +48,36 @@ const Messages = () => {
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedUserId) return;
     
+    // Stop typing indicator
+    updateTypingStatus(false);
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+      setTypingTimeout(null);
+    }
+    
     sendMessage.mutate(
       { receiverId: selectedUserId, content: messageText },
       {
         onSuccess: () => setMessageText(""),
       }
     );
+  };
+
+  const handleTyping = () => {
+    // Start typing indicator
+    updateTypingStatus(true);
+
+    // Clear existing timeout
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
+    }
+
+    // Stop typing after 2 seconds of inactivity
+    const timeout = setTimeout(() => {
+      updateTypingStatus(false);
+    }, 2000);
+
+    setTypingTimeout(timeout);
   };
 
   const formatMessageTime = (dateString: string) => {
@@ -169,6 +196,9 @@ const Messages = () => {
                               <User className="h-6 w-6" />
                             </AvatarFallback>
                           </Avatar>
+                          {isUserOnline(conversation.user_id) && (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+                          )}
                           {conversation.unread_count > 0 && (
                             <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-semibold">
                               {conversation.unread_count}
@@ -215,17 +245,24 @@ const Messages = () => {
                   <div className="p-4 border-b bg-white">
                     <Link to={`/user/${selectedUserId}`}>
                       <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
-                        <Avatar className="w-12 h-12">
-                          <AvatarImage src={selectedConversation?.avatar_url || ""} />
-                          <AvatarFallback>
-                            <User className="h-6 w-6" />
-                          </AvatarFallback>
-                        </Avatar>
+                        <div className="relative">
+                          <Avatar className="w-12 h-12">
+                            <AvatarImage src={selectedConversation?.avatar_url || ""} />
+                            <AvatarFallback>
+                              <User className="h-6 w-6" />
+                            </AvatarFallback>
+                          </Avatar>
+                          {isUserOnline(selectedUserId) && (
+                            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 border-2 border-white rounded-full" />
+                          )}
+                        </div>
                         <div>
                           <h3 className="font-semibold text-foreground">
                             {selectedConversation?.full_name || "Unknown User"}
                           </h3>
-                          <p className="text-xs text-muted-foreground">Click to view profile</p>
+                          <p className="text-xs text-muted-foreground">
+                            {isUserOnline(selectedUserId) ? "Online" : "Click to view profile"}
+                          </p>
                         </div>
                       </div>
                     </Link>
@@ -233,6 +270,23 @@ const Messages = () => {
 
                   {/* Messages */}
                   <ScrollArea className="flex-1 p-4">
+                    {isUserTyping(selectedUserId) && (
+                      <div className="mb-4 flex items-center gap-2">
+                        <Avatar className="w-8 h-8">
+                          <AvatarImage src={selectedConversation?.avatar_url || ""} />
+                          <AvatarFallback>
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="bg-accent px-4 py-2 rounded-2xl rounded-bl-sm">
+                          <div className="flex gap-1">
+                            <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "0ms" }} />
+                            <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "150ms" }} />
+                            <span className="w-2 h-2 bg-muted-foreground rounded-full animate-bounce" style={{ animationDelay: "300ms" }} />
+                          </div>
+                        </div>
+                      </div>
+                    )}
                     {messages.length === 0 ? (
                       <div className="flex items-center justify-center h-full">
                         <div className="text-center">
@@ -310,7 +364,10 @@ const Messages = () => {
                       <Input
                         placeholder="Type a message..."
                         value={messageText}
-                        onChange={(e) => setMessageText(e.target.value)}
+                        onChange={(e) => {
+                          setMessageText(e.target.value);
+                          handleTyping();
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === "Enter" && !e.shiftKey) {
                             e.preventDefault();

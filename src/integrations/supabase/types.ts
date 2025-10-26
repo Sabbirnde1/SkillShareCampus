@@ -396,6 +396,7 @@ export type Database = {
           created_at: string
           full_name: string | null
           id: string
+          last_seen_at: string | null
           location: string | null
           updated_at: string
         }
@@ -407,6 +408,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id: string
+          last_seen_at?: string | null
           location?: string | null
           updated_at?: string
         }
@@ -418,6 +420,7 @@ export type Database = {
           created_at?: string
           full_name?: string | null
           id?: string
+          last_seen_at?: string | null
           location?: string | null
           updated_at?: string
         }
