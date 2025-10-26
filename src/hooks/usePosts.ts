@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export interface Post {
   id: string;
@@ -49,6 +50,28 @@ export const usePosts = () => {
       return data as Post[];
     },
   });
+
+  // Real-time subscription for new posts
+  useEffect(() => {
+    const channel = supabase
+      .channel("posts-channel")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "posts",
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["posts"] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const createPost = useMutation({
     mutationFn: async ({ content, hashtags }: { content: string; hashtags: string[] }) => {
