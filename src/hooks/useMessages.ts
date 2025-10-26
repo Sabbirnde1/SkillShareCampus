@@ -12,6 +12,8 @@ export interface Message {
   content: string;
   is_read: boolean;
   created_at: string;
+  attachment_url?: string;
+  attachment_type?: string;
   sender?: {
     id: string;
     full_name: string;
@@ -102,6 +104,8 @@ export const useMessages = (selectedUserId?: string) => {
           content,
           is_read,
           created_at,
+          attachment_url,
+          attachment_type,
           sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
         `)
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedUserId}),and(sender_id.eq.${selectedUserId},receiver_id.eq.${user.id})`)
@@ -140,16 +144,52 @@ export const useMessages = (selectedUserId?: string) => {
   }, [user, selectedUserId, queryClient]);
 
   const sendMessage = useMutation({
-    mutationFn: async ({ receiverId, content }: { receiverId: string; content: string }) => {
+    mutationFn: async ({ 
+      receiverId, 
+      content, 
+      file 
+    }: { 
+      receiverId: string; 
+      content: string;
+      file?: File;
+    }) => {
       if (!user) throw new Error("Not authenticated");
 
       // Validate and sanitize input
       const validatedContent = validateMessage(content);
 
+      let attachmentUrl: string | undefined;
+      let attachmentType: string | undefined;
+
+      // Upload file if provided
+      if (file) {
+        if (file.size > 5 * 1024 * 1024) {
+          throw new Error("File size must be less than 5MB");
+        }
+
+        const fileExt = file.name.split('.').pop();
+        const fileName = `${user.id}/${receiverId}/${Date.now()}.${fileExt}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("message-attachments")
+          .upload(fileName, file);
+
+        if (uploadError) throw uploadError;
+
+        const { data: urlData } = supabase.storage
+          .from("message-attachments")
+          .getPublicUrl(fileName);
+
+        attachmentUrl = urlData.publicUrl;
+        attachmentType = file.type;
+      }
+
       const { error } = await supabase.from("messages").insert({
         sender_id: user.id,
         receiver_id: receiverId,
         content: validatedContent,
+        attachment_url: attachmentUrl,
+        attachment_type: attachmentType,
       });
 
       if (error) throw error;

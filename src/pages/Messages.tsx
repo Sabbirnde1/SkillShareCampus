@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send, Paperclip, X, FileText, Download } from "lucide-react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useMessages } from "@/hooks/useMessages";
@@ -12,6 +12,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePresence } from "@/hooks/usePresence";
+import { toast } from "sonner";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -20,6 +21,8 @@ const Messages = () => {
     searchParams.get("user") || undefined
   );
   const [messageText, setMessageText] = useState("");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const { conversations, messages, sendMessage, markConversationAsRead } = useMessages(selectedUserId);
   const { unreadCount } = useNotifications();
@@ -46,7 +49,7 @@ const Messages = () => {
   }, [selectedUserId, messages.length]);
 
   const handleSendMessage = () => {
-    if (!messageText.trim() || !selectedUserId) return;
+    if ((!messageText.trim() && !selectedFile) || !selectedUserId) return;
     
     // Stop typing indicator
     updateTypingStatus(false);
@@ -56,9 +59,16 @@ const Messages = () => {
     }
     
     sendMessage.mutate(
-      { receiverId: selectedUserId, content: messageText },
+      { 
+        receiverId: selectedUserId, 
+        content: messageText || (selectedFile ? "Sent an attachment" : ""),
+        file: selectedFile || undefined
+      },
       {
-        onSuccess: () => setMessageText(""),
+        onSuccess: () => {
+          setMessageText("");
+          setSelectedFile(null);
+        },
       }
     );
   };
@@ -78,6 +88,65 @@ const Messages = () => {
     }, 2000);
 
     setTypingTimeout(timeout);
+  };
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    const allowedTypes = [
+      'image/jpeg', 'image/png', 'image/gif', 'image/webp',
+      'application/pdf', 
+      'application/msword', 
+      'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'application/vnd.ms-excel',
+      'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    ];
+
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("File type not supported. Please upload images, PDFs, or documents.");
+      return;
+    }
+
+    setSelectedFile(file);
+  };
+
+  const renderAttachment = (message: any) => {
+    if (!message.attachment_url) return null;
+
+    const isImage = message.attachment_type?.startsWith('image/');
+    const isPdf = message.attachment_type === 'application/pdf';
+
+    return (
+      <div className="mt-2">
+        {isImage ? (
+          <img 
+            src={message.attachment_url} 
+            alt="Attachment" 
+            className="max-w-xs rounded-lg cursor-pointer hover:opacity-90"
+            onClick={() => window.open(message.attachment_url, '_blank')}
+          />
+        ) : (
+          <a
+            href={message.attachment_url}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors"
+          >
+            <FileText className="h-5 w-5" />
+            <span className="text-sm">
+              {isPdf ? 'PDF Document' : 'Document'}
+            </span>
+            <Download className="h-4 w-4 ml-auto" />
+          </a>
+        )}
+      </div>
+    );
   };
 
   const formatMessageTime = (dateString: string) => {
@@ -330,7 +399,7 @@ const Messages = () => {
                                         {message.sender?.full_name}
                                       </p>
                                     )}
-                                    <div
+                                     <div
                                       className={`p-3 rounded-2xl ${
                                         isSent
                                           ? "bg-primary text-primary-foreground rounded-br-sm"
@@ -338,6 +407,7 @@ const Messages = () => {
                                       }`}
                                     >
                                       <p className="text-sm break-words">{message.content}</p>
+                                      {renderAttachment(message)}
                                     </div>
                                     <div className={`flex items-center gap-1 mt-1 px-1 ${isSent ? "justify-end" : "justify-start"}`}>
                                       <p className="text-xs text-muted-foreground">
@@ -360,7 +430,52 @@ const Messages = () => {
 
                   {/* Message Input */}
                   <div className="border-t bg-white">
+                    {selectedFile && (
+                      <div className="p-3 border-b bg-accent/50">
+                        <div className="flex items-center gap-2">
+                          {selectedFile.type.startsWith('image/') ? (
+                            <img 
+                              src={URL.createObjectURL(selectedFile)} 
+                              alt="Preview" 
+                              className="w-16 h-16 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-16 h-16 bg-accent rounded flex items-center justify-center">
+                              <FileText className="h-8 w-8" />
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{selectedFile.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(selectedFile.size / 1024).toFixed(1)} KB
+                            </p>
+                          </div>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => setSelectedFile(null)}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                     <div className="p-4 flex items-center gap-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        className="hidden"
+                        accept="image/*,.pdf,.doc,.docx,.xls,.xlsx"
+                        onChange={handleFileSelect}
+                      />
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={sendMessage.isPending}
+                      >
+                        <Paperclip className="h-4 w-4" />
+                      </Button>
                       <Input
                         placeholder="Type a message..."
                         value={messageText}
@@ -381,13 +496,13 @@ const Messages = () => {
                       <Button
                         size="icon"
                         onClick={handleSendMessage}
-                        disabled={!messageText.trim() || sendMessage.isPending}
+                        disabled={(!messageText.trim() && !selectedFile) || sendMessage.isPending}
                       >
                         <Send className="h-4 w-4" />
                       </Button>
                     </div>
                     <div className="px-4 pb-2 text-xs text-muted-foreground">
-                      {messageText.length}/2000 characters
+                      {messageText.length}/2000 characters {selectedFile && `• ${selectedFile.name}`}
                     </div>
                   </div>
                 </>
