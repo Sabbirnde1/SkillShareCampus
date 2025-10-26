@@ -19,6 +19,7 @@ import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
 import Activity from "./pages/Activity";
 import UserProfile from "./pages/UserProfile";
+import HashtagPage from "./pages/HashtagPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -45,6 +46,7 @@ const App = () => (
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/activity" element={<ProtectedRoute><Activity /></ProtectedRoute>} />
             <Route path="/user/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
+            <Route path="/hashtag/:tag" element={<ProtectedRoute><HashtagPage /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

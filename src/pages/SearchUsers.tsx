@@ -39,7 +39,8 @@ const SearchUsers = () => {
     } else if (result.type === "post") {
       navigate(`/activity#post-${result.id}`);
     } else if (result.type === "hashtag") {
-      navigate(`/activity?hashtag=${encodeURIComponent(result.metadata.tag)}`);
+      const tag = result.metadata.tag.replace(/^#/, '');
+      navigate(`/hashtag/${tag}`);
     }
   };
 

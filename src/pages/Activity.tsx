@@ -45,6 +45,7 @@ import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { SharePostDialog } from "@/components/SharePostDialog";
 import { FriendSuggestions } from "@/components/FriendSuggestions";
+import { TrendingHashtags } from "@/components/TrendingHashtags";
 import { EditPostDialog } from "@/components/EditPostDialog";
 
 const Activity = () => {
@@ -400,14 +401,17 @@ const Activity = () => {
                           {post.hashtags && post.hashtags.length > 0 && (
                             <div className="flex flex-wrap gap-2">
                               {post.hashtags.map((tag, index) => (
-                                <Badge
+                                <Link
                                   key={index}
-                                  variant="secondary"
-                                  className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
-                                  onClick={() => setSelectedHashtag(tag)}
+                                  to={`/hashtag/${tag.replace(/^#/, '')}`}
                                 >
-                                  {tag}
-                                </Badge>
+                                  <Badge
+                                    variant="secondary"
+                                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                                  >
+                                    {tag}
+                                  </Badge>
+                                </Link>
                               ))}
                             </div>
                           )}
@@ -457,6 +461,9 @@ const Activity = () => {
 
             {/* Sidebar */}
             <div className="space-y-6">
+              {/* Trending Hashtags */}
+              <TrendingHashtags />
+
               {/* Friend Suggestions */}
               <FriendSuggestions />
 

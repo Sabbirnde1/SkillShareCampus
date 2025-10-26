@@ -30,6 +30,7 @@ import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { SharePostDialog } from "@/components/SharePostDialog";
 import { FriendSuggestions } from "@/components/FriendSuggestions";
+import { TrendingHashtags } from "@/components/TrendingHashtags";
 
 const Campus = () => {
   const { user } = useAuth();
@@ -313,7 +314,21 @@ const Campus = () => {
                     </div>
                     
                     <p className="text-sm mb-3 whitespace-pre-wrap">
-                      {post.content}
+                      {post.content.split(/(\s+)/).map((word, i) => {
+                        if (word.match(/^#\w+/)) {
+                          const tag = word.replace(/^#/, '');
+                          return (
+                            <Link 
+                              key={i}
+                              to={`/hashtag/${tag}`}
+                              className="text-[hsl(var(--link-blue))] hover:underline font-medium"
+                            >
+                              {word}
+                            </Link>
+                          );
+                        }
+                        return word;
+                      })}
                     </p>
                     
                     <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
@@ -364,7 +379,11 @@ const Campus = () => {
 
           {/* Right Sidebar */}
           <aside className="col-span-3">
-            <FriendSuggestions />
+            <TrendingHashtags />
+
+            <div className="mt-4">
+              <FriendSuggestions />
+            </div>
 
             <Card className="p-4 mt-4">
               <h3 className="font-semibold text-sm mb-4">Campus News</h3>
