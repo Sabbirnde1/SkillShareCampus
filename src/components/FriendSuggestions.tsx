@@ -89,8 +89,12 @@ export const FriendSuggestions = () => {
                 onClick={() => sendFriendRequest.mutate(suggestion.id)}
                 disabled={sendFriendRequest.isPending}
               >
-                <UserPlus className="h-3 w-3 mr-1" />
-                Connect
+                {sendFriendRequest.isPending ? (
+                  <div className="h-3 w-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <UserPlus className="h-3 w-3 mr-1" />
+                )}
+                {sendFriendRequest.isPending ? "Connecting..." : "Connect"}
               </Button>
             </div>
           </div>

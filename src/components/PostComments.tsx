@@ -74,10 +74,15 @@ export const PostComments = ({ postId, commentsCount }: PostCommentsProps) => {
                         variant="ghost"
                         size="sm"
                         onClick={() => deleteComment.mutate(comment.id)}
+                        disabled={deleteComment.isPending}
                         className="h-auto py-1 px-2 text-xs text-muted-foreground hover:text-destructive mt-1"
                       >
-                        <Trash2 className="h-3 w-3 mr-1" />
-                        Delete
+                        {deleteComment.isPending ? (
+                          <div className="h-3 w-3 mr-1 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <Trash2 className="h-3 w-3 mr-1" />
+                        )}
+                        {deleteComment.isPending ? "Deleting..." : "Delete"}
                       </Button>
                     )}
                   </div>
@@ -108,8 +113,12 @@ export const PostComments = ({ postId, commentsCount }: PostCommentsProps) => {
                     size="sm"
                     disabled={!newComment.trim() || isSubmitting}
                   >
-                    <Send className="h-4 w-4 mr-2" />
-                    Comment
+                    {isSubmitting ? (
+                      <div className="h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                    ) : (
+                      <Send className="h-4 w-4 mr-2" />
+                    )}
+                    {isSubmitting ? "Posting..." : "Comment"}
                   </Button>
                 </div>
               </div>

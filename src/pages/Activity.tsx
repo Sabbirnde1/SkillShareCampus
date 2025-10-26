@@ -381,13 +381,14 @@ const Activity = () => {
                                         Edit post
                                       </DropdownMenuItem>
                                     )}
-                                    <DropdownMenuItem
-                                      onClick={() => deletePost.mutate(post.id)}
-                                      className="text-destructive"
-                                    >
-                                      <Trash2 className="h-4 w-4 mr-2" />
-                                      Delete post
-                                    </DropdownMenuItem>
+                                     <DropdownMenuItem
+                                       onClick={() => deletePost.mutate(post.id)}
+                                       className="text-destructive"
+                                       disabled={deletePost.isPending}
+                                     >
+                                       <Trash2 className="h-4 w-4 mr-2" />
+                                       {deletePost.isPending ? "Deleting..." : "Delete post"}
+                                     </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
                               )}
@@ -425,13 +426,18 @@ const Activity = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
+                            disabled={toggleLike.isPending}
                             className={`gap-2 hover:text-primary ${
                               post.user_has_liked 
                                 ? 'text-primary font-semibold' 
                                 : 'text-muted-foreground'
                             }`}
                           >
-                            <ThumbsUp className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
+                            {toggleLike.isPending ? (
+                              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                            ) : (
+                              <ThumbsUp className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
+                            )}
                             <span className="text-sm font-medium">
                               {post.likes_count > 0 ? post.likes_count : "Like"}
                             </span>

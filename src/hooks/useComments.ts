@@ -100,6 +100,7 @@ export const useComments = (postId: string) => {
       if (error) throw error;
     },
     onSuccess: () => {
+      toast.success("Comment posted successfully");
       queryClient.invalidateQueries({ queryKey: ["comments", postId] });
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },

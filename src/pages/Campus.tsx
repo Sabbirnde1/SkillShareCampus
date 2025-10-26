@@ -292,13 +292,14 @@ const Campus = () => {
                                     Edit post
                                   </DropdownMenuItem>
                                 )}
-                                <DropdownMenuItem
-                                  onClick={() => deletePost.mutate(post.id)}
-                                  className="text-destructive"
-                                >
-                                  <Trash2 className="h-4 w-4 mr-2" />
-                                  Delete post
-                                </DropdownMenuItem>
+                                 <DropdownMenuItem
+                                   onClick={() => deletePost.mutate(post.id)}
+                                   className="text-destructive"
+                                   disabled={deletePost.isPending}
+                                 >
+                                   <Trash2 className="h-4 w-4 mr-2" />
+                                   {deletePost.isPending ? "Deleting..." : "Delete post"}
+                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
                           )}
@@ -342,13 +343,18 @@ const Campus = () => {
                     <div className="flex items-center justify-around mb-3">
                       <button 
                         onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
-                        className={`flex items-center gap-2 hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors ${
+                        disabled={toggleLike.isPending}
+                        className={`flex items-center gap-2 hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors disabled:opacity-50 ${
                           post.user_has_liked 
                             ? 'text-[hsl(var(--link-blue))] font-semibold' 
                             : 'text-muted-foreground'
                         }`}
                       >
-                        <ThumbsUp className={`w-5 h-5 ${post.user_has_liked ? 'fill-current' : ''}`} />
+                        {toggleLike.isPending ? (
+                          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                        ) : (
+                          <ThumbsUp className={`w-5 h-5 ${post.user_has_liked ? 'fill-current' : ''}`} />
+                        )}
                         <span className="text-sm font-medium">{post.user_has_liked ? 'Liked' : 'Like'}</span>
                       </button>
                       <button 

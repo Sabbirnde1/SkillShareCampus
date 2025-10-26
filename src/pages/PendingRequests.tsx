@@ -114,14 +114,20 @@ const PendingRequests = () => {
                       onClick={() => rejectFriendRequest.mutate(request.id)}
                       disabled={rejectFriendRequest.isPending}
                     >
-                      Reject
+                      {rejectFriendRequest.isPending ? (
+                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                      ) : null}
+                      {rejectFriendRequest.isPending ? "Rejecting..." : "Reject"}
                     </Button>
                     <Button 
                       className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
                       onClick={() => acceptFriendRequest.mutate(request.id)}
                       disabled={acceptFriendRequest.isPending}
                     >
-                      Accept
+                      {acceptFriendRequest.isPending ? (
+                        <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin mr-2" />
+                      ) : null}
+                      {acceptFriendRequest.isPending ? "Accepting..." : "Accept"}
                     </Button>
                   </div>
                 </Card>

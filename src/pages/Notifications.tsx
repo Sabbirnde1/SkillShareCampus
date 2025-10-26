@@ -21,10 +21,11 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import { useNotifications } from "@/hooks/useNotifications";
 import { formatDistanceToNow } from "date-fns";
+import { NotificationsSkeleton } from "@/components/NotificationsSkeleton";
 
 const Notifications = () => {
   const navigate = useNavigate();
-  const { notifications, unreadCount, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
+  const { notifications, unreadCount, isLoading, markAsRead, markAllAsRead, deleteNotification } = useNotifications();
 
   const getNotificationIcon = (type: string) => {
     switch (type) {
@@ -165,7 +166,9 @@ const Notifications = () => {
 
           {/* Notifications List */}
           <div className="space-y-3">
-            {notifications.length === 0 ? (
+            {isLoading ? (
+              <NotificationsSkeleton />
+            ) : notifications.length === 0 ? (
               <Card className="p-12 text-center">
                 <Bell className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
                 <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -218,8 +221,13 @@ const Notifications = () => {
                               size="icon"
                               className="h-8 w-8 flex-shrink-0"
                               onClick={() => deleteNotification.mutate(notification.id)}
+                              disabled={deleteNotification.isPending}
                             >
-                              <X className="h-4 w-4" />
+                              {deleteNotification.isPending ? (
+                                <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <X className="h-4 w-4" />
+                              )}
                             </Button>
                           </div>
                           

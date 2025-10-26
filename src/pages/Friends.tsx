@@ -8,6 +8,7 @@ import { useFriends } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useNotifications } from "@/hooks/useNotifications";
 import OnlineStatus from "@/components/OnlineStatus";
+import { FriendsSkeleton } from "@/components/FriendsSkeleton";
 
 const Friends = () => {
   const { friends, isLoading } = useFriends();
@@ -15,8 +16,24 @@ const Friends = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading friends...</p>
+      <div className="min-h-screen flex flex-col bg-background">
+        <header className="bg-white border-b px-6 py-3">
+          <div className="max-w-7xl mx-auto flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-2">
+              <h1 className="text-xl font-semibold text-primary">
+                SkillShare<span className="text-sm align-top">Campus</span>
+              </h1>
+            </Link>
+          </div>
+        </header>
+        <main className="flex-1 px-6 py-8">
+          <div className="max-w-7xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-semibold text-foreground">Catch up with my friends</h2>
+            </div>
+            <FriendsSkeleton />
+          </div>
+        </main>
       </div>
     );
   }
