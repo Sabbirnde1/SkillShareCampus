@@ -2,10 +2,49 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, Video, Image as ImageIcon, FileEdit, ThumbsUp, MessageCircle, Share2 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { usePosts } from "@/hooks/usePosts";
+import { useAuth } from "@/contexts/AuthContext";
+import { useState } from "react";
+import { formatDistanceToNow } from "date-fns";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const Campus = () => {
+  const { user } = useAuth();
+  const { posts, isLoading, createPost, likePost, deletePost } = usePosts();
+  const [postContent, setPostContent] = useState("");
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleCreatePost = () => {
+    if (!postContent.trim()) return;
+
+    const hashtags = postContent.match(/#\w+/g) || [];
+    createPost.mutate(
+      { content: postContent, hashtags },
+      {
+        onSuccess: () => {
+          setPostContent("");
+          setIsDialogOpen(false);
+        },
+      }
+    );
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -28,30 +67,30 @@ const Campus = () => {
           </div>
           
           <nav className="flex items-center gap-6">
-            <button className="flex flex-col items-center gap-1 text-[hsl(var(--link-blue))]">
+            <Link to="/campus" className="flex flex-col items-center gap-1 text-[hsl(var(--link-blue))]">
               <Home className="w-6 h-6" />
               <span className="text-xs font-medium">Home</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            </Link>
+            <Link to="/pending-requests" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <Users className="w-6 h-6" />
               <span className="text-xs">Requests</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            </Link>
+            <Link to="/campus" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <BookOpen className="w-6 h-6" />
               <span className="text-xs">Courses</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            </Link>
+            <Link to="/messages" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <MessageSquare className="w-6 h-6" />
               <span className="text-xs">Messages</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            </Link>
+            <Link to="/notifications" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <Bell className="w-6 h-6" />
               <span className="text-xs">Notifications</span>
-            </button>
-            <button className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            </Link>
+            <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground transition-colors">
               <User className="w-6 h-6" />
               <span className="text-xs">Me</span>
-            </button>
+            </Link>
           </nav>
         </div>
       </header>
@@ -87,76 +126,166 @@ const Campus = () => {
             <Card className="p-4 mb-4">
               <div className="flex items-center gap-3 mb-4">
                 <Avatar>
-                  <AvatarFallback>U</AvatarFallback>
+                  <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+                  <AvatarFallback>
+                    {user?.user_metadata?.full_name?.[0] || user?.email?.[0] || "U"}
+                  </AvatarFallback>
                 </Avatar>
-                <Input 
-                  placeholder="Start the post"
-                  className="flex-1 rounded-full bg-gray-50 border-gray-300"
-                />
-              </div>
-              <div className="flex items-center justify-around pt-2 border-t border-gray-200">
-                <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md">
-                  <Video className="w-5 h-5 text-green-600" />
-                  <span className="text-sm font-medium">Video</span>
-                </button>
-                <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md">
-                  <ImageIcon className="w-5 h-5 text-blue-600" />
-                  <span className="text-sm font-medium">Photo</span>
-                </button>
-                <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md">
-                  <FileEdit className="w-5 h-5 text-orange-600" />
-                  <span className="text-sm font-medium">Write Article</span>
-                </button>
+                <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                  <DialogTrigger asChild>
+                    <Input 
+                      placeholder="Start a post"
+                      className="flex-1 rounded-full bg-gray-50 border-gray-300 cursor-pointer"
+                      readOnly
+                    />
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[525px]">
+                    <DialogHeader>
+                      <DialogTitle>Create a post</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                      <div className="flex gap-3">
+                        <Avatar className="h-10 w-10">
+                          <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+                          <AvatarFallback>
+                            {user?.user_metadata?.full_name?.[0] || user?.email?.[0] || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1">
+                          <p className="font-semibold text-sm">
+                            {user?.user_metadata?.full_name || user?.email}
+                          </p>
+                        </div>
+                      </div>
+                      <Textarea
+                        placeholder="What's on your mind? Use #hashtags to categorize..."
+                        value={postContent}
+                        onChange={(e) => setPostContent(e.target.value)}
+                        className="min-h-[150px] text-base resize-none"
+                      />
+                      <div className="flex items-center justify-end pt-4 border-t">
+                        <Button
+                          onClick={handleCreatePost}
+                          disabled={!postContent.trim() || createPost.isPending}
+                          className="bg-[hsl(var(--link-blue))] hover:bg-[hsl(var(--link-blue))]/90"
+                        >
+                          {createPost.isPending ? "Posting..." : "Post"}
+                        </Button>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             </Card>
 
-            {/* Post */}
-            <Card className="p-4">
-              <div className="flex items-start gap-3 mb-3">
-                <Avatar>
-                  <AvatarFallback>AK</AvatarFallback>
-                </Avatar>
-                <div>
-                  <h4 className="font-semibold text-sm">Abid Khan</h4>
-                  <p className="text-xs text-muted-foreground">Undergraduate CSE Student | Entrepreneurship</p>
+            {/* Posts Feed */}
+            {isLoading ? (
+              <Card className="p-4">
+                <div className="space-y-4">
+                  <div className="flex items-start gap-3">
+                    <Skeleton className="h-12 w-12 rounded-full" />
+                    <div className="flex-1 space-y-2">
+                      <Skeleton className="h-4 w-1/3" />
+                      <Skeleton className="h-3 w-1/2" />
+                    </div>
+                  </div>
+                  <Skeleton className="h-20 w-full" />
+                  <Skeleton className="h-48 w-full" />
                 </div>
+              </Card>
+            ) : posts.length === 0 ? (
+              <Card className="p-12 text-center">
+                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground font-medium mb-2">No posts yet</p>
+                <p className="text-sm text-muted-foreground">Be the first to share your thoughts!</p>
+              </Card>
+            ) : (
+              <div className="space-y-4">
+                {posts.map((post) => (
+                  <Card key={post.id} className="p-4">
+                    <div className="flex items-start gap-3 mb-3">
+                      <Link to={`/user/${post.author.id}`}>
+                        <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
+                          <AvatarImage src={post.author.avatar_url || ""} />
+                          <AvatarFallback>
+                            {post.author.full_name?.[0] || "U"}
+                          </AvatarFallback>
+                        </Avatar>
+                      </Link>
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <Link to={`/user/${post.author.id}`}>
+                              <h4 className="font-semibold text-sm hover:text-[hsl(var(--link-blue))] transition-colors">
+                                {post.author.full_name || "Unknown User"}
+                              </h4>
+                            </Link>
+                            {post.author.bio && (
+                              <p className="text-xs text-muted-foreground line-clamp-1">
+                                {post.author.bio}
+                              </p>
+                            )}
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                            </p>
+                          </div>
+                          {user?.id === post.author_id && (
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="icon" className="h-8 w-8">
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => deletePost.mutate(post.id)}
+                                  className="text-destructive"
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  Delete post
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm mb-3 whitespace-pre-wrap">
+                      {post.content}
+                    </p>
+                    
+                    <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
+                      <span className="text-sm text-muted-foreground flex items-center gap-1">
+                        <ThumbsUp className="w-4 h-4" />
+                        {post.likes_count} {post.likes_count === 1 ? "like" : "likes"}
+                      </span>
+                      <span className="text-sm text-muted-foreground">
+                        {post.comments_count} {post.comments_count === 1 ? "comment" : "comments"}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center justify-around">
+                      <button 
+                        onClick={() => likePost.mutate(post.id)}
+                        className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors"
+                      >
+                        <ThumbsUp className="w-5 h-5" />
+                        <span className="text-sm font-medium">Like</span>
+                      </button>
+                      <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors">
+                        <MessageCircle className="w-5 h-5" />
+                        <span className="text-sm font-medium">Comment</span>
+                      </button>
+                      <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors">
+                        <Share2 className="w-5 h-5" />
+                        <span className="text-sm font-medium">Share</span>
+                      </button>
+                    </div>
+                  </Card>
+                ))}
               </div>
-              
-              <p className="text-sm mb-3">
-                "Touching the Future of Technology......<span className="text-[hsl(var(--link-blue))] cursor-pointer">See more</span>
-              </p>
-              
-              <div className="rounded-lg overflow-hidden mb-3">
-                <img 
-                  src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=800&h=500&fit=crop" 
-                  alt="Web Development"
-                  className="w-full h-auto"
-                />
-              </div>
-              
-              <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
-                <span className="text-sm text-muted-foreground flex items-center gap-1">
-                  <ThumbsUp className="w-4 h-4 fill-blue-600 text-blue-600" />
-                  4 likes
-                </span>
-                <span className="text-sm text-muted-foreground">2 Comments</span>
-              </div>
-              
-              <div className="flex items-center justify-around">
-                <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center">
-                  <ThumbsUp className="w-5 h-5" />
-                  <span className="text-sm font-medium">Liked</span>
-                </button>
-                <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center">
-                  <MessageCircle className="w-5 h-5" />
-                  <span className="text-sm font-medium">Comment</span>
-                </button>
-                <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center">
-                  <Share2 className="w-5 h-5" />
-                  <span className="text-sm font-medium">Share</span>
-                </button>
-              </div>
-            </Card>
+            )}
           </main>
 
           {/* Right Sidebar */}
