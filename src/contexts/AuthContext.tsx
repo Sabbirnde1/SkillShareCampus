@@ -2,10 +2,12 @@ import { createContext, useContext, useEffect, useState } from "react";
 import { User, Session } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { AppRole, getUserRoles } from "@/lib/roles";
 
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  userRoles: AppRole[];
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signUp: (email: string, password: string, fullName?: string) => Promise<{ error: any }>;
   signInWithGoogle: () => Promise<{ error: any }>;
@@ -18,6 +20,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [userRoles, setUserRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
@@ -28,6 +31,15 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(session);
         setUser(session?.user ?? null);
         setLoading(false);
+
+        // Fetch user roles after state update (using setTimeout to avoid deadlock)
+        if (session?.user) {
+          setTimeout(() => {
+            getUserRoles(session.user.id).then(setUserRoles);
+          }, 0);
+        } else {
+          setUserRoles([]);
+        }
       }
     );
 
@@ -36,6 +48,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
+
+      // Fetch user roles for existing session
+      if (session?.user) {
+        setTimeout(() => {
+          getUserRoles(session.user.id).then(setUserRoles);
+        }, 0);
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -80,11 +99,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   const signOut = async () => {
     await supabase.auth.signOut();
+    setUserRoles([]);
     navigate("/");
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, signIn, signUp, signInWithGoogle, signOut, loading }}>
+    <AuthContext.Provider value={{ user, session, userRoles, signIn, signUp, signInWithGoogle, signOut, loading }}>
       {children}
     </AuthContext.Provider>
   );
