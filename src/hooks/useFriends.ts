@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { useRateLimit } from "./useRateLimit";
 
 export interface Friend {
   id: string;
@@ -22,6 +23,7 @@ export interface Friend {
 export const useFriends = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { checkLimit, status: rateLimitStatus } = useRateLimit("friend_requests");
 
   const { data: friends, isLoading } = useQuery({
     queryKey: ["friends", user?.id],
@@ -86,6 +88,12 @@ export const useFriends = () => {
   const sendFriendRequest = useMutation({
     mutationFn: async (friendId: string) => {
       if (!user) throw new Error("Not authenticated");
+
+      // Check rate limit
+      const canSend = await checkLimit();
+      if (!canSend) {
+        throw new Error(`Rate limit exceeded. You can send ${rateLimitStatus.remaining} more friend requests today.`);
+      }
 
       const { error } = await supabase
         .from("friendships")

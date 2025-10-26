@@ -4,6 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { validateMessage } from "@/lib/validation";
+import { useRateLimit } from "./useRateLimit";
 
 export interface Message {
   id: string;
@@ -38,6 +39,7 @@ export interface Conversation {
 export const useMessages = (selectedUserId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
+  const { checkLimit, status: rateLimitStatus } = useRateLimit("messages");
 
   const { data: conversations } = useQuery({
     queryKey: ["conversations", user?.id],
@@ -154,6 +156,12 @@ export const useMessages = (selectedUserId?: string) => {
       file?: File;
     }) => {
       if (!user) throw new Error("Not authenticated");
+
+      // Check rate limit
+      const canSend = await checkLimit();
+      if (!canSend) {
+        throw new Error(`Rate limit exceeded. You can send ${rateLimitStatus.remaining} more messages today.`);
+      }
 
       // Validate and sanitize input
       const validatedContent = validateMessage(content);

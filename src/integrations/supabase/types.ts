@@ -480,6 +480,36 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          action_count: number
+          action_type: string
+          created_at: string
+          id: string
+          updated_at: string
+          user_id: string
+          window_start: string
+        }
+        Insert: {
+          action_count?: number
+          action_type: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id: string
+          window_start?: string
+        }
+        Update: {
+          action_count?: number
+          action_type?: string
+          created_at?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+          window_start?: string
+        }
+        Relationships: []
+      }
       skills: {
         Row: {
           created_at: string
@@ -535,6 +565,15 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_rate_limit: {
+        Args: {
+          p_action_type: string
+          p_max_actions: number
+          p_user_id: string
+          p_window_minutes: number
+        }
+        Returns: boolean
+      }
       create_notification: {
         Args: {
           p_content: string
@@ -544,6 +583,15 @@ export type Database = {
           p_user_id: string
         }
         Returns: undefined
+      }
+      get_rate_limit_status: {
+        Args: {
+          p_action_type: string
+          p_max_actions: number
+          p_user_id: string
+          p_window_minutes: number
+        }
+        Returns: Json
       }
       get_user_roles: {
         Args: { _user_id: string }
