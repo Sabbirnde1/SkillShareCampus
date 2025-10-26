@@ -36,7 +36,7 @@ export interface Post {
 export const usePosts = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { checkLimit, status: rateLimitStatus } = useRateLimit("posts");
+  const { checkLimit, status, formatTimeRemaining } = useRateLimit("create_post");
 
   const { data: posts, isLoading } = useQuery({
     queryKey: ["posts", user?.id],
@@ -109,7 +109,7 @@ export const usePosts = () => {
       // Check rate limit
       const canPost = await checkLimit();
       if (!canPost) {
-        throw new Error(`Rate limit exceeded. You can create ${rateLimitStatus.remaining} more posts. Try again in ${rateLimitStatus.reset_in_seconds}s.`);
+        throw new Error(`Rate limit exceeded. You can create ${status.remaining} more posts. Try again in ${formatTimeRemaining(status.reset_in_seconds)}.`);
       }
 
       // Validate and sanitize input
@@ -215,6 +215,6 @@ export const usePosts = () => {
     deletePost,
     editPost,
     toggleLike,
-    rateLimitStatus,
+    rateLimit: { status, formatTimeRemaining },
   };
 };

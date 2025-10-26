@@ -23,7 +23,7 @@ export interface Friend {
 export const useFriends = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { checkLimit, status: rateLimitStatus } = useRateLimit("friend_requests");
+  const { checkLimit, status, formatTimeRemaining } = useRateLimit("send_friend_request");
 
   const { data: friends, isLoading } = useQuery({
     queryKey: ["friends", user?.id],
@@ -92,7 +92,7 @@ export const useFriends = () => {
       // Check rate limit
       const canSend = await checkLimit();
       if (!canSend) {
-        throw new Error(`Rate limit exceeded. You can send ${rateLimitStatus.remaining} more friend requests today.`);
+        throw new Error(`Rate limit exceeded. You can send ${status.remaining} more friend requests. Try again in ${formatTimeRemaining(status.reset_in_seconds)}.`);
       }
 
       const { error } = await supabase

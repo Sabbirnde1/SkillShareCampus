@@ -39,7 +39,7 @@ export interface Conversation {
 export const useMessages = (selectedUserId?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { checkLimit, status: rateLimitStatus } = useRateLimit("messages");
+  const { checkLimit, status, formatTimeRemaining } = useRateLimit("send_message");
 
   const { data: conversations } = useQuery({
     queryKey: ["conversations", user?.id],
@@ -160,7 +160,7 @@ export const useMessages = (selectedUserId?: string) => {
       // Check rate limit
       const canSend = await checkLimit();
       if (!canSend) {
-        throw new Error(`Rate limit exceeded. You can send ${rateLimitStatus.remaining} more messages today.`);
+        throw new Error(`Rate limit exceeded. You can send ${status.remaining} more messages. Try again in ${formatTimeRemaining(status.reset_in_seconds)}.`);
       }
 
       // Validate and sanitize input

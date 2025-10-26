@@ -4,7 +4,6 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { useEffect } from "react";
 import { validateComment } from "@/lib/validation";
-import { useRateLimit } from "./useRateLimit";
 
 export interface Comment {
   id: string;
@@ -24,7 +23,6 @@ export interface Comment {
 export const useComments = (postId: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { checkLimit, status: rateLimitStatus } = useRateLimit("comments");
 
   const { data: comments, isLoading } = useQuery({
     queryKey: ["comments", postId],
@@ -88,12 +86,6 @@ export const useComments = (postId: string) => {
   const createComment = useMutation({
     mutationFn: async ({ content, parentCommentId }: { content: string; parentCommentId?: string }) => {
       if (!user) throw new Error("Not authenticated");
-
-      // Check rate limit
-      const canComment = await checkLimit();
-      if (!canComment) {
-        throw new Error(`Rate limit exceeded. You can post ${rateLimitStatus.remaining} more comments this hour.`);
-      }
 
       // Validate and sanitize input
       const validatedContent = validateComment(content);
