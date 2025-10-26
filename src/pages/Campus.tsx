@@ -5,7 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2 } from "lucide-react";
+import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2, Edit } from "lucide-react";
+import { EditPostDialog } from "@/components/EditPostDialog";
 import { Link } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
 import { useAuth } from "@/contexts/AuthContext";
@@ -32,12 +33,14 @@ import { FriendSuggestions } from "@/components/FriendSuggestions";
 
 const Campus = () => {
   const { user } = useAuth();
-  const { posts, isLoading, createPost, toggleLike, deletePost } = usePosts();
+  const { posts, isLoading, createPost, toggleLike, deletePost, editPost } = usePosts();
   const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [selectedPostForEdit, setSelectedPostForEdit] = useState<any>(null);
 
   const handleCreatePost = () => {
     if (!postContent.trim()) return;
@@ -49,6 +52,26 @@ const Campus = () => {
         onSuccess: () => {
           setPostContent("");
           setIsDialogOpen(false);
+        },
+      }
+    );
+  };
+
+  const canEditPost = (createdAt: string) => {
+    const postDate = new Date(createdAt);
+    const now = new Date();
+    const diffInMinutes = (now.getTime() - postDate.getTime()) / (1000 * 60);
+    return diffInMinutes <= 15;
+  };
+
+  const handleEditPost = (postId: string, newContent: string) => {
+    const hashtags = newContent.match(/#\w+/g) || [];
+    editPost.mutate(
+      { postId, content: newContent, hashtags },
+      {
+        onSuccess: () => {
+          setEditDialogOpen(false);
+          setSelectedPostForEdit(null);
         },
       }
     );
@@ -251,6 +274,9 @@ const Campus = () => {
                             )}
                             <p className="text-xs text-muted-foreground mt-1">
                               {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                              {post.edited_at && (
+                                <span className="ml-2 text-xs text-muted-foreground">· Edited</span>
+                              )}
                             </p>
                           </div>
                           {user?.id === post.author_id && (
@@ -261,6 +287,17 @@ const Campus = () => {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                {canEditPost(post.created_at) && (
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedPostForEdit(post);
+                                      setEditDialogOpen(true);
+                                    }}
+                                  >
+                                    <Edit className="h-4 w-4 mr-2" />
+                                    Edit post
+                                  </DropdownMenuItem>
+                                )}
                                 <DropdownMenuItem
                                   onClick={() => deletePost.mutate(post.id)}
                                   className="text-destructive"
@@ -371,6 +408,17 @@ const Campus = () => {
           open={shareDialogOpen}
           onOpenChange={setShareDialogOpen}
           post={selectedPostForShare}
+        />
+      )}
+
+      {/* Edit Post Dialog */}
+      {selectedPostForEdit && (
+        <EditPostDialog
+          open={editDialogOpen}
+          onOpenChange={setEditDialogOpen}
+          postId={selectedPostForEdit.id}
+          initialContent={selectedPostForEdit.content}
+          onEditSuccess={(newContent) => handleEditPost(selectedPostForEdit.id, newContent)}
         />
       )}
     </div>

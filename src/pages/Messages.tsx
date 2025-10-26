@@ -3,7 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send, Paperclip, X, FileText, Download } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send, Paperclip, X, FileText, Download, Check, CheckCheck } from "lucide-react";
+import NotificationBadge from "@/components/NotificationBadge";
 import { Link, useSearchParams } from "react-router-dom";
 import { useState, useEffect, useRef } from "react";
 import { useMessages } from "@/hooks/useMessages";
@@ -208,20 +209,10 @@ const Messages = () => {
               <MessageSquare className="h-5 w-5" />
               <span className="text-xs font-medium">Messages</span>
             </Link>
-            <Link to="/notifications" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <div className="relative">
-                <Bell className="h-5 w-5" />
-                {unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
-                    className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-                  >
-                    {unreadCount > 9 ? '9+' : unreadCount}
-                  </Badge>
-                )}
-              </div>
-              <span className="text-xs">Notifications</span>
-            </Link>
+            <div className="flex flex-col items-center gap-1">
+              <NotificationBadge />
+              <span className="text-xs text-muted-foreground">Notifications</span>
+            </div>
             <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
               <User className="h-5 w-5" />
               <span className="text-xs">Me</span>
@@ -409,12 +400,18 @@ const Messages = () => {
                                       <p className="text-sm break-words">{message.content}</p>
                                       {renderAttachment(message)}
                                     </div>
-                                    <div className={`flex items-center gap-1 mt-1 px-1 ${isSent ? "justify-end" : "justify-start"}`}>
+                                     <div className={`flex items-center gap-1 mt-1 px-1 ${isSent ? "justify-end" : "justify-start"}`}>
                                       <p className="text-xs text-muted-foreground">
                                         {format(new Date(message.created_at), "h:mm a")}
                                       </p>
-                                      {isSent && message.is_read && (
-                                        <span className="text-xs text-muted-foreground">• Read</span>
+                                      {isSent && (
+                                        <span className="ml-1">
+                                          {message.is_read ? (
+                                            <CheckCheck className="h-3 w-3 text-blue-500" />
+                                          ) : (
+                                            <Check className="h-3 w-3 text-muted-foreground" />
+                                          )}
+                                        </span>
                                       )}
                                     </div>
                                   </div>
