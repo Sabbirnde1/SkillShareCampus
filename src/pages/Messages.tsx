@@ -16,6 +16,7 @@ import { usePresence } from "@/hooks/usePresence";
 import { toast } from "sonner";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
+import { MessagesSkeleton } from "@/components/MessagesSkeleton";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -27,7 +28,7 @@ const Messages = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { conversations, messages, sendMessage, markConversationAsRead } = useMessages(selectedUserId);
+  const { conversations, messages, isLoading, sendMessage, markConversationAsRead } = useMessages(selectedUserId);
   const { unreadCount } = useNotifications();
   const { isUserOnline, isUserTyping, updateTypingStatus } = usePresence("messages-presence");
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -291,9 +292,12 @@ const Messages = () => {
 
           {/* Center - Chat Area */}
           <ErrorBoundary fallbackMessage="Unable to load messages">
-            <div className="col-span-6">
-            <Card className="flex flex-col h-[600px]">
-              {!selectedUserId ? (
+            {isLoading && selectedUserId ? (
+              <MessagesSkeleton />
+            ) : (
+              <div className="col-span-6">
+                <Card className="flex flex-col h-[600px]">
+                  {!selectedUserId ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                   <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
                   <h3 className="text-lg font-semibold text-foreground mb-2">
@@ -507,9 +511,10 @@ const Messages = () => {
                     </div>
                   </div>
                 </>
-              )}
-            </Card>
-          </div>
+                  )}
+                </Card>
+              </div>
+            )}
           </ErrorBoundary>
 
           {/* Right Sidebar - Campus News */}

@@ -200,11 +200,38 @@ export const usePosts = () => {
         if (error) throw error;
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["posts"] });
+    onMutate: async ({ postId, isLiked }) => {
+      // Cancel outgoing refetches
+      await queryClient.cancelQueries({ queryKey: ["posts"] });
+
+      // Snapshot previous value
+      const previousPosts = queryClient.getQueryData<Post[]>(["posts", user?.id]);
+
+      // Optimistically update
+      queryClient.setQueryData<Post[]>(["posts", user?.id], (old) => {
+        if (!old) return old;
+        return old.map((post) =>
+          post.id === postId
+            ? {
+                ...post,
+                user_has_liked: !isLiked,
+                likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1,
+              }
+            : post
+        );
+      });
+
+      return { previousPosts };
     },
-    onError: () => {
+    onError: (err, variables, context) => {
+      // Rollback on error
+      if (context?.previousPosts) {
+        queryClient.setQueryData(["posts", user?.id], context.previousPosts);
+      }
       toast.error("Failed to update like");
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
   });
 

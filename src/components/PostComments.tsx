@@ -48,7 +48,17 @@ export const PostComments = ({ postId, commentsCount }: PostCommentsProps) => {
         <div className="space-y-4 pl-4 border-l-2 border-border">
           {/* Comment List */}
           {isLoading ? (
-            <p className="text-sm text-muted-foreground">Loading comments...</p>
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="flex gap-3 animate-pulse">
+                  <div className="h-8 w-8 bg-muted rounded-full flex-shrink-0" />
+                  <div className="flex-1 space-y-2">
+                    <div className="h-4 bg-muted rounded w-1/4" />
+                    <div className="h-12 bg-muted rounded" />
+                  </div>
+                </div>
+              ))}
+            </div>
           ) : comments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No comments yet. Be the first to comment!</p>
           ) : (

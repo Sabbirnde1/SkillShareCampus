@@ -41,7 +41,7 @@ export const useMessages = (selectedUserId?: string) => {
   const queryClient = useQueryClient();
   const { checkLimit, status, formatTimeRemaining } = useRateLimit("send_message");
 
-  const { data: conversations } = useQuery({
+  const { data: conversations, isLoading: conversationsLoading } = useQuery({
     queryKey: ["conversations", user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -92,7 +92,7 @@ export const useMessages = (selectedUserId?: string) => {
     enabled: !!user,
   });
 
-  const { data: messages = [] } = useQuery({
+  const { data: messages = [], isLoading: messagesLoading } = useQuery({
     queryKey: ["messages", user?.id, selectedUserId],
     queryFn: async () => {
       if (!user || !selectedUserId) return [];
@@ -247,6 +247,7 @@ export const useMessages = (selectedUserId?: string) => {
   return {
     conversations: conversations || [],
     messages,
+    isLoading: conversationsLoading || messagesLoading,
     sendMessage,
     markAsRead,
     markConversationAsRead,

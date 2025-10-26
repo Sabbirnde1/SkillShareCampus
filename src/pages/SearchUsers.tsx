@@ -328,8 +328,12 @@ const SearchUsers = () => {
                               }}
                               disabled={sendFriendRequest.isPending}
                             >
-                              <UserPlus className="h-4 w-4 mr-2" />
-                              Add
+                              {sendFriendRequest.isPending ? (
+                                <div className="h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+                              ) : (
+                                <UserPlus className="h-4 w-4 mr-2" />
+                              )}
+                              {sendFriendRequest.isPending ? "Adding..." : "Add"}
                             </Button>
                           )}
                         </div>

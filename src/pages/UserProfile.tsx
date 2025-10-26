@@ -63,6 +63,17 @@ const UserProfile = () => {
   };
 
   const getFriendButtonContent = () => {
+    const isLoading = sendFriendRequest.isPending || removeFriend.isPending;
+    
+    if (isLoading) {
+      return (
+        <>
+          <div className="h-4 w-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+          {sendFriendRequest.isPending ? "Adding..." : "Removing..."}
+        </>
+      );
+    }
+    
     if (!friendshipStatus) {
       return (
         <>
