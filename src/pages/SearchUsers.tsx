@@ -3,23 +3,29 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, UserPlus, Hash, FileText, X, Clock } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, UserPlus, Hash, FileText, X, Clock, TrendingUp } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFriends } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import OnlineStatus from "@/components/OnlineStatus";
 import { useEnhancedSearch, getRecentSearches, clearRecentSearches, SearchType } from "@/hooks/useEnhancedSearch";
 import NotificationBadge from "@/components/NotificationBadge";
 import { highlightText } from "@/lib/searchUtils";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const SearchUsers = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchType, setSearchType] = useState<SearchType>("all");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
   const { results, userResults, postResults, hashtagResults, isLoading, isSearching, debouncedQuery } = useEnhancedSearch(searchQuery, searchType);
   const { sendFriendRequest } = useFriends();
   const navigate = useNavigate();
+
+  // Popular search suggestions
+  const popularSearches = ["React", "TypeScript", "Web Development", "Design", "Marketing"];
 
   useEffect(() => {
     setRecentSearches(getRecentSearches());
@@ -57,20 +63,91 @@ const SearchUsers = () => {
           </Link>
           
           <div className="flex-1 max-w-md mx-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search users, posts, hashtags..." 
-                className="pl-10 bg-gray-50"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-              />
-              {isSearching && (
-                <div className="absolute right-3 top-1/2 -translate-y-1/2">
-                  <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <Popover open={showSuggestions} onOpenChange={setShowSuggestions}>
+              <PopoverTrigger asChild>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input 
+                    ref={inputRef}
+                    placeholder="Search users, posts, hashtags..." 
+                    className="pl-10 bg-gray-50"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onFocus={() => setShowSuggestions(true)}
+                  />
+                  {isSearching && (
+                    <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    </div>
+                  )}
                 </div>
+              </PopoverTrigger>
+              {searchQuery.length < 2 && (recentSearches.length > 0 || popularSearches.length > 0) && (
+                <PopoverContent className="w-[400px] p-4" align="start">
+                  {recentSearches.length > 0 && (
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <h4 className="text-sm font-semibold flex items-center gap-2">
+                          <Clock className="h-4 w-4" />
+                          Recent
+                        </h4>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            handleClearRecent();
+                            setShowSuggestions(false);
+                          }}
+                          className="h-6 text-xs"
+                        >
+                          Clear
+                        </Button>
+                      </div>
+                      <div className="space-y-1">
+                        {recentSearches.map((query, idx) => (
+                          <div
+                            key={idx}
+                            className="px-3 py-2 hover:bg-accent rounded-md cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              handleRecentSearchClick(query);
+                              setShowSuggestions(false);
+                              inputRef.current?.focus();
+                            }}
+                          >
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{query}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {popularSearches.length > 0 && (
+                    <div>
+                      <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Trending
+                      </h4>
+                      <div className="space-y-1">
+                        {popularSearches.map((query, idx) => (
+                          <div
+                            key={idx}
+                            className="px-3 py-2 hover:bg-accent rounded-md cursor-pointer flex items-center gap-2"
+                            onClick={() => {
+                              setSearchQuery(query);
+                              setShowSuggestions(false);
+                              inputRef.current?.focus();
+                            }}
+                          >
+                            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm">{query}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </PopoverContent>
               )}
-            </div>
+            </Popover>
           </div>
 
           <nav className="flex items-center gap-6">
