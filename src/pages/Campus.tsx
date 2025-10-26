@@ -31,6 +31,9 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { SharePostDialog } from "@/components/SharePostDialog";
 import { FriendSuggestions } from "@/components/FriendSuggestions";
 import { TrendingHashtags } from "@/components/TrendingHashtags";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { PostsFeedSkeleton } from "@/components/PostsFeedSkeleton";
 
 const Campus = () => {
   const { user } = useAuth();
@@ -140,6 +143,7 @@ const Campus = () => {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-4 py-6">
+        <OfflineBanner />
         <EmailVerificationBanner />
         <div className="grid grid-cols-12 gap-6">
           {/* Left Sidebar */}
@@ -227,28 +231,17 @@ const Campus = () => {
             </Card>
 
             {/* Posts Feed */}
-            {isLoading ? (
-              <Card className="p-4">
+            <ErrorBoundary fallbackMessage="Unable to load posts">
+              {isLoading ? (
+                <PostsFeedSkeleton />
+              ) : posts.length === 0 ? (
+                <Card className="p-12 text-center">
+                  <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <p className="text-muted-foreground font-medium mb-2">No posts yet</p>
+                  <p className="text-sm text-muted-foreground">Be the first to share your thoughts!</p>
+                </Card>
+              ) : (
                 <div className="space-y-4">
-                  <div className="flex items-start gap-3">
-                    <Skeleton className="h-12 w-12 rounded-full" />
-                    <div className="flex-1 space-y-2">
-                      <Skeleton className="h-4 w-1/3" />
-                      <Skeleton className="h-3 w-1/2" />
-                    </div>
-                  </div>
-                  <Skeleton className="h-20 w-full" />
-                  <Skeleton className="h-48 w-full" />
-                </div>
-              </Card>
-            ) : posts.length === 0 ? (
-              <Card className="p-12 text-center">
-                <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground font-medium mb-2">No posts yet</p>
-                <p className="text-sm text-muted-foreground">Be the first to share your thoughts!</p>
-              </Card>
-            ) : (
-              <div className="space-y-4">
                 {posts.map((post) => (
                   <Card key={post.id} className="p-4">
                     <div className="flex items-start gap-3 mb-3">
@@ -373,8 +366,9 @@ const Campus = () => {
                     <PostComments postId={post.id} commentsCount={post.comments_count} />
                   </Card>
                 ))}
-              </div>
-            )}
+                </div>
+              )}
+            </ErrorBoundary>
           </main>
 
           {/* Right Sidebar */}

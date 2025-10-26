@@ -47,6 +47,9 @@ import { SharePostDialog } from "@/components/SharePostDialog";
 import { FriendSuggestions } from "@/components/FriendSuggestions";
 import { TrendingHashtags } from "@/components/TrendingHashtags";
 import { EditPostDialog } from "@/components/EditPostDialog";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineBanner } from "@/components/OfflineBanner";
+import { PostsFeedSkeleton } from "@/components/PostsFeedSkeleton";
 
 const Activity = () => {
   const { user } = useAuth();
@@ -176,6 +179,7 @@ const Activity = () => {
       {/* Main Content */}
       <main className="flex-1 py-6">
         <div className="max-w-7xl mx-auto px-6">
+          <OfflineBanner />
           <EmailVerificationBanner />
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Activity Section */}
@@ -301,14 +305,11 @@ const Activity = () => {
               )}
 
               {/* Posts Feed */}
-              <div className="space-y-4">
-                {isLoading ? (
-                  <Card>
-                    <CardContent className="p-12 text-center">
-                      <p className="text-muted-foreground">Loading posts...</p>
-                    </CardContent>
-                  </Card>
-                ) : filteredPosts.length === 0 ? (
+              <ErrorBoundary fallbackMessage="Unable to load posts">
+                <div className="space-y-4">
+                  {isLoading ? (
+                    <PostsFeedSkeleton />
+                  ) : filteredPosts.length === 0 ? (
                   <Card>
                     <CardContent className="p-12 text-center">
                       <MessageCircle className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
@@ -457,6 +458,7 @@ const Activity = () => {
                   ))
                 )}
               </div>
+              </ErrorBoundary>
             </div>
 
             {/* Sidebar */}

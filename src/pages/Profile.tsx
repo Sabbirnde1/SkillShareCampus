@@ -14,6 +14,8 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { Badge } from "@/components/ui/badge";
 import { FriendSuggestions } from "@/components/FriendSuggestions";
 import { ProfileCompletenessWidget } from "@/components/ProfileCompletenessWidget";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -84,6 +86,7 @@ const Profile = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <OfflineBanner />
       {/* Header */}
       <header className="bg-[hsl(var(--header-bg))] py-3 px-6 border-b">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -146,7 +149,8 @@ const Profile = () => {
       <main className="flex-1 py-6">
         <div className="max-w-7xl mx-auto px-6">
           <EmailVerificationBanner />
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <ErrorBoundary fallbackMessage="Unable to load profile">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Main Profile Section */}
             <div className="lg:col-span-2">
               <Card>
@@ -309,6 +313,7 @@ const Profile = () => {
               </Card>
             </div>
           </div>
+          </ErrorBoundary>
         </div>
       </main>
 

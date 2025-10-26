@@ -14,6 +14,8 @@ import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 import { useNotifications } from "@/hooks/useNotifications";
 import { usePresence } from "@/hooks/usePresence";
 import { toast } from "sonner";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { OfflineBanner } from "@/components/OfflineBanner";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -170,6 +172,7 @@ const Messages = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <OfflineBanner />
       {/* Header */}
       <header className="bg-white border-b px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
@@ -287,7 +290,8 @@ const Messages = () => {
           </div>
 
           {/* Center - Chat Area */}
-          <div className="col-span-6">
+          <ErrorBoundary fallbackMessage="Unable to load messages">
+            <div className="col-span-6">
             <Card className="flex flex-col h-[600px]">
               {!selectedUserId ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
@@ -506,6 +510,7 @@ const Messages = () => {
               )}
             </Card>
           </div>
+          </ErrorBoundary>
 
           {/* Right Sidebar - Campus News */}
           <div className="col-span-3">
