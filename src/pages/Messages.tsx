@@ -1,21 +1,43 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import { useMessages } from "@/hooks/useMessages";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
-import { formatDistanceToNow } from "date-fns";
+import { formatDistanceToNow, format, isToday, isYesterday } from "date-fns";
 
 const Messages = () => {
   const { user } = useAuth();
-  const [selectedUserId, setSelectedUserId] = useState<string | undefined>();
+  const [searchParams] = useSearchParams();
+  const [selectedUserId, setSelectedUserId] = useState<string | undefined>(
+    searchParams.get("user") || undefined
+  );
   const [messageText, setMessageText] = useState("");
-  const { conversations, messages, sendMessage } = useMessages(selectedUserId);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const { conversations, messages, sendMessage, markConversationAsRead } = useMessages(selectedUserId);
 
   const selectedConversation = conversations.find((c) => c.user_id === selectedUserId);
+
+  // Auto-scroll to bottom when messages change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  // Mark messages as read when viewing conversation
+  useEffect(() => {
+    if (selectedUserId && messages.length > 0) {
+      const unreadMessages = messages.filter(
+        (msg) => msg.receiver_id === user?.id && !msg.is_read
+      );
+      if (unreadMessages.length > 0) {
+        markConversationAsRead.mutate(selectedUserId);
+      }
+    }
+  }, [selectedUserId, messages.length]);
 
   const handleSendMessage = () => {
     if (!messageText.trim() || !selectedUserId) return;
@@ -26,6 +48,17 @@ const Messages = () => {
         onSuccess: () => setMessageText(""),
       }
     );
+  };
+
+  const formatMessageTime = (dateString: string) => {
+    const date = new Date(dateString);
+    if (isToday(date)) {
+      return format(date, "h:mm a");
+    } else if (isYesterday(date)) {
+      return "Yesterday";
+    } else {
+      return format(date, "MMM d");
+    }
   };
 
   const newsItems = [
@@ -47,13 +80,16 @@ const Messages = () => {
           </Link>
           
           <div className="flex-1 max-w-md mx-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search" 
-                className="pl-10 bg-gray-50"
-              />
-            </div>
+            <Link to="/search">
+              <div className="relative cursor-pointer">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search users..." 
+                  className="pl-10 bg-gray-50"
+                  readOnly
+                />
+              </div>
+            </Link>
           </div>
 
           <nav className="flex items-center gap-6">
@@ -90,36 +126,60 @@ const Messages = () => {
         <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6">
           {/* Left Sidebar - Contacts */}
           <div className="col-span-3">
-            <Card className="p-4">
-              {conversations.length === 0 ? (
-                <p className="text-center text-muted-foreground py-4">No conversations yet</p>
-              ) : (
-                conversations.map((conversation) => (
-                  <div
-                    key={conversation.user_id}
-                    onClick={() => setSelectedUserId(conversation.user_id)}
-                    className={`flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg cursor-pointer border-b last:border-b-0 ${
-                      selectedUserId === conversation.user_id ? "bg-gray-50" : ""
-                    }`}
-                  >
-                    <Avatar className="w-12 h-12 flex-shrink-0">
-                      <AvatarImage src={conversation.avatar_url || ""} />
-                      <AvatarFallback>
-                        <User className="h-6 w-6" />
-                      </AvatarFallback>
-                    </Avatar>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-sm text-foreground">{conversation.full_name}</h3>
-                      <p className="text-xs text-muted-foreground truncate">{conversation.last_message}</p>
-                      {conversation.unread_count > 0 && (
-                        <span className="inline-block mt-1 px-2 py-0.5 bg-primary text-primary-foreground text-xs rounded-full">
-                          {conversation.unread_count}
-                        </span>
-                      )}
-                    </div>
+            <Card className="p-0">
+              <div className="p-4 border-b">
+                <h2 className="font-semibold text-lg">Messages</h2>
+              </div>
+              <ScrollArea className="h-[calc(600px-57px)]">
+                {conversations.length === 0 ? (
+                  <div className="p-8 text-center">
+                    <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground text-sm">No conversations yet</p>
+                    <p className="text-muted-foreground text-xs mt-2">
+                      Start chatting with your friends!
+                    </p>
                   </div>
-                ))
-              )}
+                ) : (
+                  <div className="p-2">
+                    {conversations.map((conversation) => (
+                      <div
+                        key={conversation.user_id}
+                        onClick={() => setSelectedUserId(conversation.user_id)}
+                        className={`flex items-start gap-3 p-3 hover:bg-accent rounded-lg cursor-pointer transition-colors ${
+                          selectedUserId === conversation.user_id ? "bg-accent" : ""
+                        }`}
+                      >
+                        <div className="relative">
+                          <Avatar className="w-12 h-12 flex-shrink-0">
+                            <AvatarImage src={conversation.avatar_url || ""} />
+                            <AvatarFallback>
+                              <User className="h-6 w-6" />
+                            </AvatarFallback>
+                          </Avatar>
+                          {conversation.unread_count > 0 && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-primary text-primary-foreground rounded-full flex items-center justify-center text-xs font-semibold">
+                              {conversation.unread_count}
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center justify-between mb-1">
+                            <h3 className="font-semibold text-sm text-foreground truncate">
+                              {conversation.full_name}
+                            </h3>
+                            <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                              {formatMessageTime(conversation.last_message_time)}
+                            </span>
+                          </div>
+                          <p className="text-xs text-muted-foreground truncate">
+                            {conversation.last_message}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
             </Card>
           </div>
 
@@ -127,82 +187,128 @@ const Messages = () => {
           <div className="col-span-6">
             <Card className="flex flex-col h-[600px]">
               {!selectedUserId ? (
-                <div className="flex-1 flex items-center justify-center">
-                  <p className="text-muted-foreground">Select a conversation to start messaging</p>
+                <div className="flex-1 flex flex-col items-center justify-center p-8">
+                  <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
+                  <h3 className="text-lg font-semibold text-foreground mb-2">
+                    Your Messages
+                  </h3>
+                  <p className="text-muted-foreground text-center max-w-sm">
+                    Select a conversation from the sidebar to view messages or start a new conversation with your friends
+                  </p>
                 </div>
               ) : (
                 <>
                   {/* Chat Header */}
-                  <div className="p-4 border-b">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={selectedConversation?.avatar_url || ""} />
-                        <AvatarFallback>
-                          <User className="h-6 w-6" />
-                        </AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <h3 className="font-semibold text-foreground">
-                          {selectedConversation?.full_name || "Unknown User"}
-                        </h3>
+                  <div className="p-4 border-b bg-white">
+                    <Link to={`/user/${selectedUserId}`}>
+                      <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
+                        <Avatar className="w-12 h-12">
+                          <AvatarImage src={selectedConversation?.avatar_url || ""} />
+                          <AvatarFallback>
+                            <User className="h-6 w-6" />
+                          </AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <h3 className="font-semibold text-foreground">
+                            {selectedConversation?.full_name || "Unknown User"}
+                          </h3>
+                          <p className="text-xs text-muted-foreground">Click to view profile</p>
+                        </div>
                       </div>
-                    </div>
+                    </Link>
                   </div>
 
                   {/* Messages */}
-                  <div className="flex-1 p-4 overflow-y-auto space-y-4">
+                  <ScrollArea className="flex-1 p-4">
                     {messages.length === 0 ? (
-                      <p className="text-center text-muted-foreground">No messages yet. Start the conversation!</p>
+                      <div className="flex items-center justify-center h-full">
+                        <div className="text-center">
+                          <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                          <p className="text-muted-foreground">
+                            No messages yet. Start the conversation!
+                          </p>
+                        </div>
+                      </div>
                     ) : (
-                      messages.map((message) => {
-                        const isSent = message.sender_id === user?.id;
-                        return (
-                          <div key={message.id} className={`flex ${isSent ? "justify-end" : "justify-start"}`}>
-                            <div className="flex items-start gap-2 max-w-[70%]">
-                              {!isSent && (
-                                <Avatar className="w-8 h-8 flex-shrink-0">
-                                  <AvatarImage src={message.sender?.avatar_url || ""} />
-                                  <AvatarFallback>
-                                    <User className="h-4 w-4" />
-                                  </AvatarFallback>
-                                </Avatar>
-                              )}
-                              <div>
-                                {!isSent && (
-                                  <p className="text-xs font-semibold text-foreground mb-1">
-                                    {message.sender?.full_name}
-                                  </p>
-                                )}
-                                <div
-                                  className={`p-3 rounded-lg ${
-                                    isSent ? "bg-primary text-primary-foreground" : "bg-gray-100 text-foreground"
-                                  }`}
-                                >
-                                  <p className="text-sm">{message.content}</p>
+                      <div className="space-y-4">
+                        {messages.map((message, index) => {
+                          const isSent = message.sender_id === user?.id;
+                          const showDate =
+                            index === 0 ||
+                            new Date(message.created_at).toDateString() !==
+                              new Date(messages[index - 1].created_at).toDateString();
+
+                          return (
+                            <div key={message.id}>
+                              {showDate && (
+                                <div className="flex items-center justify-center my-4">
+                                  <div className="bg-gray-200 text-gray-600 text-xs px-3 py-1 rounded-full">
+                                    {format(new Date(message.created_at), "MMMM d, yyyy")}
+                                  </div>
                                 </div>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
-                                </p>
+                              )}
+                              <div className={`flex ${isSent ? "justify-end" : "justify-start"}`}>
+                                <div className="flex items-end gap-2 max-w-[70%]">
+                                  {!isSent && (
+                                    <Avatar className="w-8 h-8 flex-shrink-0 mb-6">
+                                      <AvatarImage src={message.sender?.avatar_url || ""} />
+                                      <AvatarFallback>
+                                        <User className="h-4 w-4" />
+                                      </AvatarFallback>
+                                    </Avatar>
+                                  )}
+                                  <div className={isSent ? "items-end" : "items-start"}>
+                                    {!isSent && (
+                                      <p className="text-xs font-semibold text-foreground mb-1 px-1">
+                                        {message.sender?.full_name}
+                                      </p>
+                                    )}
+                                    <div
+                                      className={`p-3 rounded-2xl ${
+                                        isSent
+                                          ? "bg-primary text-primary-foreground rounded-br-sm"
+                                          : "bg-accent text-foreground rounded-bl-sm"
+                                      }`}
+                                    >
+                                      <p className="text-sm break-words">{message.content}</p>
+                                    </div>
+                                    <div className={`flex items-center gap-1 mt-1 px-1 ${isSent ? "justify-end" : "justify-start"}`}>
+                                      <p className="text-xs text-muted-foreground">
+                                        {format(new Date(message.created_at), "h:mm a")}
+                                      </p>
+                                      {isSent && message.is_read && (
+                                        <span className="text-xs text-muted-foreground">• Read</span>
+                                      )}
+                                    </div>
+                                  </div>
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })
+                          );
+                        })}
+                        <div ref={messagesEndRef} />
+                      </div>
                     )}
-                  </div>
+                  </ScrollArea>
 
                   {/* Message Input */}
-                  <div className="p-4 border-t bg-gray-50">
+                  <div className="p-4 border-t bg-white">
                     <div className="flex items-center gap-2">
                       <Input
-                        placeholder="Write a message"
+                        placeholder="Type a message..."
                         value={messageText}
                         onChange={(e) => setMessageText(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && handleSendMessage()}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter" && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage();
+                          }
+                        }}
                         className="flex-1"
+                        disabled={sendMessage.isPending}
                       />
                       <Button
-                        className="bg-primary hover:bg-primary/90 text-primary-foreground"
+                        size="icon"
                         onClick={handleSendMessage}
                         disabled={!messageText.trim() || sendMessage.isPending}
                       >

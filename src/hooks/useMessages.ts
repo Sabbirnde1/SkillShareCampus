@@ -173,10 +173,30 @@ export const useMessages = (selectedUserId?: string) => {
     },
   });
 
+  const markConversationAsRead = useMutation({
+    mutationFn: async (senderId: string) => {
+      if (!user) throw new Error("Not authenticated");
+
+      const { error } = await supabase
+        .from("messages")
+        .update({ is_read: true })
+        .eq("sender_id", senderId)
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["conversations"] });
+      queryClient.invalidateQueries({ queryKey: ["messages"] });
+    },
+  });
+
   return {
     conversations: conversations || [],
     messages,
     sendMessage,
     markAsRead,
+    markConversationAsRead,
   };
 };
