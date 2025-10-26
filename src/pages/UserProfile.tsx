@@ -3,11 +3,87 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Pencil, Plus } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, UserPlus, UserMinus, UserCheck } from "lucide-react";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import Footer from "@/components/Footer";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useFriends } from "@/hooks/useFriends";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect, useState } from "react";
 
 const UserProfile = () => {
+  const { id: userId } = useParams();
+  const { user } = useAuth();
+  const navigate = useNavigate();
+  const { profile, education, skills, experience, friendCount, isLoading } = useUserProfile(userId);
+  const { sendFriendRequest, removeFriend, checkFriendshipStatus } = useFriends();
+  const [friendshipStatus, setFriendshipStatus] = useState<any>(null);
+
+  useEffect(() => {
+    if (userId && user) {
+      checkFriendshipStatus(userId).then(setFriendshipStatus);
+    }
+  }, [userId, user]);
+
+  if (!userId) {
+    navigate("/");
+    return null;
+  }
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>User not found</p>
+      </div>
+    );
+  }
+
+  const handleFriendAction = async () => {
+    if (!friendshipStatus) {
+      await sendFriendRequest.mutateAsync(userId);
+      const status = await checkFriendshipStatus(userId);
+      setFriendshipStatus(status);
+    } else if (friendshipStatus.status === "accepted") {
+      await removeFriend.mutateAsync(friendshipStatus.id);
+      setFriendshipStatus(null);
+    }
+  };
+
+  const getFriendButtonContent = () => {
+    if (!friendshipStatus) {
+      return (
+        <>
+          <UserPlus className="h-4 w-4 mr-2" />
+          Add Friend
+        </>
+      );
+    } else if (friendshipStatus.status === "pending") {
+      return (
+        <>
+          <UserCheck className="h-4 w-4 mr-2" />
+          Request Sent
+        </>
+      );
+    } else if (friendshipStatus.status === "accepted") {
+      return (
+        <>
+          <UserMinus className="h-4 w-4 mr-2" />
+          Remove Friend
+        </>
+      );
+    }
+  };
+
+  const isFriendButtonDisabled = friendshipStatus?.status === "pending";
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -77,113 +153,120 @@ const UserProfile = () => {
 
                   {/* Profile Info */}
                   <div className="px-6 pb-6">
-                    <div className="relative -mt-16 mb-4">
+                     <div className="relative -mt-16 mb-4">
                       <Avatar className="h-32 w-32 border-4 border-background">
-                        <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=shifat" />
-                        <AvatarFallback>SM</AvatarFallback>
+                        <AvatarImage src={profile.avatar_url || ""} />
+                        <AvatarFallback>
+                          <User className="h-16 w-16" />
+                        </AvatarFallback>
                       </Avatar>
                     </div>
 
                     <div className="space-y-2">
-                      <h2 className="text-2xl font-bold text-foreground">Shifat Mahamud</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Undergraduate CSE Student | Entrepreneurship | B2C E-commerce
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Birullia, Savar, Dhaka
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Empower NextGen Ltd
-                      </p>
-                      <p className="text-sm text-primary font-medium">4 connections</p>
+                      <h2 className="text-2xl font-bold text-foreground">{profile.full_name || "Unknown User"}</h2>
+                      {profile.bio && (
+                        <p className="text-sm text-muted-foreground">{profile.bio}</p>
+                      )}
+                      {profile.location && (
+                        <p className="text-xs text-muted-foreground">{profile.location}</p>
+                      )}
+                      {profile.company && (
+                        <p className="text-xs text-muted-foreground">{profile.company}</p>
+                      )}
+                      <p className="text-sm text-primary font-medium">{friendCount} connections</p>
                     </div>
 
                     <div className="flex gap-3 mt-4">
-                      <Button variant="default">Message</Button>
-                      <Button variant="outline">Request</Button>
-                      <Button variant="outline">Follow</Button>
+                      <Link to={`/messages?user=${userId}`}>
+                        <Button variant="default">
+                          <MessageSquare className="h-4 w-4 mr-2" />
+                          Message
+                        </Button>
+                      </Link>
+                      <Button 
+                        variant="outline"
+                        onClick={handleFriendAction}
+                        disabled={isFriendButtonDisabled || sendFriendRequest.isPending || removeFriend.isPending}
+                      >
+                        {getFriendButtonContent()}
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
               {/* About Section */}
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold text-foreground mb-4">About</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Hi! I'm a curious and motivated individual who enjoys learning new things and taking on challenges. 
-                    I have a passion for [insert your interest or field—e.g., technology, art, business, etc.] and enjoy 
-                    working on projects that allow me to grow and be creative. Whether I'm collaborating with others or 
-                    working independently...
-                    <span className="text-primary cursor-pointer ml-1">See more</span>
-                  </p>
-                </CardContent>
-              </Card>
+              {profile.bio && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">About</h3>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {profile.bio}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Education Section */}
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-foreground">Educations</h3>
-                    <div className="flex gap-2">
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+              {education.length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">Education</h3>
+                    <div className="space-y-4">
+                      {education.map((edu) => (
+                        <div key={edu.id}>
+                          <h4 className="font-semibold text-foreground">{edu.institution}</h4>
+                          {edu.degree && (
+                            <p className="text-sm text-muted-foreground">{edu.degree}</p>
+                          )}
+                          {edu.period && (
+                            <p className="text-xs text-muted-foreground">{edu.period}</p>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                  <div className="space-y-3">
-                    <div>
-                      <h4 className="font-semibold text-foreground">Daffodil International University</h4>
-                      <p className="text-sm text-muted-foreground">Bachelor of Computer Science and Engineering</p>
-                      <p className="text-xs text-muted-foreground">2022-Present</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Skills Section */}
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-foreground">Skills</h3>
-                    <div className="flex gap-2">
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+              {skills.length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">Skills</h3>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill) => (
+                        <Badge key={skill.id} variant="secondary">
+                          {skill.skill_name}
+                        </Badge>
+                      ))}
                     </div>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    <Badge variant="default" className="bg-primary">Data Analysis</Badge>
-                    <Badge variant="default" className="bg-primary">html</Badge>
-                    <Badge variant="default" className="bg-primary">CSS</Badge>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Experience Section */}
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-foreground">Experience</h3>
-                    <div className="flex gap-2">
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
-                        <Plus className="h-4 w-4" />
-                      </Button>
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
-                        <Pencil className="h-4 w-4" />
-                      </Button>
+              {experience.length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">Experience</h3>
+                    <div className="space-y-4">
+                      {experience.map((exp) => (
+                        <div key={exp.id}>
+                          <h4 className="font-semibold text-foreground">{exp.position}</h4>
+                          <p className="text-sm text-muted-foreground">{exp.company}</p>
+                          {exp.period && (
+                            <p className="text-xs text-muted-foreground">{exp.period}</p>
+                          )}
+                          {exp.description && (
+                            <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                  </div>
-                  <p className="text-sm text-muted-foreground">No experience added yet.</p>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Sidebar */}

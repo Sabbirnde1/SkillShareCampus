@@ -11,6 +11,7 @@ import Join from "./pages/Join";
 import Campus from "./pages/Campus";
 import Friends from "./pages/Friends";
 import PendingRequests from "./pages/PendingRequests";
+import SearchUsers from "./pages/SearchUsers";
 import Messages from "./pages/Messages";
 import Notifications from "./pages/Notifications";
 import Profile from "./pages/Profile";
@@ -34,6 +35,7 @@ const App = () => (
             <Route path="/campus" element={<ProtectedRoute><Campus /></ProtectedRoute>} />
             <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
             <Route path="/pending-requests" element={<ProtectedRoute><PendingRequests /></ProtectedRoute>} />
+            <Route path="/search" element={<ProtectedRoute><SearchUsers /></ProtectedRoute>} />
             <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
             <Route path="/notifications" element={<ProtectedRoute><Notifications /></ProtectedRoute>} />
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

@@ -2,11 +2,24 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Pencil } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Pencil, LogOut } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const Profile = () => {
+  const { user, signOut } = useAuth();
+  const { profile, friendCount, isLoading } = useUserProfile(user?.id);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <p>Loading profile...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
@@ -84,8 +97,10 @@ const Profile = () => {
                   <div className="px-6 pb-6">
                     <div className="relative -mt-16 mb-4">
                       <Avatar className="h-32 w-32 border-4 border-background">
-                        <AvatarImage src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" />
-                        <AvatarFallback>DI</AvatarFallback>
+                        <AvatarImage src={profile?.avatar_url || ""} />
+                        <AvatarFallback>
+                          <User className="h-16 w-16" />
+                        </AvatarFallback>
                       </Avatar>
                       <Button 
                         size="icon" 
@@ -97,44 +112,47 @@ const Profile = () => {
                     </div>
 
                     <div className="space-y-2">
-                      <h2 className="text-2xl font-bold text-foreground">Md. Didarul Islam</h2>
-                      <p className="text-sm text-muted-foreground">
-                        Undergraduate CSE Student | Entrepreneurship | B2C E-commerce
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Brindis, Savar, Dhaka
-                      </p>
-                      <p className="text-xs text-muted-foreground">
-                        Empower NextGen Ltd
-                      </p>
-                      <p className="text-sm text-primary font-medium">4 connections</p>
+                      <h2 className="text-2xl font-bold text-foreground">
+                        {profile?.full_name || user?.email || "User"}
+                      </h2>
+                      {profile?.bio && (
+                        <p className="text-sm text-muted-foreground">{profile.bio}</p>
+                      )}
+                      {profile?.location && (
+                        <p className="text-xs text-muted-foreground">{profile.location}</p>
+                      )}
+                      {profile?.company && (
+                        <p className="text-xs text-muted-foreground">{profile.company}</p>
+                      )}
+                      <p className="text-sm text-primary font-medium">{friendCount} connections</p>
                     </div>
 
                     <div className="flex gap-3 mt-4">
                       <Button variant="default">Share Profile</Button>
-                      <Button variant="outline">Log Out</Button>
+                      <Button variant="outline" onClick={signOut}>
+                        <LogOut className="h-4 w-4 mr-2" />
+                        Log Out
+                      </Button>
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* About Section */}
-              <Card className="mt-6">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between mb-4">
-                    <h3 className="text-xl font-semibold text-foreground">About</h3>
-                    <Button size="icon" variant="ghost" className="h-8 w-8">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    Hi! I'm a curious and motivated individual who enjoys learning new things and taking on challenges. 
-                    I have a passion for [insert your interest or field—e.g., technology, art, business, etc.] and enjoy 
-                    working on projects that allow me to grow and be creative. Whether I'm collaborating with others or 
-                    working independently, I always strive to bring fresh ideas and innovative solutions to the table.
-                  </p>
-                </CardContent>
-              </Card>
+              {profile.bio && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-foreground">About</h3>
+                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {profile.bio}
+                    </p>
+                  </CardContent>
+                </Card>
+              )}
             </div>
 
             {/* Sidebar */}

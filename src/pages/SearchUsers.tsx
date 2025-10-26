@@ -1,21 +1,17 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, UserPlus } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
+import { useUserSearch } from "@/hooks/useUserSearch";
 import { useFriends } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
-const Friends = () => {
-  const { friends, isLoading } = useFriends();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <p>Loading friends...</p>
-      </div>
-    );
-  }
+const SearchUsers = () => {
+  const [searchQuery, setSearchQuery] = useState("");
+  const { users, isLoading } = useUserSearch(searchQuery);
+  const { sendFriendRequest } = useFriends();
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -29,16 +25,15 @@ const Friends = () => {
           </Link>
           
           <div className="flex-1 max-w-md mx-8">
-            <Link to="/search">
-              <div className="relative cursor-pointer">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input 
-                  placeholder="Search users..." 
-                  className="pl-10 bg-gray-50"
-                  readOnly
-                />
-              </div>
-            </Link>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input 
+                placeholder="Search users..." 
+                className="pl-10 bg-gray-50"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
           </div>
 
           <nav className="flex items-center gap-6">
@@ -50,7 +45,7 @@ const Friends = () => {
               <Users className="h-5 w-5" />
               <span className="text-xs font-medium">Requests</span>
             </Link>
-            <Link to="/courses" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
+            <Link to="/campus" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
               <BookOpen className="h-5 w-5" />
               <span className="text-xs">Courses</span>
             </Link>
@@ -73,58 +68,62 @@ const Friends = () => {
       {/* Main Content */}
       <main className="flex-1 px-6 py-8">
         <div className="max-w-7xl mx-auto">
-          {/* Page Header */}
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-foreground">Catch up with my friends</h2>
-            <div className="flex gap-3">
-              <Button className="bg-primary text-primary-foreground hover:bg-primary/90">
-                Friends
-              </Button>
-              <Link to="/pending-requests">
-                <Button variant="outline">
-                  Pending Requests
-                </Button>
-              </Link>
-            </div>
-          </div>
+          <h2 className="text-2xl font-semibold text-foreground mb-6">Find People</h2>
 
-          {/* Friends Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            {friends.length === 0 ? (
+          {/* Search Results */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {searchQuery.length < 2 ? (
               <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground">No friends yet. Start connecting with people!</p>
+                <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <p className="text-muted-foreground">Enter at least 2 characters to search for users</p>
+              </div>
+            ) : isLoading ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">Searching...</p>
+              </div>
+            ) : users.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No users found</p>
               </div>
             ) : (
-              friends.map((friend) => (
-                <Card key={friend.id} className="overflow-hidden">
-                  <div className="relative h-24 bg-gradient-to-r from-blue-600 to-blue-800">
-                    <div className="absolute inset-0 opacity-30" 
-                      style={{
-                        backgroundImage: "url('data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.4'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')"
-                      }}
-                    />
-                  </div>
-                  
-                  <div className="p-4 relative">
-                    <Link to={`/user/${friend.profile.id}`} className="absolute -top-8 left-4">
-                      <Avatar className="w-16 h-16 border-4 border-white">
-                        <AvatarImage src={friend.profile.avatar_url || ""} />
+              users.map((user) => (
+                <Card key={user.id} className="p-6 bg-white">
+                  <div className="flex items-start gap-4 mb-4">
+                    <Link to={`/user/${user.id}`}>
+                      <Avatar className="w-16 h-16 flex-shrink-0">
+                        <AvatarImage src={user.avatar_url || ""} />
                         <AvatarFallback>
                           <User className="h-8 w-8" />
                         </AvatarFallback>
                       </Avatar>
                     </Link>
                     
-                    <div className="mt-10">
-                      <Link to={`/user/${friend.profile.id}`}>
+                    <div className="flex-1 min-w-0">
+                      <Link to={`/user/${user.id}`}>
                         <h3 className="font-semibold text-foreground mb-1 hover:text-primary">
-                          {friend.profile.full_name || "Unknown User"}
+                          {user.full_name || "Unknown User"}
                         </h3>
                       </Link>
-                      <p className="text-xs text-muted-foreground mb-1">{friend.profile.bio || "No bio"}</p>
-                      <p className="text-xs text-muted-foreground mb-1">{friend.profile.location || "No location"}</p>
-                      <p className="text-xs text-muted-foreground">{friend.profile.company || "No company"}</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">{user.bio || "No bio"}</p>
+                      <p className="text-xs text-muted-foreground mb-0.5">{user.location || "No location"}</p>
+                      <p className="text-xs text-muted-foreground">{user.company || "No company"}</p>
                     </div>
+                  </div>
+                  
+                  <div className="flex gap-3">
+                    <Link to={`/user/${user.id}`} className="flex-1">
+                      <Button variant="outline" className="w-full">
+                        View Profile
+                      </Button>
+                    </Link>
+                    <Button 
+                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
+                      onClick={() => sendFriendRequest.mutate(user.id)}
+                      disabled={sendFriendRequest.isPending}
+                    >
+                      <UserPlus className="h-4 w-4 mr-2" />
+                      Add Friend
+                    </Button>
                   </div>
                 </Card>
               ))
@@ -150,4 +149,4 @@ const Friends = () => {
   );
 };
 
-export default Friends;
+export default SearchUsers;

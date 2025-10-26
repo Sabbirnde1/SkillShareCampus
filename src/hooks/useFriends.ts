@@ -106,12 +106,35 @@ export const useFriends = () => {
 
   const acceptFriendRequest = useMutation({
     mutationFn: async (requestId: string) => {
-      const { error } = await supabase
+      if (!user) throw new Error("Not authenticated");
+
+      // Get the original request
+      const { data: request, error: fetchError } = await supabase
+        .from("friendships")
+        .select("user_id, friend_id")
+        .eq("id", requestId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Update the original request to accepted
+      const { error: updateError } = await supabase
         .from("friendships")
         .update({ status: "accepted" })
         .eq("id", requestId);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
+
+      // Create reciprocal friendship
+      const { error: insertError } = await supabase
+        .from("friendships")
+        .insert({
+          user_id: request.friend_id,
+          friend_id: request.user_id,
+          status: "accepted",
+        });
+
+      if (insertError) throw insertError;
     },
     onSuccess: () => {
       toast.success("Friend request accepted");
@@ -141,6 +164,62 @@ export const useFriends = () => {
     },
   });
 
+  const removeFriend = useMutation({
+    mutationFn: async (friendshipId: string) => {
+      if (!user) throw new Error("Not authenticated");
+
+      // Delete both friendship records
+      const { data: friendship, error: fetchError } = await supabase
+        .from("friendships")
+        .select("user_id, friend_id")
+        .eq("id", friendshipId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // Delete the main friendship
+      const { error: deleteError1 } = await supabase
+        .from("friendships")
+        .delete()
+        .eq("id", friendshipId);
+
+      if (deleteError1) throw deleteError1;
+
+      // Delete the reciprocal friendship
+      const { error: deleteError2 } = await supabase
+        .from("friendships")
+        .delete()
+        .eq("user_id", friendship.friend_id)
+        .eq("friend_id", friendship.user_id);
+
+      if (deleteError2) throw deleteError2;
+    },
+    onSuccess: () => {
+      toast.success("Friend removed");
+      queryClient.invalidateQueries({ queryKey: ["friends"] });
+    },
+    onError: () => {
+      toast.error("Failed to remove friend");
+    },
+  });
+
+  const checkFriendshipStatus = async (userId: string) => {
+    if (!user) return null;
+
+    const { data, error } = await supabase
+      .from("friendships")
+      .select("id, status")
+      .or(`and(user_id.eq.${user.id},friend_id.eq.${userId}),and(user_id.eq.${userId},friend_id.eq.${user.id})`)
+      .maybeSingle();
+
+    if (error) {
+      console.error("Error checking friendship:", error);
+      return null;
+    }
+
+    return data;
+  };
+
   return {
     friends: friends || [],
     pendingRequests: pendingRequests || [],
@@ -148,5 +227,7 @@ export const useFriends = () => {
     sendFriendRequest,
     acceptFriendRequest,
     rejectFriendRequest,
+    removeFriend,
+    checkFriendshipStatus,
   };
 };

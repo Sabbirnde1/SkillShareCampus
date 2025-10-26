@@ -21,13 +21,16 @@ const PendingRequests = () => {
           </Link>
           
           <div className="flex-1 max-w-md mx-8">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                placeholder="Search" 
-                className="pl-10 bg-gray-50"
-              />
-            </div>
+            <Link to="/search">
+              <div className="relative cursor-pointer">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input 
+                  placeholder="Search users..." 
+                  className="pl-10 bg-gray-50"
+                  readOnly
+                />
+              </div>
+            </Link>
           </div>
 
           <nav className="flex items-center gap-6">
