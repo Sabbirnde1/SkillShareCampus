@@ -23,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PostComments } from "@/components/PostComments";
 
 const Campus = () => {
   const { user } = useAuth();
@@ -265,7 +266,7 @@ const Campus = () => {
                       </span>
                     </div>
                     
-                    <div className="flex items-center justify-around">
+                    <div className="flex items-center justify-around mb-3">
                       <button 
                         onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
                         className={`flex items-center gap-2 hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors ${
@@ -278,14 +279,12 @@ const Campus = () => {
                         <span className="text-sm font-medium">{post.user_has_liked ? 'Liked' : 'Like'}</span>
                       </button>
                       <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors">
-                        <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm font-medium">Comment</span>
-                      </button>
-                      <button className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors">
                         <Share2 className="w-5 h-5" />
                         <span className="text-sm font-medium">Share</span>
                       </button>
                     </div>
+
+                    <PostComments postId={post.id} commentsCount={post.comments_count} />
                   </Card>
                 ))}
               </div>

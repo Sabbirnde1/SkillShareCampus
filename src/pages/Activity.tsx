@@ -14,7 +14,7 @@ import {
   User, 
   Search, 
   ThumbsUp, 
-  MessageCircle, 
+  MessageCircle,
   Trash2,
   Image as ImageIcon,
   Hash
@@ -38,6 +38,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { PostComments } from "@/components/PostComments";
 
 const Activity = () => {
   const { user } = useAuth();
@@ -342,35 +343,25 @@ const Activity = () => {
 
                         <Separator className="mb-3" />
 
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-6">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
-                              className={`gap-2 hover:text-primary ${
-                                post.user_has_liked 
-                                  ? 'text-primary font-semibold' 
-                                  : 'text-muted-foreground'
-                              }`}
-                            >
-                              <ThumbsUp className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
-                              <span className="text-sm font-medium">
-                                {post.likes_count > 0 ? post.likes_count : "Like"}
-                              </span>
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="gap-2 text-muted-foreground hover:text-primary"
-                            >
-                              <MessageCircle className="h-4 w-4" />
-                              <span className="text-sm font-medium">
-                                {post.comments_count > 0 ? post.comments_count : "Comment"}
-                              </span>
-                            </Button>
-                          </div>
+                        <div className="flex items-center gap-6 mb-3">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
+                            className={`gap-2 hover:text-primary ${
+                              post.user_has_liked 
+                                ? 'text-primary font-semibold' 
+                                : 'text-muted-foreground'
+                            }`}
+                          >
+                            <ThumbsUp className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
+                            <span className="text-sm font-medium">
+                              {post.likes_count > 0 ? post.likes_count : "Like"}
+                            </span>
+                          </Button>
                         </div>
+
+                        <PostComments postId={post.id} commentsCount={post.comments_count} />
                       </CardContent>
                     </Card>
                   ))
