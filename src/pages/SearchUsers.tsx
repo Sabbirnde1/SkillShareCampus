@@ -1,18 +1,47 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, UserPlus } from "lucide-react";
-import { Link } from "react-router-dom";
-import { useState } from "react";
-import { useUserSearch } from "@/hooks/useUserSearch";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, UserPlus, Hash, FileText, X, Clock } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
 import { useFriends } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import OnlineStatus from "@/components/OnlineStatus";
+import { useEnhancedSearch, getRecentSearches, clearRecentSearches, SearchType } from "@/hooks/useEnhancedSearch";
+import NotificationBadge from "@/components/NotificationBadge";
 
 const SearchUsers = () => {
   const [searchQuery, setSearchQuery] = useState("");
-  const { users, isLoading } = useUserSearch(searchQuery);
+  const [searchType, setSearchType] = useState<SearchType>("all");
+  const [recentSearches, setRecentSearches] = useState<string[]>([]);
+  const { results, userResults, postResults, hashtagResults, isLoading } = useEnhancedSearch(searchQuery, searchType);
   const { sendFriendRequest } = useFriends();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    setRecentSearches(getRecentSearches());
+  }, []);
+
+  const handleRecentSearchClick = (query: string) => {
+    setSearchQuery(query);
+  };
+
+  const handleClearRecent = () => {
+    clearRecentSearches();
+    setRecentSearches([]);
+  };
+
+  const handleResultClick = (result: any) => {
+    if (result.type === "user") {
+      navigate(`/user/${result.id}`);
+    } else if (result.type === "post") {
+      navigate(`/activity#post-${result.id}`);
+    } else if (result.type === "hashtag") {
+      navigate(`/activity?hashtag=${encodeURIComponent(result.metadata.tag)}`);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -54,10 +83,7 @@ const SearchUsers = () => {
               <MessageSquare className="h-5 w-5" />
               <span className="text-xs">Messages</span>
             </Link>
-            <Link to="/notifications" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
-              <Bell className="h-5 w-5" />
-              <span className="text-xs">Notifications</span>
-            </Link>
+            <NotificationBadge />
             <Link to="/profile" className="flex flex-col items-center gap-1 text-muted-foreground hover:text-foreground">
               <User className="h-5 w-5" />
               <span className="text-xs">Me</span>
@@ -69,81 +95,184 @@ const SearchUsers = () => {
       {/* Main Content */}
       <main className="flex-1 px-6 py-8">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl font-semibold text-foreground mb-6">Find People</h2>
+          <h2 className="text-2xl font-semibold text-foreground mb-6">Search</h2>
 
-          {/* Search Results */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {searchQuery.length < 2 ? (
-              <div className="col-span-full text-center py-12">
-                <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                <p className="text-muted-foreground">Enter at least 2 characters to search for users</p>
+          {/* Recent Searches */}
+          {searchQuery.length < 2 && recentSearches.length > 0 && (
+            <Card className="p-4 mb-6">
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Clock className="h-4 w-4" />
+                  Recent Searches
+                </h3>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleClearRecent}
+                  className="text-xs"
+                >
+                  Clear all
+                </Button>
               </div>
-            ) : isLoading ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground">Searching...</p>
+              <div className="flex flex-wrap gap-2">
+                {recentSearches.map((query, idx) => (
+                  <Badge
+                    key={idx}
+                    variant="secondary"
+                    className="cursor-pointer hover:bg-primary hover:text-primary-foreground transition-colors"
+                    onClick={() => handleRecentSearchClick(query)}
+                  >
+                    {query}
+                  </Badge>
+                ))}
               </div>
-            ) : users.length === 0 ? (
-              <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground">No users found</p>
-              </div>
-            ) : (
-              users.map((user) => (
-                <Card key={user.id} className="p-6 bg-white">
-                  <div className="flex items-start gap-4 mb-4">
-                    <Link to={`/user/${user.id}`}>
-                      <div className="relative">
-                        <Avatar className="w-16 h-16 flex-shrink-0">
-                          <AvatarImage src={user.avatar_url || ""} />
-                          <AvatarFallback>
-                            <User className="h-8 w-8" />
-                          </AvatarFallback>
-                        </Avatar>
-                        <OnlineStatus 
-                          userId={user.id} 
-                          lastSeenAt={user.last_seen_at} 
-                          showText={false}
-                          className="absolute bottom-0 right-0"
-                        />
-                      </div>
-                    </Link>
-                    
-                    <div className="flex-1 min-w-0">
-                      <Link to={`/user/${user.id}`}>
-                        <h3 className="font-semibold text-foreground mb-1 hover:text-primary">
-                          {user.full_name || "Unknown User"}
-                        </h3>
-                      </Link>
-                      <OnlineStatus 
-                        userId={user.id} 
-                        lastSeenAt={user.last_seen_at}
-                        showDot={false}
-                        className="mb-1"
-                      />
-                      <p className="text-xs text-muted-foreground mb-0.5">{user.bio || "No bio"}</p>
-                      <p className="text-xs text-muted-foreground mb-0.5">{user.location || "No location"}</p>
-                      <p className="text-xs text-muted-foreground">{user.company || "No company"}</p>
-                    </div>
+            </Card>
+          )}
+
+          {/* Search Filters */}
+          {searchQuery.length >= 2 && (
+            <Tabs value={searchType} onValueChange={(v) => setSearchType(v as SearchType)} className="mb-6">
+              <TabsList>
+                <TabsTrigger value="all">
+                  All ({results.length})
+                </TabsTrigger>
+                <TabsTrigger value="people">
+                  <Users className="h-4 w-4 mr-2" />
+                  People ({userResults.length})
+                </TabsTrigger>
+                <TabsTrigger value="posts">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Posts ({postResults.length})
+                </TabsTrigger>
+                <TabsTrigger value="hashtags">
+                  <Hash className="h-4 w-4 mr-2" />
+                  Hashtags ({hashtagResults.length})
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value={searchType} className="mt-6">
+                {isLoading ? (
+                  <div className="text-center py-12">
+                    <p className="text-muted-foreground">Searching...</p>
                   </div>
-                  
-                  <div className="flex gap-3">
-                    <Link to={`/user/${user.id}`} className="flex-1">
-                      <Button variant="outline" className="w-full">
-                        View Profile
-                      </Button>
-                    </Link>
-                    <Button 
-                      className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90"
-                      onClick={() => sendFriendRequest.mutate(user.id)}
-                      disabled={sendFriendRequest.isPending}
-                    >
-                      <UserPlus className="h-4 w-4 mr-2" />
-                      Add Friend
-                    </Button>
+                ) : results.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <p className="text-muted-foreground">No results found for "{searchQuery}"</p>
                   </div>
-                </Card>
-              ))
-            )}
-          </div>
+                ) : (
+                  <div className="space-y-3">
+                    {results.map((result) => (
+                      <Card 
+                        key={`${result.type}-${result.id}`} 
+                        className="p-4 hover:bg-accent cursor-pointer transition-colors"
+                        onClick={() => handleResultClick(result)}
+                      >
+                        <div className="flex items-start gap-4">
+                          <div className="flex-shrink-0">
+                            {result.type === "user" ? (
+                              <div className="relative">
+                                <Avatar className="w-12 h-12">
+                                  <AvatarImage src={result.avatar_url || ""} />
+                                  <AvatarFallback>
+                                    <User className="h-6 w-6" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <OnlineStatus 
+                                  userId={result.id}
+                                  lastSeenAt={result.metadata?.last_seen_at}
+                                  showText={false}
+                                  className="absolute bottom-0 right-0"
+                                />
+                              </div>
+                            ) : result.type === "post" ? (
+                              <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
+                                <FileText className="h-6 w-6 text-primary" />
+                              </div>
+                            ) : (
+                              <div className="w-12 h-12 rounded-full bg-secondary flex items-center justify-center">
+                                <Hash className="h-6 w-6 text-secondary-foreground" />
+                              </div>
+                            )}
+                          </div>
+
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-foreground truncate">
+                                {result.title}
+                              </h3>
+                              {result.type === "user" && (
+                                <Badge variant="outline" className="text-xs">
+                                  <Users className="h-3 w-3 mr-1" />
+                                  Person
+                                </Badge>
+                              )}
+                              {result.type === "post" && (
+                                <Badge variant="outline" className="text-xs">
+                                  <FileText className="h-3 w-3 mr-1" />
+                                  Post
+                                </Badge>
+                              )}
+                              {result.type === "hashtag" && (
+                                <Badge variant="outline" className="text-xs">
+                                  <Hash className="h-3 w-3 mr-1" />
+                                  Tag
+                                </Badge>
+                              )}
+                            </div>
+                            {result.subtitle && (
+                              <p className="text-sm text-muted-foreground truncate">
+                                {result.subtitle}
+                              </p>
+                            )}
+                          </div>
+
+                          {result.type === "user" && (
+                            <Button 
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                sendFriendRequest.mutate(result.id);
+                              }}
+                              disabled={sendFriendRequest.isPending}
+                            >
+                              <UserPlus className="h-4 w-4 mr-2" />
+                              Add
+                            </Button>
+                          )}
+                        </div>
+                      </Card>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+            </Tabs>
+          )}
+
+          {/* Empty State */}
+          {searchQuery.length < 2 && recentSearches.length === 0 && (
+            <div className="text-center py-12">
+              <Search className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
+              <h3 className="text-lg font-semibold mb-2">Search SkillShare Campus</h3>
+              <p className="text-muted-foreground mb-4">
+                Find people, posts, and topics
+              </p>
+              <div className="flex flex-wrap justify-center gap-2 max-w-md mx-auto">
+                <Badge variant="outline" className="text-sm">
+                  <Users className="h-3 w-3 mr-1" />
+                  People
+                </Badge>
+                <Badge variant="outline" className="text-sm">
+                  <FileText className="h-3 w-3 mr-1" />
+                  Posts
+                </Badge>
+                <Badge variant="outline" className="text-sm">
+                  <Hash className="h-3 w-3 mr-1" />
+                  Hashtags
+                </Badge>
+              </div>
+            </div>
+          )}
         </div>
       </main>
 
