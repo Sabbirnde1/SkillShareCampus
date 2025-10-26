@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
+import NotificationBadge from "@/components/NotificationBadge";
 
 const Header = () => {
   const location = useLocation();
@@ -34,6 +35,7 @@ const Header = () => {
                   Messages
                 </Button>
               </Link>
+              <NotificationBadge />
               <Link to="/profile">
                 <Button variant="ghost" className="text-foreground hover:bg-white/50">
                   Profile
