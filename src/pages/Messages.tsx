@@ -3,6 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send, Paperclip, X, FileText, Download, Check, CheckCheck } from "lucide-react";
 import NotificationBadge from "@/components/NotificationBadge";
 import { Link, useSearchParams } from "react-router-dom";
@@ -366,13 +367,24 @@ const Messages = () => {
                                         {format(new Date(message.created_at), "h:mm a")}
                                       </p>
                                       {isSent && (
-                                        <span className="ml-1">
-                                          {message.is_read ? (
-                                            <CheckCheck className="h-3 w-3 text-blue-500" />
-                                          ) : (
-                                            <Check className="h-3 w-3 text-muted-foreground" />
-                                          )}
-                                        </span>
+                                        <TooltipProvider>
+                                          <Tooltip delayDuration={200}>
+                                            <TooltipTrigger asChild>
+                                              <span className="ml-1 cursor-help">
+                                                {message.is_read ? (
+                                                  <CheckCheck className="h-3.5 w-3.5 text-blue-500" />
+                                                ) : (
+                                                  <Check className="h-3.5 w-3.5 text-muted-foreground" />
+                                                )}
+                                              </span>
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p className="text-xs">
+                                                {message.is_read ? "Read" : "Delivered"}
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
                                       )}
                                     </div>
                                   </div>
