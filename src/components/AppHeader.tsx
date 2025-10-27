@@ -5,7 +5,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import NotificationBadge from "@/components/NotificationBadge";
 
 interface AppHeaderProps {
-  currentPage: "campus" | "activity" | "friends" | "messages" | "profile" | "notifications";
+  currentPage: "campus" | "activity" | "friends" | "messages" | "profile" | "notifications" | "admin";
 }
 
 export const AppHeader = ({ currentPage }: AppHeaderProps) => {
