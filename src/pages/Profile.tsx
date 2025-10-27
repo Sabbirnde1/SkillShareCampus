@@ -17,6 +17,7 @@ import { ProfileCompletenessWidget } from "@/components/ProfileCompletenessWidge
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { AppHeader } from "@/components/AppHeader";
+import { EditProfileDialog } from "@/components/EditProfileDialog";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -26,6 +27,7 @@ const Profile = () => {
   const coverFileInputRef = useRef<HTMLInputElement>(null);
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
+  const [editDialogOpen, setEditDialogOpen] = useState(false);
 
   const handleAvatarFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -187,7 +189,10 @@ const Profile = () => {
                     </div>
 
                     <div className="flex gap-3 mt-4">
-                      <Button variant="default">Share Profile</Button>
+                      <Button variant="default" onClick={() => setEditDialogOpen(true)}>
+                        <Pencil className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
                       <Button variant="outline" onClick={signOut}>
                         <LogOut className="h-4 w-4 mr-2" />
                         Log Out
@@ -197,18 +202,86 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
-              {profile.bio && (
+              {profile?.bio && (
                 <Card className="mt-6">
                   <CardContent className="p-6">
                     <div className="flex items-start justify-between mb-4">
                       <h3 className="text-xl font-semibold text-foreground">About</h3>
-                      <Button size="icon" variant="ghost" className="h-8 w-8">
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditDialogOpen(true)}>
                         <Pencil className="h-4 w-4" />
                       </Button>
                     </div>
                     <p className="text-sm text-muted-foreground leading-relaxed">
                       {profile.bio}
                     </p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Education Section */}
+              {education && education.length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-foreground">Education</h3>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditDialogOpen(true)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-4">
+                      {education.map((edu) => (
+                        <div key={edu.id} className="border-l-2 border-primary pl-4">
+                          <h4 className="font-semibold text-foreground">{edu.institution}</h4>
+                          {edu.degree && <p className="text-sm text-muted-foreground">{edu.degree}</p>}
+                          {edu.period && <p className="text-xs text-muted-foreground mt-1">{edu.period}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Experience Section */}
+              {experience && experience.length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-foreground">Experience</h3>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditDialogOpen(true)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="space-y-4">
+                      {experience.map((exp) => (
+                        <div key={exp.id} className="border-l-2 border-primary pl-4">
+                          <h4 className="font-semibold text-foreground">{exp.position}</h4>
+                          <p className="text-sm text-primary">{exp.company}</p>
+                          {exp.period && <p className="text-xs text-muted-foreground mt-1">{exp.period}</p>}
+                          {exp.description && <p className="text-sm text-muted-foreground mt-2">{exp.description}</p>}
+                        </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Skills Section */}
+              {skills && skills.length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-foreground">Skills</h3>
+                      <Button size="icon" variant="ghost" className="h-8 w-8" onClick={() => setEditDialogOpen(true)}>
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {skills.map((skill) => (
+                        <Badge key={skill.id} variant="secondary">
+                          {skill.skill_name}
+                        </Badge>
+                      ))}
+                    </div>
                   </CardContent>
                 </Card>
               )}
@@ -264,6 +337,16 @@ const Profile = () => {
       </main>
 
       <Footer />
+
+      {/* Edit Profile Dialog */}
+      <EditProfileDialog
+        open={editDialogOpen}
+        onOpenChange={setEditDialogOpen}
+        profile={profile}
+        education={education || []}
+        experience={experience || []}
+        skills={skills || []}
+      />
     </div>
   );
 };

@@ -70,3 +70,76 @@ export const validateComment = (content: string) => {
   }
   return sanitizeInput(result.data.content);
 };
+
+// Profile validation schemas
+export const profileBasicInfoSchema = z.object({
+  full_name: z
+    .string()
+    .trim()
+    .min(2, "Name must be at least 2 characters")
+    .max(100, "Name must be less than 100 characters"),
+  bio: z
+    .string()
+    .trim()
+    .max(500, "Bio must be less than 500 characters")
+    .optional(),
+  location: z
+    .string()
+    .trim()
+    .max(100, "Location must be less than 100 characters")
+    .optional(),
+  company: z
+    .string()
+    .trim()
+    .max(100, "Company must be less than 100 characters")
+    .optional(),
+});
+
+export const educationSchema = z.object({
+  institution: z
+    .string()
+    .trim()
+    .min(2, "Institution name is required")
+    .max(200, "Institution must be less than 200 characters"),
+  degree: z
+    .string()
+    .trim()
+    .max(200, "Degree must be less than 200 characters")
+    .optional(),
+  period: z
+    .string()
+    .trim()
+    .max(50, "Period must be less than 50 characters")
+    .optional(),
+});
+
+export const experienceSchema = z.object({
+  company: z
+    .string()
+    .trim()
+    .min(2, "Company name is required")
+    .max(200, "Company must be less than 200 characters"),
+  position: z
+    .string()
+    .trim()
+    .min(2, "Position is required")
+    .max(200, "Position must be less than 200 characters"),
+  description: z
+    .string()
+    .trim()
+    .max(500, "Description must be less than 500 characters")
+    .optional(),
+  period: z
+    .string()
+    .trim()
+    .max(50, "Period must be less than 50 characters")
+    .optional(),
+});
+
+export const skillSchema = z.object({
+  skill_name: z
+    .string()
+    .trim()
+    .min(2, "Skill name must be at least 2 characters")
+    .max(50, "Skill name must be less than 50 characters"),
+});
