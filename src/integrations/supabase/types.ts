@@ -403,6 +403,7 @@ export type Database = {
           edited_at: string | null
           hashtags: string[] | null
           id: string
+          image_url: string | null
           likes_count: number
           shared_count: number
           updated_at: string
@@ -415,6 +416,7 @@ export type Database = {
           edited_at?: string | null
           hashtags?: string[] | null
           id?: string
+          image_url?: string | null
           likes_count?: number
           shared_count?: number
           updated_at?: string
@@ -427,6 +429,7 @@ export type Database = {
           edited_at?: string | null
           hashtags?: string[] | null
           id?: string
+          image_url?: string | null
           likes_count?: number
           shared_count?: number
           updated_at?: string

@@ -19,7 +19,8 @@ import {
   Image as ImageIcon,
   Hash,
   Share2,
-  Edit
+  Edit,
+  X
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
@@ -51,6 +52,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { PostsFeedSkeleton } from "@/components/PostsFeedSkeleton";
 import { AppHeader } from "@/components/AppHeader";
+import { toast } from "sonner";
 
 const Activity = () => {
   const { user } = useAuth();
@@ -63,20 +65,52 @@ const Activity = () => {
   const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedPostForEdit, setSelectedPostForEdit] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleCreatePost = () => {
     if (!postContent.trim()) return;
 
     const hashtags = postContent.match(/#\w+/g) || [];
     createPost.mutate(
-      { content: postContent, hashtags },
+      { content: postContent, hashtags, image: selectedImage || undefined },
       {
         onSuccess: () => {
           setPostContent("");
+          setSelectedImage(null);
+          setImagePreview(null);
           setIsDialogOpen(false);
         },
       }
     );
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+    
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
   };
 
   const handleEditPost = (newContent: string) => {
@@ -171,14 +205,38 @@ const Activity = () => {
                             className="min-h-[150px] text-base resize-none border-0 focus-visible:ring-0 p-0"
                             maxLength={5000}
                           />
+                          {imagePreview && (
+                            <div className="relative">
+                              <img src={imagePreview} alt="Preview" className="max-h-64 rounded-lg object-cover w-full" />
+                              <Button
+                                size="icon"
+                                variant="destructive"
+                                className="absolute top-2 right-2"
+                                onClick={handleRemoveImage}
+                              >
+                                <X className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
                           <div className="flex items-center justify-between text-xs text-muted-foreground mb-2">
                             <span>{postContent.length}/5000 characters</span>
                           </div>
                           <div className="flex items-center justify-between pt-4 border-t">
                             <div className="flex gap-2">
-                              <Button variant="ghost" size="icon" disabled>
-                                <ImageIcon className="h-5 w-5" />
-                              </Button>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                onChange={handleImageSelect}
+                                className="hidden"
+                                id="activity-post-image-upload"
+                              />
+                              <label htmlFor="activity-post-image-upload">
+                                <Button variant="ghost" size="icon" asChild>
+                                  <span>
+                                    <ImageIcon className="h-5 w-5" />
+                                  </span>
+                                </Button>
+                              </label>
                               <Button 
                                 variant="ghost" 
                                 size="icon"
@@ -208,9 +266,18 @@ const Activity = () => {
                         </Button>
                       </DialogTrigger>
                     </Dialog>
-                    <Button variant="ghost" className="flex-1" size="sm" disabled>
-                      <ImageIcon className="h-4 w-4 mr-2" />
-                      Add photo
+                    <Button variant="ghost" className="flex-1" size="sm">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleImageSelect}
+                        className="hidden"
+                        id="activity-quick-image-upload"
+                      />
+                      <label htmlFor="activity-quick-image-upload" className="flex items-center cursor-pointer">
+                        <ImageIcon className="h-4 w-4 mr-2" />
+                        Add photo
+                      </label>
                     </Button>
                   </div>
                 </CardContent>
@@ -358,6 +425,15 @@ const Activity = () => {
                                   </Badge>
                                 </Link>
                               ))}
+                            </div>
+                          )}
+                          {post.image_url && (
+                            <div className="mt-3 rounded-lg overflow-hidden">
+                              <img 
+                                src={post.image_url} 
+                                alt="Post attachment" 
+                                className="w-full max-h-96 object-cover"
+                              />
                             </div>
                           )}
                         </div>

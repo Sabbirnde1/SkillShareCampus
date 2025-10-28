@@ -18,6 +18,7 @@ export interface Post {
   author_id: string;
   content: string;
   hashtags: string[];
+  image_url: string | null;
   likes_count: number;
   comments_count: number;
   shared_count: number;
@@ -48,6 +49,7 @@ export const usePosts = () => {
           author_id,
           content,
           hashtags,
+          image_url,
           likes_count,
           comments_count,
           shared_count,
@@ -103,7 +105,7 @@ export const usePosts = () => {
   }, [queryClient]);
 
   const createPost = useMutation({
-    mutationFn: async ({ content, hashtags }: { content: string; hashtags: string[] }) => {
+    mutationFn: async ({ content, hashtags, image }: { content: string; hashtags: string[]; image?: File }) => {
       if (!user) throw new Error("Not authenticated");
 
       // Check rate limit
@@ -115,10 +117,34 @@ export const usePosts = () => {
       // Validate and sanitize input
       const validated = validatePost(content, hashtags);
 
+      let imageUrl: string | null = null;
+
+      // Upload image if provided
+      if (image) {
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('post-images')
+          .upload(fileName, image, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-images')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+      }
+
       const { error } = await supabase.from("posts").insert({
         author_id: user.id,
         content: validated.content,
         hashtags: validated.hashtags,
+        image_url: imageUrl,
       });
 
       if (error) throw error;
@@ -148,19 +174,52 @@ export const usePosts = () => {
   });
 
   const editPost = useMutation({
-    mutationFn: async ({ postId, content, hashtags }: { postId: string; content: string; hashtags: string[] }) => {
+    mutationFn: async ({ postId, content, hashtags, image, removeImage }: { postId: string; content: string; hashtags: string[]; image?: File; removeImage?: boolean }) => {
       if (!user) throw new Error("Not authenticated");
 
       // Validate and sanitize input
       const validated = validatePost(content, hashtags);
 
+      let imageUrl: string | null | undefined = undefined;
+
+      // Handle image removal
+      if (removeImage) {
+        imageUrl = null;
+      }
+      // Upload new image if provided
+      else if (image) {
+        const fileExt = image.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError, data } = await supabase.storage
+          .from('post-images')
+          .upload(fileName, image, {
+            cacheControl: '3600',
+            upsert: false
+          });
+
+        if (uploadError) throw uploadError;
+        
+        const { data: { publicUrl } } = supabase.storage
+          .from('post-images')
+          .getPublicUrl(fileName);
+        
+        imageUrl = publicUrl;
+      }
+
+      const updateData: any = {
+        content: validated.content,
+        hashtags: validated.hashtags,
+        edited_at: new Date().toISOString(),
+      };
+
+      if (imageUrl !== undefined) {
+        updateData.image_url = imageUrl;
+      }
+
       const { error } = await supabase
         .from("posts")
-        .update({
-          content: validated.content,
-          hashtags: validated.hashtags,
-          edited_at: new Date().toISOString(),
-        })
+        .update(updateData)
         .eq("id", postId)
         .eq("author_id", user.id); // Extra security: ensure user owns the post
 

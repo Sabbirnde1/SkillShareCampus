@@ -5,7 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2, Edit } from "lucide-react";
+import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2, Edit, X, ImageIcon } from "lucide-react";
 import { EditPostDialog } from "@/components/EditPostDialog";
 import { Link } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
@@ -35,6 +35,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { PostsFeedSkeleton } from "@/components/PostsFeedSkeleton";
 import { AppHeader } from "@/components/AppHeader";
+import { toast } from "sonner";
 
 const Campus = () => {
   const { user } = useAuth();
@@ -46,20 +47,55 @@ const Campus = () => {
   const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [selectedPostForEdit, setSelectedPostForEdit] = useState<any>(null);
+  const [selectedImage, setSelectedImage] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
 
   const handleCreatePost = () => {
     if (!postContent.trim()) return;
 
     const hashtags = postContent.match(/#\w+/g) || [];
     createPost.mutate(
-      { content: postContent, hashtags },
+      { content: postContent, hashtags, image: selectedImage || undefined },
       {
         onSuccess: () => {
           setPostContent("");
+          setSelectedImage(null);
+          setImagePreview(null);
           setIsDialogOpen(false);
         },
       }
     );
+  };
+
+  const handleImageSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.type.startsWith('image/')) {
+      toast.error('Please select an image file');
+      return;
+    }
+
+    // Validate file size (max 5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be less than 5MB');
+      return;
+    }
+
+    setSelectedImage(file);
+    
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImage(null);
+    setImagePreview(null);
   };
 
   const canEditPost = (createdAt: string) => {
@@ -159,10 +195,37 @@ const Campus = () => {
                         className="min-h-[150px] text-base resize-none"
                         maxLength={5000}
                       />
+                      {imagePreview && (
+                        <div className="relative">
+                          <img src={imagePreview} alt="Preview" className="max-h-64 rounded-lg object-cover w-full" />
+                          <Button
+                            size="icon"
+                            variant="destructive"
+                            className="absolute top-2 right-2"
+                            onClick={handleRemoveImage}
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                       <div className="flex items-center justify-between text-xs text-muted-foreground">
                         <span>{postContent.length}/5000 characters</span>
                       </div>
-                      <div className="flex items-center justify-end pt-4 border-t">
+                      <div className="flex items-center justify-end pt-4 border-t gap-2">
+                        <input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleImageSelect}
+                          className="hidden"
+                          id="post-image-upload"
+                        />
+                        <label htmlFor="post-image-upload">
+                          <Button variant="outline" size="icon" asChild>
+                            <span>
+                              <ImageIcon className="h-4 w-4" />
+                            </span>
+                          </Button>
+                        </label>
                         <Button
                           onClick={handleCreatePost}
                           disabled={!postContent.trim() || createPost.isPending}
@@ -271,6 +334,16 @@ const Campus = () => {
                         return word;
                       })}
                     </p>
+                    
+                    {post.image_url && (
+                      <div className="mb-3 rounded-lg overflow-hidden">
+                        <img 
+                          src={post.image_url} 
+                          alt="Post attachment" 
+                          className="w-full max-h-96 object-cover"
+                        />
+                      </div>
+                    )}
                     
                     <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
                       <span className="text-sm text-muted-foreground flex items-center gap-1">
