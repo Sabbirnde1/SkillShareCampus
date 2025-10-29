@@ -6,12 +6,8 @@ import { Label } from "@/components/ui/label";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { toast } from "sonner";
+import { signInSchema } from "@/lib/validation";
 import { z } from "zod";
-
-const signInSchema = z.object({
-  email: z.string().email("Invalid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
 
 const SignIn = () => {
   const { signIn, signInWithGoogle } = useAuth();
