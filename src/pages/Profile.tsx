@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Input } from "@/components/ui/input";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Pencil, LogOut, Camera } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -144,12 +145,12 @@ const Profile = () => {
                   {/* Profile Info */}
                   <div className="px-6 pb-6">
                     <div className="relative -mt-16 mb-4">
-                      <Avatar className="h-32 w-32 border-4 border-background">
-                        <AvatarImage src={avatarPreviewUrl || profile?.avatar_url || ""} />
-                        <AvatarFallback>
-                          <User className="h-16 w-16" />
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar
+                        avatarUrl={avatarPreviewUrl || profile?.avatar_url}
+                        fullName={profile?.full_name}
+                        email={user?.email}
+                        className="h-32 w-32 border-4 border-background text-4xl"
+                      />
                       <input
                         ref={avatarFileInputRef}
                         type="file"

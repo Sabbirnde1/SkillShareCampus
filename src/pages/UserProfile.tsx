@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { UserAvatar } from "@/components/UserAvatar";
 import { Input } from "@/components/ui/input";
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, UserPlus, UserMinus, UserCheck } from "lucide-react";
 import { Link, useParams, useNavigate } from "react-router-dom";
@@ -170,12 +171,11 @@ const UserProfile = () => {
                   {/* Profile Info */}
                   <div className="px-6 pb-6">
                      <div className="relative -mt-16 mb-4">
-                      <Avatar className="h-32 w-32 border-4 border-background">
-                        <AvatarImage src={profile.avatar_url || ""} />
-                        <AvatarFallback>
-                          <User className="h-16 w-16" />
-                        </AvatarFallback>
-                      </Avatar>
+                      <UserAvatar
+                        avatarUrl={profile.avatar_url}
+                        fullName={profile.full_name}
+                        className="h-32 w-32 border-4 border-background text-4xl"
+                      />
                     </div>
 
                     <div className="space-y-2">
