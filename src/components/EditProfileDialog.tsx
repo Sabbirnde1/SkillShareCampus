@@ -53,6 +53,34 @@ export const EditProfileDialog = ({ open, onOpenChange, profile, education, expe
   // Skills Forms
   const [skillEntries, setSkillEntries] = useState(skills || []);
   const [newSkill, setNewSkill] = useState("");
+  const [skillSuggestions, setSkillSuggestions] = useState<string[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Fetch skill suggestions from database
+  const fetchSkillSuggestions = async (query: string) => {
+    if (!query || query.length < 2) {
+      setSkillSuggestions([]);
+      setShowSuggestions(false);
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from("skills")
+        .select("skill_name")
+        .ilike("skill_name", `%${query}%`)
+        .limit(5);
+
+      if (error) throw error;
+
+      // Get unique skill names
+      const uniqueSkills = [...new Set(data.map(s => s.skill_name))];
+      setSkillSuggestions(uniqueSkills);
+      setShowSuggestions(uniqueSkills.length > 0);
+    } catch (error) {
+      console.error("Error fetching skill suggestions:", error);
+    }
+  };
 
   const handleBasicInfoSubmit = async (data: z.infer<typeof profileBasicInfoSchema>) => {
     if (!user) return;
@@ -166,6 +194,12 @@ export const EditProfileDialog = ({ open, onOpenChange, profile, education, expe
   const handleAddSkill = async () => {
     if (!user || !newSkill.trim()) return;
 
+    // Check max 20 skills limit (FR-PROFILE-002 requirement)
+    if (skills.length >= 20) {
+      toast.error("Maximum 20 skills allowed");
+      return;
+    }
+
     try {
       const validated = skillSchema.parse({ skill_name: newSkill });
       
@@ -180,6 +214,7 @@ export const EditProfileDialog = ({ open, onOpenChange, profile, education, expe
 
       toast.success("Skill added successfully");
       setNewSkill("");
+      setShowSuggestions(false);
       queryClient.invalidateQueries({ queryKey: ["profile", user.id] });
     } catch (error: any) {
       toast.error(error.message || "Failed to add skill");
@@ -460,17 +495,28 @@ export const EditProfileDialog = ({ open, onOpenChange, profile, education, expe
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Plus className="h-4 w-4" />
-                  Add Skill
+                  Add Skill {skills.length >= 20 && "(Limit Reached)"}
                 </CardTitle>
+                {skills.length >= 20 && (
+                  <p className="text-sm text-destructive mt-1">
+                    Maximum 20 skills allowed. Delete a skill to add a new one.
+                  </p>
+                )}
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="space-y-2">
+                <div className="space-y-2 relative">
                   <Label htmlFor="skill_name">Skill Name *</Label>
                   <Input
                     id="skill_name"
                     value={newSkill}
-                    onChange={(e) => setNewSkill(e.target.value)}
+                    onChange={(e) => {
+                      setNewSkill(e.target.value);
+                      fetchSkillSuggestions(e.target.value);
+                    }}
+                    onFocus={() => newSkill.length >= 2 && setShowSuggestions(true)}
+                    onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                     placeholder="e.g., JavaScript, Project Management"
+                    disabled={skills.length >= 20}
                     onKeyDown={(e) => {
                       if (e.key === "Enter") {
                         e.preventDefault();
@@ -478,8 +524,30 @@ export const EditProfileDialog = ({ open, onOpenChange, profile, education, expe
                       }
                     }}
                   />
+                  {/* Auto-suggest dropdown (FR-PROFILE-002 requirement) */}
+                  {showSuggestions && skillSuggestions.length > 0 && (
+                    <div className="absolute z-10 w-full mt-1 bg-popover border rounded-md shadow-lg">
+                      {skillSuggestions.map((suggestion, index) => (
+                        <button
+                          key={index}
+                          type="button"
+                          className="w-full px-3 py-2 text-left hover:bg-accent transition-colors text-sm"
+                          onClick={() => {
+                            setNewSkill(suggestion);
+                            setShowSuggestions(false);
+                          }}
+                        >
+                          {suggestion}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
-                <Button onClick={handleAddSkill} className="w-full">
+                <Button 
+                  onClick={handleAddSkill} 
+                  className="w-full"
+                  disabled={skills.length >= 20}
+                >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Skill
                 </Button>
