@@ -113,15 +113,14 @@ const Activity = () => {
     setImagePreview(null);
   };
 
-  const handleEditPost = (newContent: string) => {
-    if (!selectedPostForEdit) return;
-    
-    const hashtags = newContent.match(/#\w+/g) || [];
+  const handleEditPost = (postId: string, content: string, hashtags: string[], image?: File, removeImage?: boolean) => {
     editPost.mutate(
       {
-        postId: selectedPostForEdit.id,
-        content: newContent,
+        postId,
+        content,
         hashtags,
+        image,
+        removeImage,
       },
       {
         onSuccess: () => {
@@ -543,8 +542,7 @@ const Activity = () => {
         <EditPostDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
-          postId={selectedPostForEdit.id}
-          initialContent={selectedPostForEdit.content}
+          post={selectedPostForEdit}
           onEditSuccess={handleEditPost}
         />
       )}

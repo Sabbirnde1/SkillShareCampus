@@ -349,9 +349,18 @@ const UserProfile = () => {
                               />
                               <div className="flex-1 min-w-0">
                                 <p className="font-semibold text-sm">{post.author?.full_name}</p>
-                                <p className="text-xs text-muted-foreground">
-                                  {new Date(post.created_at).toLocaleDateString()}
-                                </p>
+                                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                                  <span>
+                                    {new Date(post.created_at).toLocaleDateString()}
+                                  </span>
+                                  {/* FR-CONTENT-002: Show "Edited" badge for edited posts */}
+                                  {post.edited_at && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="italic">Edited</span>
+                                    </>
+                                  )}
+                                </div>
                               </div>
                             </div>
                             <p className="text-sm text-foreground whitespace-pre-wrap mb-3">

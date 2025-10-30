@@ -105,10 +105,15 @@ const Campus = () => {
     return diffInMinutes <= 15;
   };
 
-  const handleEditPost = (postId: string, newContent: string) => {
-    const hashtags = newContent.match(/#\w+/g) || [];
+  const handleEditPost = (postId: string, content: string, hashtags: string[], image?: File, removeImage?: boolean) => {
     editPost.mutate(
-      { postId, content: newContent, hashtags },
+      {
+        postId,
+        content,
+        hashtags,
+        image,
+        removeImage,
+      },
       {
         onSuccess: () => {
           setEditDialogOpen(false);
@@ -455,9 +460,8 @@ const Campus = () => {
         <EditPostDialog
           open={editDialogOpen}
           onOpenChange={setEditDialogOpen}
-          postId={selectedPostForEdit.id}
-          initialContent={selectedPostForEdit.content}
-          onEditSuccess={(newContent) => handleEditPost(selectedPostForEdit.id, newContent)}
+          post={selectedPostForEdit}
+          onEditSuccess={handleEditPost}
         />
       )}
     </div>
