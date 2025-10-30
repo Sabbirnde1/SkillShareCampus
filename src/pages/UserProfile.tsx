@@ -13,6 +13,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { useFriendSuggestions } from "@/hooks/useFriendSuggestions";
 import OnlineStatus from "@/components/OnlineStatus";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Heart, MessageCircle, Share2 } from "lucide-react";
 
 const UserProfile = () => {
   const { id: userId } = useParams();
@@ -23,6 +26,29 @@ const UserProfile = () => {
   const { getMutualFriends } = useFriendSuggestions();
   const [friendshipStatus, setFriendshipStatus] = useState<any>(null);
   const [mutualFriends, setMutualFriends] = useState<any[]>([]);
+
+  // Fetch user's recent posts (FR-PROFILE-004 requirement)
+  const { data: recentPosts = [] } = useQuery({
+    queryKey: ["user-posts", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+
+      const { data, error } = await supabase
+        .from("posts")
+        .select(`
+          *,
+          author:profiles!posts_author_id_fkey(id, full_name, avatar_url),
+          post_likes(user_id)
+        `)
+        .eq("author_id", userId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
 
   useEffect(() => {
     if (userId && user) {
@@ -300,6 +326,60 @@ const UserProfile = () => {
                             <p className="text-sm text-muted-foreground mt-1">{exp.description}</p>
                           )}
                         </div>
+                      ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Recent Posts Section (FR-PROFILE-004 requirement) */}
+              {recentPosts.length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <h3 className="text-xl font-semibold text-foreground mb-4">Recent Posts</h3>
+                    <div className="space-y-4">
+                      {recentPosts.map((post: any) => (
+                        <Card key={post.id} className="border">
+                          <CardContent className="p-4">
+                            <div className="flex items-start gap-3 mb-3">
+                              <UserAvatar
+                                avatarUrl={post.author?.avatar_url}
+                                fullName={post.author?.full_name}
+                                className="h-10 w-10"
+                              />
+                              <div className="flex-1 min-w-0">
+                                <p className="font-semibold text-sm">{post.author?.full_name}</p>
+                                <p className="text-xs text-muted-foreground">
+                                  {new Date(post.created_at).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                            <p className="text-sm text-foreground whitespace-pre-wrap mb-3">
+                              {post.content}
+                            </p>
+                            {post.image_url && (
+                              <img
+                                src={post.image_url}
+                                alt="Post"
+                                className="w-full rounded-lg mb-3 max-h-96 object-cover"
+                              />
+                            )}
+                            <div className="flex items-center gap-4 pt-2 border-t">
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Heart className="h-4 w-4" />
+                                <span className="text-xs">{post.likes_count || 0}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <MessageCircle className="h-4 w-4" />
+                                <span className="text-xs">{post.comments_count || 0}</span>
+                              </div>
+                              <div className="flex items-center gap-1 text-muted-foreground">
+                                <Share2 className="h-4 w-4" />
+                                <span className="text-xs">{post.shared_count || 0}</span>
+                              </div>
+                            </div>
+                          </CardContent>
+                        </Card>
                       ))}
                     </div>
                   </CardContent>
