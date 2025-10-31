@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, UserMinus } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useFriends } from "@/hooks/useFriends";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,10 +10,28 @@ import { useNotifications } from "@/hooks/useNotifications";
 import OnlineStatus from "@/components/OnlineStatus";
 import { FriendsSkeleton } from "@/components/FriendsSkeleton";
 import { AppHeader } from "@/components/AppHeader";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { useState } from "react";
 
 const Friends = () => {
-  const { friends, isLoading } = useFriends();
+  const { friends, isLoading, removeFriend } = useFriends();
   const { unreadCount } = useNotifications();
+  const [removingFriendId, setRemovingFriendId] = useState<string | null>(null);
+
+  const handleRemoveFriend = async (friendId: string) => {
+    await removeFriend.mutateAsync(friendId);
+    setRemovingFriendId(null);
+  };
 
   if (isLoading) {
     return (
@@ -103,7 +121,39 @@ const Friends = () => {
                       />
                       <p className="text-xs text-muted-foreground mb-1">{friend.profile.bio || "No bio"}</p>
                       <p className="text-xs text-muted-foreground mb-1">{friend.profile.location || "No location"}</p>
-                      <p className="text-xs text-muted-foreground">{friend.profile.company || "No company"}</p>
+                      <p className="text-xs text-muted-foreground mb-3">{friend.profile.company || "No company"}</p>
+                      
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full text-destructive hover:text-destructive"
+                          >
+                            <UserMinus className="h-4 w-4 mr-2" />
+                            Remove Friend
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>Remove Friend</AlertDialogTitle>
+                            <AlertDialogDescription>
+                              Are you sure you want to remove {friend.profile.full_name || "this user"} from your friends list? 
+                              You can always send them a friend request again later.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => handleRemoveFriend(friend.profile.id)}
+                              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                              disabled={removeFriend.isPending}
+                            >
+                              {removeFriend.isPending ? "Removing..." : "Remove"}
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
                   </div>
                 </Card>
