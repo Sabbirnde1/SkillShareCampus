@@ -36,6 +36,16 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
@@ -67,6 +77,8 @@ const Activity = () => {
   const [selectedPostForEdit, setSelectedPostForEdit] = useState<any>(null);
   const [selectedImage, setSelectedImage] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [selectedPostForDelete, setSelectedPostForDelete] = useState<any>(null);
 
   const handleCreatePost = () => {
     if (!postContent.trim()) return;
@@ -129,6 +141,17 @@ const Activity = () => {
         },
       }
     );
+  };
+
+  const handleDeletePost = () => {
+    if (!selectedPostForDelete) return;
+    
+    deletePost.mutate(selectedPostForDelete.id, {
+      onSuccess: () => {
+        setDeleteDialogOpen(false);
+        setSelectedPostForDelete(null);
+      },
+    });
   };
 
   const canEditPost = (postCreatedAt: string) => {
@@ -391,12 +414,14 @@ const Activity = () => {
                                       </DropdownMenuItem>
                                     )}
                                      <DropdownMenuItem
-                                       onClick={() => deletePost.mutate(post.id)}
+                                       onClick={() => {
+                                         setSelectedPostForDelete(post);
+                                         setDeleteDialogOpen(true);
+                                       }}
                                        className="text-destructive"
-                                       disabled={deletePost.isPending}
                                      >
                                        <Trash2 className="h-4 w-4 mr-2" />
-                                       {deletePost.isPending ? "Deleting..." : "Delete post"}
+                                       Delete post
                                      </DropdownMenuItem>
                                   </DropdownMenuContent>
                                 </DropdownMenu>
@@ -546,6 +571,35 @@ const Activity = () => {
           onEditSuccess={handleEditPost}
         />
       )}
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Post</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this post? This action cannot be undone.
+              {selectedPostForDelete?.image_url && (
+                <span className="block mt-2 text-sm">
+                  The attached image will also be permanently deleted.
+                </span>
+              )}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={deletePost.isPending}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeletePost}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={deletePost.isPending}
+            >
+              {deletePost.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       <Footer />
     </div>

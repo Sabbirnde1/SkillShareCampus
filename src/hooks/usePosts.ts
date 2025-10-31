@@ -160,16 +160,83 @@ export const usePosts = () => {
 
   const deletePost = useMutation({
     mutationFn: async (postId: string) => {
-      const { error } = await supabase.from("posts").delete().eq("id", postId);
+      if (!user) throw new Error("Not authenticated");
+
+      // Get post details to check authorization and get image URL
+      const { data: post, error: fetchError } = await supabase
+        .from("posts")
+        .select("author_id, image_url")
+        .eq("id", postId)
+        .single();
+
+      if (fetchError) throw fetchError;
+      if (!post) throw new Error("Post not found");
+
+      // Check authorization: post author, moderator, or admin
+      const { data: userRoles } = await supabase
+        .rpc("get_user_roles", { _user_id: user.id });
+
+      const isAuthor = post.author_id === user.id;
+      const isModerator = userRoles?.includes("moderator");
+      const isAdmin = userRoles?.includes("admin");
+
+      if (!isAuthor && !isModerator && !isAdmin) {
+        throw new Error("You don't have permission to delete this post");
+      }
+
+      // Delete cascade: post_likes, post_comments, post_shares
+      const { error: likesError } = await supabase
+        .from("post_likes")
+        .delete()
+        .eq("post_id", postId);
+      
+      if (likesError) throw likesError;
+
+      const { error: commentsError } = await supabase
+        .from("post_comments")
+        .delete()
+        .eq("post_id", postId);
+      
+      if (commentsError) throw commentsError;
+
+      const { error: sharesError } = await supabase
+        .from("post_shares")
+        .delete()
+        .eq("post_id", postId);
+      
+      if (sharesError) throw sharesError;
+
+      // Delete image from storage if exists
+      if (post.image_url) {
+        try {
+          const urlParts = post.image_url.split('/');
+          const fileName = urlParts[urlParts.length - 1];
+          const userId = urlParts[urlParts.length - 2];
+          const filePath = `${userId}/${fileName}`;
+          
+          await supabase.storage
+            .from('post-images')
+            .remove([filePath]);
+        } catch (storageError) {
+          console.error("Failed to delete image:", storageError);
+          // Continue with post deletion even if image deletion fails
+        }
+      }
+
+      // Finally, delete the post
+      const { error } = await supabase
+        .from("posts")
+        .delete()
+        .eq("id", postId);
 
       if (error) throw error;
     },
     onSuccess: () => {
-      toast.success("Post deleted");
+      toast.success("Post deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["posts"] });
     },
-    onError: () => {
-      toast.error("Failed to delete post");
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to delete post");
     },
   });
 
