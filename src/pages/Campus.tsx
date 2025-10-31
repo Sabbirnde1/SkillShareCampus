@@ -5,7 +5,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
-import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2, Edit, X, ImageIcon } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2, Edit, X, ImageIcon, Eye } from "lucide-react";
 import { EditPostDialog } from "@/components/EditPostDialog";
 import { Link } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
@@ -175,71 +176,164 @@ const Campus = () => {
                       readOnly
                     />
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[525px]">
+                  <DialogContent className="sm:max-w-[625px] max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
                       <DialogTitle>Create a post</DialogTitle>
                     </DialogHeader>
-                    <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <Avatar className="h-10 w-10">
-                          <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
-                          <AvatarFallback>
-                            {user?.user_metadata?.full_name?.[0] || user?.email?.[0] || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                        <div className="flex-1">
-                          <p className="font-semibold text-sm">
-                            {user?.user_metadata?.full_name || user?.email}
-                          </p>
+                    <Tabs defaultValue="write" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2">
+                        <TabsTrigger value="write">Write</TabsTrigger>
+                        <TabsTrigger value="preview">
+                          <Eye className="h-4 w-4 mr-2" />
+                          Preview
+                        </TabsTrigger>
+                      </TabsList>
+                      
+                      <TabsContent value="write" className="space-y-4 mt-4">
+                        <div className="flex gap-3">
+                          <Avatar className="h-10 w-10">
+                            <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+                            <AvatarFallback>
+                              {user?.user_metadata?.full_name?.[0] || user?.email?.[0] || "U"}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1">
+                            <p className="font-semibold text-sm">
+                              {user?.user_metadata?.full_name || user?.email}
+                            </p>
+                          </div>
                         </div>
-                      </div>
-                      <Textarea
-                        placeholder="What's on your mind? Use #hashtags to categorize..."
-                        value={postContent}
-                        onChange={(e) => setPostContent(e.target.value)}
-                        className="min-h-[150px] text-base resize-none"
-                        maxLength={5000}
-                      />
-                      {imagePreview && (
-                        <div className="relative">
-                          <img src={imagePreview} alt="Preview" className="max-h-64 rounded-lg object-cover w-full" />
-                          <Button
-                            size="icon"
-                            variant="destructive"
-                            className="absolute top-2 right-2"
-                            onClick={handleRemoveImage}
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      )}
-                      <div className="flex items-center justify-between text-xs text-muted-foreground">
-                        <span>{postContent.length}/5000 characters</span>
-                      </div>
-                      <div className="flex items-center justify-end pt-4 border-t gap-2">
-                        <input
-                          type="file"
-                          accept="image/*"
-                          onChange={handleImageSelect}
-                          className="hidden"
-                          id="post-image-upload"
+                        <Textarea
+                          placeholder="What's on your mind? Use #hashtags to categorize..."
+                          value={postContent}
+                          onChange={(e) => setPostContent(e.target.value)}
+                          className="min-h-[150px] text-base resize-none"
+                          maxLength={5000}
                         />
-                        <label htmlFor="post-image-upload">
-                          <Button variant="outline" size="icon" asChild>
-                            <span>
-                              <ImageIcon className="h-4 w-4" />
-                            </span>
+                        {imagePreview && (
+                          <div className="relative">
+                            <img src={imagePreview} alt="Preview" className="max-h-64 rounded-lg object-cover w-full" />
+                            <Button
+                              size="icon"
+                              variant="destructive"
+                              className="absolute top-2 right-2"
+                              onClick={handleRemoveImage}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between text-xs text-muted-foreground">
+                          <span>{postContent.length}/5000 characters</span>
+                          {postContent.match(/#\w+/g) && (
+                            <span>{postContent.match(/#\w+/g)?.length} hashtag(s) detected</span>
+                          )}
+                        </div>
+                        <div className="flex items-center justify-end pt-4 border-t gap-2">
+                          <input
+                            type="file"
+                            accept="image/*"
+                            onChange={handleImageSelect}
+                            className="hidden"
+                            id="post-image-upload"
+                          />
+                          <label htmlFor="post-image-upload">
+                            <Button variant="outline" size="icon" asChild>
+                              <span>
+                                <ImageIcon className="h-4 w-4" />
+                              </span>
+                            </Button>
+                          </label>
+                          <Button
+                            onClick={handleCreatePost}
+                            disabled={!postContent.trim() || createPost.isPending}
+                            className="bg-[hsl(var(--link-blue))] hover:bg-[hsl(var(--link-blue))]/90"
+                          >
+                            {createPost.isPending ? "Posting..." : "Post"}
                           </Button>
-                        </label>
-                        <Button
-                          onClick={handleCreatePost}
-                          disabled={!postContent.trim() || createPost.isPending}
-                          className="bg-[hsl(var(--link-blue))] hover:bg-[hsl(var(--link-blue))]/90"
-                        >
-                          {createPost.isPending ? "Posting..." : "Post"}
-                        </Button>
-                      </div>
-                    </div>
+                        </div>
+                      </TabsContent>
+                      
+                      <TabsContent value="preview" className="mt-4">
+                        <Card className="p-4">
+                          <div className="flex items-start gap-3 mb-3">
+                            <Avatar>
+                              <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
+                              <AvatarFallback>
+                                {user?.user_metadata?.full_name?.[0] || user?.email?.[0] || "U"}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-sm">
+                                {user?.user_metadata?.full_name || user?.email}
+                              </h4>
+                              <p className="text-xs text-muted-foreground">Just now</p>
+                            </div>
+                          </div>
+                          
+                          {postContent.trim() ? (
+                            <p className="text-sm mb-3 whitespace-pre-wrap">
+                              {postContent.split(/(\s+)/).map((word, i) => {
+                                if (word.match(/^#\w+/)) {
+                                  return (
+                                    <span key={i} className="text-[hsl(var(--link-blue))] font-medium">
+                                      {word}
+                                    </span>
+                                  );
+                                }
+                                return word;
+                              })}
+                            </p>
+                          ) : (
+                            <p className="text-sm text-muted-foreground mb-3 italic">
+                              Your post content will appear here...
+                            </p>
+                          )}
+                          
+                          {imagePreview && (
+                            <div className="mb-3 rounded-lg overflow-hidden">
+                              <img 
+                                src={imagePreview} 
+                                alt="Post preview" 
+                                className="w-full max-h-96 object-cover"
+                              />
+                            </div>
+                          )}
+                          
+                          <div className="flex items-center justify-between py-2 border-t border-gray-200 mb-2">
+                            <span className="text-sm text-muted-foreground flex items-center gap-1">
+                              <ThumbsUp className="w-4 h-4" />
+                              0 likes
+                            </span>
+                            <div className="flex gap-3">
+                              <span className="text-sm text-muted-foreground">0 comments</span>
+                              <span className="text-sm text-muted-foreground">0 shares</span>
+                            </div>
+                          </div>
+                          
+                          <div className="flex items-center justify-around">
+                            <button className="flex items-center gap-2 text-muted-foreground px-4 py-2 rounded-md flex-1 justify-center">
+                              <ThumbsUp className="w-5 h-5" />
+                              <span className="text-sm font-medium">Like</span>
+                            </button>
+                            <button className="flex items-center gap-2 text-muted-foreground px-4 py-2 rounded-md flex-1 justify-center">
+                              <Share2 className="w-5 h-5" />
+                              <span className="text-sm font-medium">Share</span>
+                            </button>
+                          </div>
+                        </Card>
+                        
+                        <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
+                          <Button
+                            onClick={handleCreatePost}
+                            disabled={!postContent.trim() || createPost.isPending}
+                            className="bg-[hsl(var(--link-blue))] hover:bg-[hsl(var(--link-blue))]/90"
+                          >
+                            {createPost.isPending ? "Posting..." : "Post"}
+                          </Button>
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </DialogContent>
                 </Dialog>
               </div>
