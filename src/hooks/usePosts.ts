@@ -55,6 +55,21 @@ export const usePosts = () => {
   const { data: posts, isLoading } = useQuery({
     queryKey: ["posts", user?.id],
     queryFn: async () => {
+      if (!user) return [];
+
+      // Get visible post IDs (friends' posts + own posts) using the database function
+      const { data: visiblePostIds, error: visibleError } = await supabase
+        .rpc("get_visible_posts", { for_user_id: user.id });
+
+      if (visibleError) throw visibleError;
+
+      // If no visible posts, return empty array
+      if (!visiblePostIds || visiblePostIds.length === 0) return [];
+
+      // Extract post IDs
+      const postIds = visiblePostIds.map((row: any) => row.post_id);
+
+      // Fetch full post details for visible posts
       const { data, error } = await supabase
         .from("posts")
         .select(`
@@ -82,6 +97,7 @@ export const usePosts = () => {
             created_at
           )
         `)
+        .in("id", postIds)
         .order("created_at", { ascending: false });
 
       if (error) throw error;

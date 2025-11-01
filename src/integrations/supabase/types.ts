@@ -571,6 +571,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      are_friends: {
+        Args: { user1_id: string; user2_id: string }
+        Returns: boolean
+      }
       check_rate_limit: {
         Args: {
           p_action_type: string
@@ -602,6 +606,12 @@ export type Database = {
       get_user_roles: {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
+      }
+      get_visible_posts: {
+        Args: { for_user_id: string }
+        Returns: {
+          post_id: string
+        }[]
       }
       has_role: {
         Args: {
