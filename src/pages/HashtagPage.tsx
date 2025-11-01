@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Search, Home, Users, BookOpen, MessageSquare, User, ThumbsUp, MessageCircle, Share2, Hash, ArrowLeft } from "lucide-react";
+import { Search, Home, Users, BookOpen, MessageSquare, User, MessageCircle, Share2, Hash, ArrowLeft, Heart } from "lucide-react";
 import { usePosts } from "@/hooks/usePosts";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
@@ -12,11 +12,12 @@ import { SharePostDialog } from "@/components/SharePostDialog";
 import { useState, useMemo } from "react";
 import NotificationBadge from "@/components/NotificationBadge";
 import { Input } from "@/components/ui/input";
+import { ReactionPicker, type ReactionType } from "@/components/ReactionPicker";
 
 const HashtagPage = () => {
   const { tag } = useParams<{ tag: string }>();
   const { user } = useAuth();
-  const { posts, isLoading, toggleLike } = usePosts();
+  const { posts, isLoading, toggleReaction } = usePosts();
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const [selectedPostForShare, setSelectedPostForShare] = useState<any>(null);
 
@@ -194,8 +195,8 @@ const HashtagPage = () => {
                 
                 <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
                   <span className="text-sm text-muted-foreground flex items-center gap-1">
-                    <ThumbsUp className="w-4 h-4" />
-                    {post.likes_count} {post.likes_count === 1 ? "like" : "likes"}
+                    <Heart className="w-4 h-4" />
+                    {post.likes_count} {post.likes_count === 1 ? "reaction" : "reactions"}
                   </span>
                   <div className="flex gap-3">
                     <span className="text-sm text-muted-foreground">
@@ -207,18 +208,23 @@ const HashtagPage = () => {
                   </div>
                 </div>
                 
-                <div className="flex items-center justify-around mb-3">
-                  <button 
-                    onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
-                    className={`flex items-center gap-2 hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors ${
-                      post.user_has_liked 
-                        ? 'text-[hsl(var(--link-blue))] font-semibold' 
-                        : 'text-muted-foreground'
-                    }`}
-                  >
-                    <ThumbsUp className={`w-5 h-5 ${post.user_has_liked ? 'fill-current' : ''}`} />
-                    <span className="text-sm font-medium">{post.user_has_liked ? 'Liked' : 'Like'}</span>
-                  </button>
+                <div className="flex items-center justify-between mb-3">
+                  <ReactionPicker
+                    postId={post.id}
+                    userReaction={post.user_reaction || null}
+                    reactionCounts={post.reaction_counts || {
+                      like: 0,
+                      celebrate: 0,
+                      support: 0,
+                      love: 0,
+                      insightful: 0,
+                      funny: 0,
+                    }}
+                    onReact={(postId, reactionType, currentReaction) => {
+                      toggleReaction.mutate({ postId, reactionType, currentReaction });
+                    }}
+                    disabled={toggleReaction.isPending}
+                  />
                   <button 
                     onClick={() => {
                       setSelectedPostForShare(post);

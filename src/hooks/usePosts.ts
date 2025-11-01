@@ -6,11 +6,23 @@ import { useEffect } from "react";
 import { validatePost } from "@/lib/validation";
 import { useRateLimit } from "./useRateLimit";
 
+export type ReactionType = "like" | "celebrate" | "support" | "love" | "insightful" | "funny";
+
 export interface PostLike {
   id: string;
   post_id: string;
   user_id: string;
+  reaction_type: ReactionType;
   created_at: string;
+}
+
+export interface ReactionCounts {
+  like: number;
+  celebrate: number;
+  support: number;
+  love: number;
+  insightful: number;
+  funny: number;
 }
 
 export interface Post {
@@ -31,7 +43,8 @@ export interface Post {
     bio: string;
   };
   post_likes?: PostLike[];
-  user_has_liked?: boolean;
+  user_reaction?: ReactionType | null;
+  reaction_counts?: ReactionCounts;
 }
 
 export const usePosts = () => {
@@ -65,6 +78,7 @@ export const usePosts = () => {
             id,
             post_id,
             user_id,
+            reaction_type,
             created_at
           )
         `)
@@ -72,13 +86,34 @@ export const usePosts = () => {
 
       if (error) throw error;
       
-      // Add user_has_liked flag
-      const postsWithLikeStatus = data?.map(post => ({
-        ...post,
-        user_has_liked: user ? post.post_likes?.some(like => like.user_id === user.id) : false,
-      })) as Post[];
+      // Add user reaction and reaction counts
+      const postsWithReactions = data?.map(post => {
+        const userLike = user ? post.post_likes?.find(like => like.user_id === user.id) : null;
+        
+        // Calculate reaction counts
+        const reactionCounts: ReactionCounts = {
+          like: 0,
+          celebrate: 0,
+          support: 0,
+          love: 0,
+          insightful: 0,
+          funny: 0,
+        };
+        
+        post.post_likes?.forEach(like => {
+          if (like.reaction_type in reactionCounts) {
+            reactionCounts[like.reaction_type]++;
+          }
+        });
+        
+        return {
+          ...post,
+          user_reaction: userLike?.reaction_type || null,
+          reaction_counts: reactionCounts,
+        };
+      }) as Post[];
       
-      return postsWithLikeStatus;
+      return postsWithReactions;
     },
   });
 
@@ -301,12 +336,20 @@ export const usePosts = () => {
     },
   });
 
-  const toggleLike = useMutation({
-    mutationFn: async ({ postId, isLiked }: { postId: string; isLiked: boolean }) => {
+  const toggleReaction = useMutation({
+    mutationFn: async ({ 
+      postId, 
+      reactionType, 
+      currentReaction 
+    }: { 
+      postId: string; 
+      reactionType: ReactionType;
+      currentReaction: ReactionType | null;
+    }) => {
       if (!user) throw new Error("Not authenticated");
 
-      if (isLiked) {
-        // Unlike: delete the like
+      if (currentReaction === reactionType) {
+        // Remove reaction if clicking the same one
         const { error } = await supabase
           .from("post_likes")
           .delete()
@@ -314,19 +357,29 @@ export const usePosts = () => {
           .eq("user_id", user.id);
 
         if (error) throw error;
+      } else if (currentReaction) {
+        // Update existing reaction to new type
+        const { error } = await supabase
+          .from("post_likes")
+          .update({ reaction_type: reactionType })
+          .eq("post_id", postId)
+          .eq("user_id", user.id);
+
+        if (error) throw error;
       } else {
-        // Like: insert a new like
+        // Insert new reaction
         const { error } = await supabase
           .from("post_likes")
           .insert({
             post_id: postId,
             user_id: user.id,
+            reaction_type: reactionType,
           });
 
         if (error) throw error;
       }
     },
-    onMutate: async ({ postId, isLiked }) => {
+    onMutate: async ({ postId, reactionType, currentReaction }) => {
       // Cancel outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["posts"] });
 
@@ -336,15 +389,34 @@ export const usePosts = () => {
       // Optimistically update
       queryClient.setQueryData<Post[]>(["posts", user?.id], (old) => {
         if (!old) return old;
-        return old.map((post) =>
-          post.id === postId
-            ? {
-                ...post,
-                user_has_liked: !isLiked,
-                likes_count: isLiked ? post.likes_count - 1 : post.likes_count + 1,
-              }
-            : post
-        );
+        return old.map((post) => {
+          if (post.id !== postId) return post;
+
+          const newReactionCounts = { ...post.reaction_counts! };
+          let newLikesCount = post.likes_count;
+
+          // Update counts based on reaction change
+          if (currentReaction === reactionType) {
+            // Removing reaction
+            newReactionCounts[reactionType]--;
+            newLikesCount--;
+          } else if (currentReaction) {
+            // Changing reaction
+            newReactionCounts[currentReaction]--;
+            newReactionCounts[reactionType]++;
+          } else {
+            // Adding new reaction
+            newReactionCounts[reactionType]++;
+            newLikesCount++;
+          }
+
+          return {
+            ...post,
+            user_reaction: currentReaction === reactionType ? null : reactionType,
+            reaction_counts: newReactionCounts,
+            likes_count: newLikesCount,
+          };
+        });
       });
 
       return { previousPosts };
@@ -354,7 +426,7 @@ export const usePosts = () => {
       if (context?.previousPosts) {
         queryClient.setQueryData(["posts", user?.id], context.previousPosts);
       }
-      toast.error("Failed to update like");
+      toast.error("Failed to update reaction");
     },
     onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["posts"] });
@@ -367,7 +439,7 @@ export const usePosts = () => {
     createPost,
     deletePost,
     editPost,
-    toggleLike,
+    toggleReaction,
     rateLimit: { status, formatTimeRemaining },
   };
 };

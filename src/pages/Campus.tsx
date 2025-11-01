@@ -6,13 +6,14 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, ThumbsUp, MessageCircle, Share2, MoreVertical, Trash2, Edit, X, ImageIcon, Eye } from "lucide-react";
+import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, MessageCircle, Share2, MoreVertical, Trash2, Edit, X, ImageIcon, Eye, Heart } from "lucide-react";
 import { EditPostDialog } from "@/components/EditPostDialog";
 import { Link } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
 import { useAuth } from "@/contexts/AuthContext";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
+import { ReactionPicker, type ReactionType } from "@/components/ReactionPicker";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -51,7 +52,7 @@ import { toast } from "sonner";
 
 const Campus = () => {
   const { user } = useAuth();
-  const { posts, isLoading, createPost, toggleLike, deletePost, editPost } = usePosts();
+  const { posts, isLoading, createPost, toggleReaction, deletePost, editPost } = usePosts();
   const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -326,8 +327,8 @@ const Campus = () => {
                           
                           <div className="flex items-center justify-between py-2 border-t border-gray-200 mb-2">
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <ThumbsUp className="w-4 h-4" />
-                              0 likes
+                              <Heart className="w-4 h-4" />
+                              0 reactions
                             </span>
                             <div className="flex gap-3">
                               <span className="text-sm text-muted-foreground">0 comments</span>
@@ -337,8 +338,8 @@ const Campus = () => {
                           
                           <div className="flex items-center justify-around">
                             <button className="flex items-center gap-2 text-muted-foreground px-4 py-2 rounded-md flex-1 justify-center">
-                              <ThumbsUp className="w-5 h-5" />
-                              <span className="text-sm font-medium">Like</span>
+                              <Heart className="w-5 h-5" />
+                              <span className="text-sm font-medium">React</span>
                             </button>
                             <button className="flex items-center gap-2 text-muted-foreground px-4 py-2 rounded-md flex-1 justify-center">
                               <Share2 className="w-5 h-5" />
@@ -472,8 +473,8 @@ const Campus = () => {
                     
                     <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
                       <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <ThumbsUp className="w-4 h-4" />
-                        {post.likes_count} {post.likes_count === 1 ? "like" : "likes"}
+                        <Heart className="w-4 h-4" />
+                        {post.likes_count} {post.likes_count === 1 ? "reaction" : "reactions"}
                       </span>
                       <div className="flex gap-3">
                         <span className="text-sm text-muted-foreground">
@@ -485,23 +486,23 @@ const Campus = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-around mb-3">
-                      <button 
-                        onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
-                        disabled={toggleLike.isPending}
-                        className={`flex items-center gap-2 hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors disabled:opacity-50 ${
-                          post.user_has_liked 
-                            ? 'text-[hsl(var(--link-blue))] font-semibold' 
-                            : 'text-muted-foreground'
-                        }`}
-                      >
-                        {toggleLike.isPending ? (
-                          <div className="w-5 h-5 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                        ) : (
-                          <ThumbsUp className={`w-5 h-5 ${post.user_has_liked ? 'fill-current' : ''}`} />
-                        )}
-                        <span className="text-sm font-medium">{post.user_has_liked ? 'Liked' : 'Like'}</span>
-                      </button>
+                    <div className="flex items-center justify-between mb-3">
+                      <ReactionPicker
+                        postId={post.id}
+                        userReaction={post.user_reaction || null}
+                        reactionCounts={post.reaction_counts || {
+                          like: 0,
+                          celebrate: 0,
+                          support: 0,
+                          love: 0,
+                          insightful: 0,
+                          funny: 0,
+                        }}
+                        onReact={(postId, reactionType, currentReaction) => {
+                          toggleReaction.mutate({ postId, reactionType, currentReaction });
+                        }}
+                        disabled={toggleReaction.isPending}
+                      />
                       <button 
                         onClick={() => {
                           setSelectedPostForShare(post);

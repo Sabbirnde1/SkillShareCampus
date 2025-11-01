@@ -13,7 +13,6 @@ import {
   Bell, 
   User, 
   Search, 
-  ThumbsUp, 
   MessageCircle,
   Trash2,
   Image as ImageIcon,
@@ -28,6 +27,7 @@ import { usePosts } from "@/hooks/usePosts";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { useAuth } from "@/contexts/AuthContext";
+import { ReactionPicker, type ReactionType } from "@/components/ReactionPicker";
 import {
   Dialog,
   DialogContent,
@@ -66,7 +66,7 @@ import { toast } from "sonner";
 
 const Activity = () => {
   const { user } = useAuth();
-  const { posts, isLoading, createPost, toggleLike, deletePost, editPost } = usePosts();
+  const { posts, isLoading, createPost, toggleReaction, deletePost, editPost } = usePosts();
   const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -465,26 +465,22 @@ const Activity = () => {
                         <Separator className="mb-3" />
 
                         <div className="flex items-center gap-6 mb-3">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => toggleLike.mutate({ postId: post.id, isLiked: post.user_has_liked || false })}
-                            disabled={toggleLike.isPending}
-                            className={`gap-2 hover:text-primary ${
-                              post.user_has_liked 
-                                ? 'text-primary font-semibold' 
-                                : 'text-muted-foreground'
-                            }`}
-                          >
-                            {toggleLike.isPending ? (
-                              <div className="h-4 w-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                            ) : (
-                              <ThumbsUp className={`h-4 w-4 ${post.user_has_liked ? 'fill-current' : ''}`} />
-                            )}
-                            <span className="text-sm font-medium">
-                              {post.likes_count > 0 ? post.likes_count : "Like"}
-                            </span>
-                          </Button>
+                          <ReactionPicker
+                            postId={post.id}
+                            userReaction={post.user_reaction || null}
+                            reactionCounts={post.reaction_counts || {
+                              like: 0,
+                              celebrate: 0,
+                              support: 0,
+                              love: 0,
+                              insightful: 0,
+                              funny: 0,
+                            }}
+                            onReact={(postId, reactionType, currentReaction) => {
+                              toggleReaction.mutate({ postId, reactionType, currentReaction });
+                            }}
+                            disabled={toggleReaction.isPending}
+                          />
                           <Button
                             variant="ghost"
                             size="sm"
