@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect } from "react";
+import { toast } from "sonner";
 
 export interface Notification {
   id: string;
@@ -37,7 +38,7 @@ export const useNotifications = () => {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Real-time subscription for all notification events
+  // Real-time subscription for all notification events with toast notifications
   useEffect(() => {
     if (!user) return;
 
@@ -46,7 +47,43 @@ export const useNotifications = () => {
       .on(
         "postgres_changes",
         {
-          event: "*",
+          event: "INSERT",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        (payload) => {
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+          
+          // Show toast notification for new notifications
+          const notification = payload.new as Notification;
+          if (notification && !notification.is_read) {
+            toast.info(notification.content, {
+              duration: 4000,
+              action: {
+                label: "View",
+                onClick: () => window.location.href = "/notifications"
+              }
+            });
+          }
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "notifications",
+          filter: `user_id=eq.${user.id}`,
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ["notifications"] });
+        }
+      )
+      .on(
+        "postgres_changes",
+        {
+          event: "DELETE",
           schema: "public",
           table: "notifications",
           filter: `user_id=eq.${user.id}`,
