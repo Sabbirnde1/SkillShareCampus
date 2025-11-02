@@ -1,13 +1,16 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserRole } from "@/hooks/useUserRole";
 import { AppHeader } from "@/components/AppHeader";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Shield, Users, FileText, BarChart3, AlertCircle } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
-import { useEffect } from "react";
+import { UserManagementTable } from "@/components/admin/UserManagementTable";
+import { ContentModerationPanel } from "@/components/admin/ContentModerationPanel";
 
 const Admin = () => {
   const { user } = useAuth();
@@ -49,133 +52,89 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader currentPage="admin" />
-      
-      <div className="container mx-auto px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Shield className="h-8 w-8 text-primary" />
-            <h1 className="text-3xl font-bold">Admin Dashboard</h1>
-            <Badge variant={isAdmin ? "default" : "secondary"}>
+      <main className="container mx-auto px-4 py-8 max-w-7xl">
+        <div className="space-y-6">
+          {/* Header */}
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+              <p className="text-muted-foreground mt-1">
+                Manage users, content, and system settings
+              </p>
+            </div>
+            <Badge variant="default" className="text-lg px-4 py-2">
               {primaryRole}
             </Badge>
           </div>
-          <p className="text-muted-foreground">
-            Manage users, content, and monitor platform activity
-          </p>
-        </div>
 
-        {/* Info Alert */}
-        <Alert className="mb-8">
-          <AlertCircle className="h-4 w-4" />
-          <AlertTitle>Admin Panel Foundation</AlertTitle>
-          <AlertDescription>
-            The role system is fully configured. Admin features will be implemented in future updates.
-          </AlertDescription>
-        </Alert>
+          {/* Admin Tabs */}
+          <Tabs defaultValue="users" className="w-full">
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="users">User Management</TabsTrigger>
+              <TabsTrigger value="moderation">Content Moderation</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            </TabsList>
 
-        {/* Dashboard Cards */}
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">User Management</CardTitle>
-              <Users className="h-4 w-4 text-muted-foreground" />
+            <TabsContent value="users" className="mt-6">
+              <UserManagementTable />
+            </TabsContent>
+
+            <TabsContent value="moderation" className="mt-6">
+              <ContentModerationPanel />
+            </TabsContent>
+
+            <TabsContent value="analytics" className="mt-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Analytics Dashboard</CardTitle>
+                  <CardDescription>
+                    Platform statistics and user engagement metrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Badge variant="secondary">Coming Soon</Badge>
+                  <p className="text-sm text-muted-foreground mt-4">
+                    Analytics features including DAU/MAU, engagement rates, and retention
+                    metrics will be available in the next update.
+                  </p>
+                </CardContent>
+              </Card>
+            </TabsContent>
+          </Tabs>
+
+          {/* Setup Instructions */}
+          <Card className="border-primary/50">
+            <CardHeader>
+              <CardTitle>Assigning Admin Roles</CardTitle>
+              <CardDescription>
+                To assign the first admin or moderator role, use SQL commands in Supabase
+              </CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Coming Soon</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Manage user accounts and permissions
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Content Moderation</CardTitle>
-              <FileText className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Coming Soon</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Review and moderate posts and comments
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Analytics</CardTitle>
-              <BarChart3 className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">Coming Soon</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                Platform usage and engagement metrics
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Your Role</CardTitle>
-              <Shield className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold capitalize">{primaryRole}</div>
-              <p className="text-xs text-muted-foreground mt-1">
-                {isAdmin ? "Full system access" : "Moderation access"}
-              </p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Setup Instructions for First Admin */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Assigning the First Admin</CardTitle>
-            <CardDescription>
-              Use the Supabase SQL Editor to assign admin role to a user
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
+            <CardContent className="space-y-4">
               <div>
-                <h3 className="font-semibold mb-2">Step 1: Get your user ID</h3>
-                <p className="text-sm text-muted-foreground mb-2">
-                  Find your user ID in the Authentication section of Supabase Dashboard
-                </p>
-              </div>
-              
-              <div>
-                <h3 className="font-semibold mb-2">Step 2: Run this SQL in Supabase SQL Editor</h3>
-                <pre className="bg-muted p-4 rounded-md text-sm overflow-x-auto">
-{`-- Replace 'YOUR_USER_ID_HERE' with your actual user ID
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('YOUR_USER_ID_HERE', 'admin')
-ON CONFLICT (user_id, role) DO NOTHING;`}
+                <h3 className="font-semibold mb-2">Assign Admin Role:</h3>
+                <pre className="bg-muted p-3 rounded-lg text-sm overflow-x-auto">
+{`INSERT INTO user_roles (user_id, role)
+VALUES ('your-user-id-here', 'admin');`}
                 </pre>
               </div>
-
               <div>
-                <h3 className="font-semibold mb-2">Step 3: Assign moderator role (optional)</h3>
-                <pre className="bg-muted p-4 rounded-md text-sm overflow-x-auto">
-{`-- Replace 'USER_ID_HERE' with the user ID
-INSERT INTO public.user_roles (user_id, role)
-VALUES ('USER_ID_HERE', 'moderator')
-ON CONFLICT (user_id, role) DO NOTHING;`}
+                <h3 className="font-semibold mb-2">Assign Moderator Role:</h3>
+                <pre className="bg-muted p-3 rounded-lg text-sm overflow-x-auto">
+{`INSERT INTO user_roles (user_id, role)
+VALUES ('your-user-id-here', 'moderator');`}
                 </pre>
               </div>
-
               <Alert>
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  After running the SQL, refresh this page to see the changes reflected.
+                  Run these commands in your Supabase SQL Editor. Find your user ID in the Auth Users table.
                 </AlertDescription>
               </Alert>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </div>
+      </main>
     </div>
   );
 };

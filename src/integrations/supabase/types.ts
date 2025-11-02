@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      audit_logs: {
+        Row: {
+          action_type: string
+          admin_id: string
+          created_at: string
+          details: Json | null
+          id: string
+          target_post_id: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_id: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_post_id?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_id?: string
+          created_at?: string
+          details?: Json | null
+          id?: string
+          target_post_id?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_logs_target_post_id_fkey"
+            columns: ["target_post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      banned_users: {
+        Row: {
+          banned_at: string
+          banned_by: string
+          banned_until: string | null
+          id: string
+          is_permanent: boolean
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          banned_at?: string
+          banned_by: string
+          banned_until?: string | null
+          id?: string
+          is_permanent?: boolean
+          reason: string
+          user_id: string
+        }
+        Update: {
+          banned_at?: string
+          banned_by?: string
+          banned_until?: string | null
+          id?: string
+          is_permanent?: boolean
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       courses: {
         Row: {
           created_at: string
@@ -355,6 +423,53 @@ export type Database = {
           },
         ]
       }
+      post_reports: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          id: string
+          post_id: string
+          reason: string
+          report_type: string
+          reported_by: string
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          post_id: string
+          reason: string
+          report_type: string
+          reported_by: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          id?: string
+          post_id?: string
+          reason?: string
+          report_type?: string
+          reported_by?: string
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_reports_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_shares: {
         Row: {
           created_at: string
@@ -566,6 +681,39 @@ export type Database = {
         }
         Relationships: []
       }
+      user_warnings: {
+        Row: {
+          created_at: string
+          expires_at: string | null
+          id: string
+          issued_by: string
+          reason: string
+          severity: string
+          user_id: string
+          warning_type: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          issued_by: string
+          reason: string
+          severity: string
+          user_id: string
+          warning_type: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          issued_by?: string
+          reason?: string
+          severity?: string
+          user_id?: string
+          warning_type?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -619,6 +767,16 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      is_user_banned: { Args: { p_user_id: string }; Returns: boolean }
+      log_admin_action: {
+        Args: {
+          p_action_type: string
+          p_details?: Json
+          p_target_post_id?: string
+          p_target_user_id?: string
+        }
+        Returns: undefined
       }
     }
     Enums: {
