@@ -128,12 +128,12 @@ export const useMessages = (selectedUserId?: string) => {
   // Flatten and reverse messages for display (newest at bottom)
   const flatMessages = (messages && 'pages' in messages) ? messages.pages.flat().reverse() : [];
 
-  // Real-time subscription
+  // Real-time subscription for new messages and read receipts
   useEffect(() => {
-    if (!user || !selectedUserId) return;
+    if (!user) return;
 
     const channel = supabase
-      .channel("messages")
+      .channel("messages-realtime")
       .on(
         "postgres_changes",
         {
@@ -147,12 +147,25 @@ export const useMessages = (selectedUserId?: string) => {
           queryClient.invalidateQueries({ queryKey: ["conversations"] });
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "UPDATE",
+          schema: "public",
+          table: "messages",
+          filter: `sender_id=eq.${user.id}`,
+        },
+        (payload) => {
+          // Update read receipt status for sent messages
+          queryClient.invalidateQueries({ queryKey: ["messages"] });
+        }
+      )
       .subscribe();
 
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [user, selectedUserId, queryClient]);
+  }, [user, queryClient]);
 
   const sendMessage = useMutation({
     mutationFn: async ({ 
