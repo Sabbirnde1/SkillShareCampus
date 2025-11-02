@@ -30,7 +30,16 @@ const Messages = () => {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const { conversations, messages, isLoading, sendMessage, markConversationAsRead } = useMessages(selectedUserId);
+  const {
+    conversations,
+    messages,
+    isLoading,
+    sendMessage,
+    markConversationAsRead,
+    loadMoreMessages,
+    hasMoreMessages,
+    isLoadingMore,
+  } = useMessages(selectedUserId);
   const { unreadCount } = useNotifications();
   const { isUserOnline, isUserTyping, updateTypingStatus } = usePresence("messages-presence");
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -320,6 +329,18 @@ const Messages = () => {
                       </div>
                     ) : (
                       <div className="space-y-4">
+                        {hasMoreMessages && (
+                          <div className="flex justify-center mb-4">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => loadMoreMessages()}
+                              disabled={isLoadingMore}
+                            >
+                              {isLoadingMore ? "Loading..." : "Load older messages"}
+                            </Button>
+                          </div>
+                        )}
                         {messages.map((message, index) => {
                           const isSent = message.sender_id === user?.id;
                           const showDate =

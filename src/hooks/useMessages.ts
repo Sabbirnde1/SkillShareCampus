@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient, useInfiniteQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -92,11 +92,12 @@ export const useMessages = (selectedUserId?: string) => {
     enabled: !!user,
   });
 
-  const { data: messages = [], isLoading: messagesLoading } = useQuery({
+  const { data: messages = [], isLoading: messagesLoading, fetchNextPage, hasNextPage, isFetchingNextPage } = useInfiniteQuery({
     queryKey: ["messages", user?.id, selectedUserId],
-    queryFn: async () => {
+    queryFn: async ({ pageParam = 0 }) => {
       if (!user || !selectedUserId) return [];
 
+      const MESSAGES_PER_PAGE = 50;
       const { data, error } = await supabase
         .from("messages")
         .select(`
@@ -111,13 +112,21 @@ export const useMessages = (selectedUserId?: string) => {
           sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url)
         `)
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${selectedUserId}),and(sender_id.eq.${selectedUserId},receiver_id.eq.${user.id})`)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: false })
+        .range(pageParam * MESSAGES_PER_PAGE, (pageParam + 1) * MESSAGES_PER_PAGE - 1);
 
       if (error) throw error;
       return data as Message[];
     },
+    getNextPageParam: (lastPage, pages) => {
+      return lastPage.length === 50 ? pages.length : undefined;
+    },
     enabled: !!user && !!selectedUserId,
+    initialPageParam: 0,
   });
+
+  // Flatten and reverse messages for display (newest at bottom)
+  const flatMessages = (messages && 'pages' in messages) ? messages.pages.flat().reverse() : [];
 
   // Real-time subscription
   useEffect(() => {
@@ -246,10 +255,13 @@ export const useMessages = (selectedUserId?: string) => {
 
   return {
     conversations: conversations || [],
-    messages,
+    messages: flatMessages,
     isLoading: conversationsLoading || messagesLoading,
     sendMessage,
     markAsRead,
     markConversationAsRead,
+    loadMoreMessages: fetchNextPage,
+    hasMoreMessages: hasNextPage,
+    isLoadingMore: isFetchingNextPage,
   };
 };
