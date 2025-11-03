@@ -11,6 +11,7 @@ import { AlertCircle } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { UserManagementTable } from "@/components/admin/UserManagementTable";
 import { ContentModerationPanel } from "@/components/admin/ContentModerationPanel";
+import { AnalyticsDashboard } from "@/components/admin/AnalyticsDashboard";
 
 const Admin = () => {
   const { user } = useAuth();
@@ -84,21 +85,7 @@ const Admin = () => {
             </TabsContent>
 
             <TabsContent value="analytics" className="mt-6">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Analytics Dashboard</CardTitle>
-                  <CardDescription>
-                    Platform statistics and user engagement metrics
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Badge variant="secondary">Coming Soon</Badge>
-                  <p className="text-sm text-muted-foreground mt-4">
-                    Analytics features including DAU/MAU, engagement rates, and retention
-                    metrics will be available in the next update.
-                  </p>
-                </CardContent>
-              </Card>
+              <AnalyticsDashboard />
             </TabsContent>
           </Tabs>
 
