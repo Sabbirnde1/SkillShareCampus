@@ -159,9 +159,9 @@ const Campus = () => {
       <div className="max-w-7xl mx-auto px-4 py-6">
         <OfflineBanner />
         <EmailVerificationBanner />
-        <div className="grid grid-cols-12 gap-6">
-          {/* Left Sidebar */}
-          <aside className="col-span-3">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - Hidden on mobile */}
+          <aside className="hidden lg:block lg:col-span-3">
             <Card className="overflow-hidden">
               <div className="relative h-24 bg-gradient-to-r from-blue-900 to-blue-700">
                 <img 
@@ -183,7 +183,7 @@ const Campus = () => {
           </aside>
 
           {/* Main Feed */}
-          <main className="col-span-6">
+          <main className="col-span-1 lg:col-span-6">
             {/* Create Post */}
             <Card className="p-4 mb-4">
               <div className="flex items-center gap-3 mb-4">
@@ -523,8 +523,8 @@ const Campus = () => {
             </ErrorBoundary>
           </main>
 
-          {/* Right Sidebar */}
-          <aside className="col-span-3">
+          {/* Right Sidebar - Hidden on mobile */}
+          <aside className="hidden lg:block lg:col-span-3">
             <TrendingHashtags />
 
             <div className="mt-4">

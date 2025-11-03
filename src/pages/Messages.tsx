@@ -189,10 +189,10 @@ const Messages = () => {
       <AppHeader currentPage="messages" />
 
       {/* Main Content */}
-      <main className="flex-1 px-6 py-8">
-        <div className="max-w-7xl mx-auto grid grid-cols-12 gap-6">
-          {/* Left Sidebar - Contacts */}
-          <div className="col-span-3">
+      <main className="flex-1 px-4 md:px-6 py-4 md:py-8">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left Sidebar - Contacts - Show as full width on mobile */}
+          <div className={`col-span-1 lg:col-span-3 ${selectedUserId ? 'hidden lg:block' : ''}`}>
             <Card className="p-0">
               <div className="p-4 border-b">
                 <h2 className="font-semibold text-lg">Messages</h2>
@@ -258,8 +258,8 @@ const Messages = () => {
             {isLoading && selectedUserId ? (
               <MessagesSkeleton />
             ) : (
-              <div className="col-span-6">
-                <Card className="flex flex-col h-[600px]">
+              <div className={`col-span-1 lg:col-span-6 ${!selectedUserId ? 'hidden lg:block' : ''}`}>
+                <Card className="flex flex-col h-[calc(100vh-200px)] lg:h-[600px]">
                   {!selectedUserId ? (
                 <div className="flex-1 flex flex-col items-center justify-center p-8">
                   <MessageSquare className="h-16 w-16 text-muted-foreground mb-4" />
@@ -273,8 +273,14 @@ const Messages = () => {
               ) : (
                 <>
                   {/* Chat Header */}
-                  <div className="p-4 border-b bg-white">
-                    <Link to={`/user/${selectedUserId}`}>
+                  <div className="p-4 border-b bg-white flex items-center gap-3">
+                    <button 
+                      onClick={() => setSelectedUserId(undefined)}
+                      className="lg:hidden p-2 hover:bg-accent rounded-lg"
+                    >
+                      <X className="h-5 w-5" />
+                    </button>
+                    <Link to={`/user/${selectedUserId}`} className="flex-1">
                       <div className="flex items-center gap-3 hover:opacity-80 transition-opacity cursor-pointer">
                         <div className="relative">
                           <Avatar className="w-12 h-12">
@@ -503,8 +509,8 @@ const Messages = () => {
             )}
           </ErrorBoundary>
 
-          {/* Right Sidebar - Campus News */}
-          <div className="col-span-3">
+          {/* Right Sidebar - Campus News - Hidden on mobile */}
+          <div className="hidden lg:block lg:col-span-3">
             <Card className="p-4 mb-4">
               <h3 className="font-semibold text-foreground mb-3">{newsItems[0].title}</h3>
               <p className="text-xs text-muted-foreground mb-3">{newsItems[0].time}</p>

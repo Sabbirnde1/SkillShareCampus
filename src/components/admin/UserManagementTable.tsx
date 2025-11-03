@@ -66,9 +66,9 @@ export const UserManagementTable = () => {
         </div>
       </div>
 
-      {/* Users Table */}
-      <div className="border rounded-lg">
-        <Table>
+      {/* Users Table - Scrollable on mobile */}
+      <div className="border rounded-lg overflow-x-auto">
+        <Table className="min-w-[800px]">
           <TableHeader>
             <TableRow>
               <TableHead>User</TableHead>

@@ -132,8 +132,8 @@ export const AnalyticsDashboard = () => {
             <CardTitle>Daily Active Users</CardTitle>
             <CardDescription>User activity over the last 7 days</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
+          <CardContent className="p-4 md:p-6">
+            <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <LineChart data={analytics.dailyActiveUsersChart}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -166,8 +166,8 @@ export const AnalyticsDashboard = () => {
             <CardTitle>Post Creation</CardTitle>
             <CardDescription>Posts created in the last 7 days</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
+          <CardContent className="p-4 md:p-6">
+            <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.postCreationChart}>
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
@@ -197,8 +197,8 @@ export const AnalyticsDashboard = () => {
             <CardTitle>Engagement Breakdown</CardTitle>
             <CardDescription>Interactions in the last 30 days</CardDescription>
           </CardHeader>
-          <CardContent>
-            <ChartContainer config={chartConfig} className="h-[300px]">
+          <CardContent className="p-4 md:p-6">
+            <ChartContainer config={chartConfig} className="h-[250px] md:h-[300px]">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={analytics.engagementChart} layout="vertical">
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />

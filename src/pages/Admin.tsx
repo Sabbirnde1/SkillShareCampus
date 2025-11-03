@@ -53,27 +53,27 @@ const Admin = () => {
   return (
     <div className="min-h-screen bg-background">
       <AppHeader currentPage="admin" />
-      <main className="container mx-auto px-4 py-8 max-w-7xl">
+      <main className="container mx-auto px-4 py-4 md:py-8 max-w-7xl">
         <div className="space-y-6">
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div>
-              <h1 className="text-3xl font-bold">Admin Dashboard</h1>
+              <h1 className="text-2xl md:text-3xl font-bold">Admin Dashboard</h1>
               <p className="text-muted-foreground mt-1">
                 Manage users, content, and system settings
               </p>
             </div>
-            <Badge variant="default" className="text-lg px-4 py-2">
+            <Badge variant="default" className="text-base md:text-lg px-3 md:px-4 py-1.5 md:py-2">
               {primaryRole}
             </Badge>
           </div>
 
           {/* Admin Tabs */}
           <Tabs defaultValue="users" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="users">User Management</TabsTrigger>
-              <TabsTrigger value="moderation">Content Moderation</TabsTrigger>
-              <TabsTrigger value="analytics">Analytics</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3 h-auto">
+              <TabsTrigger value="users" className="text-xs md:text-sm">User Management</TabsTrigger>
+              <TabsTrigger value="moderation" className="text-xs md:text-sm">Content Moderation</TabsTrigger>
+              <TabsTrigger value="analytics" className="text-xs md:text-sm">Analytics</TabsTrigger>
             </TabsList>
 
             <TabsContent value="users" className="mt-6">
