@@ -49,7 +49,7 @@ serve(async (req) => {
           .insert({
             course_id: courseId,
             user_id: userId,
-            status: "active",
+            status: "enrolled",
             payment_status: "completed",
           });
 

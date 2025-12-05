@@ -130,7 +130,7 @@ export function useEnrollInCourse() {
         .insert({
           course_id: courseId,
           user_id: user.id,
-          status: "active",
+          status: "enrolled",
         })
         .select()
         .single();
