@@ -323,6 +323,7 @@ export type Database = {
           enrolled_at: string
           id: string
           last_accessed_at: string | null
+          payment_status: string | null
           progress_percentage: number | null
           status: string
           user_id: string
@@ -333,6 +334,7 @@ export type Database = {
           enrolled_at?: string
           id?: string
           last_accessed_at?: string | null
+          payment_status?: string | null
           progress_percentage?: number | null
           status: string
           user_id: string
@@ -343,6 +345,7 @@ export type Database = {
           enrolled_at?: string
           id?: string
           last_accessed_at?: string | null
+          payment_status?: string | null
           progress_percentage?: number | null
           status?: string
           user_id?: string
