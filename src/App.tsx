@@ -22,6 +22,12 @@ import UserProfile from "./pages/UserProfile";
 import HashtagPage from "./pages/HashtagPage";
 import Admin from "./pages/Admin";
 import NotFound from "./pages/NotFound";
+import Courses from "./pages/Courses";
+import CourseDetail from "./pages/CourseDetail";
+import CourseLearn from "./pages/CourseLearn";
+import MyCourses from "./pages/MyCourses";
+import CourseCertificate from "./pages/CourseCertificate";
+import CreateCourse from "./pages/CreateCourse";
 
 const queryClient = new QueryClient();
 
@@ -49,6 +55,12 @@ const App = () => (
             <Route path="/user/:id" element={<ProtectedRoute><UserProfile /></ProtectedRoute>} />
             <Route path="/hashtag/:tag" element={<ProtectedRoute><HashtagPage /></ProtectedRoute>} />
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
+            <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
+            <Route path="/courses/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
+            <Route path="/courses/create" element={<ProtectedRoute><CreateCourse /></ProtectedRoute>} />
+            <Route path="/courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
+            <Route path="/courses/:id/learn" element={<ProtectedRoute><CourseLearn /></ProtectedRoute>} />
+            <Route path="/courses/:id/certificate" element={<ProtectedRoute><CourseCertificate /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>
