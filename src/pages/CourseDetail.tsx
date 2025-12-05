@@ -245,7 +245,7 @@ const CourseDetail = () => {
                         <div className="text-3xl font-bold">
                           {isFree
                             ? "Free"
-                            : `$${course.price}`}
+                            : `৳${course.price}`}
                         </div>
                         <Button
                           className="w-full"

@@ -45,7 +45,6 @@ import {
   ShieldAlert,
   ArrowLeft,
   Users,
-  DollarSign,
 } from "lucide-react";
 import { format } from "date-fns";
 
@@ -220,11 +219,10 @@ const AdminCourses = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            <DollarSign className="h-3 w-3" />
                             {course.price === 0 || course.price === null ? (
                               <span className="text-green-600 font-medium">Free</span>
                             ) : (
-                              <span>${course.price}</span>
+                              <span>৳{course.price}</span>
                             )}
                           </div>
                         </TableCell>
