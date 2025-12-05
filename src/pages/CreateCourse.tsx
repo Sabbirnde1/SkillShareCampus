@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { AppHeader } from "@/components/AppHeader";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
+import { useUserRole } from "@/hooks/useUserRole";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -18,7 +19,7 @@ import { Switch } from "@/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCreateCourse } from "@/hooks/useCourses";
 import { useUserProfile } from "@/hooks/useUserProfile";
-import { ArrowLeft, BookOpen } from "lucide-react";
+import { ArrowLeft, BookOpen, ShieldAlert } from "lucide-react";
 
 const categories = [
   "Web Development",
@@ -34,8 +35,33 @@ const categories = [
 const CreateCourse = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isAdmin } = useUserRole();
   const createCourse = useCreateCourse();
   const { profile } = useUserProfile(user?.id);
+
+  // Access denied for non-admins
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen flex flex-col bg-background">
+        <AppHeader currentPage="courses" />
+        <main className="flex-1 container mx-auto px-4 py-16">
+          <div className="max-w-md mx-auto text-center">
+            <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-destructive/10 flex items-center justify-center">
+              <ShieldAlert className="h-8 w-8 text-destructive" />
+            </div>
+            <h1 className="text-2xl font-bold mb-2">Access Denied</h1>
+            <p className="text-muted-foreground mb-6">
+              Only administrators can create courses. If you believe you should have access, please contact an administrator.
+            </p>
+            <Button asChild>
+              <Link to="/courses">Browse Courses</Link>
+            </Button>
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   const [formData, setFormData] = useState({
     title: "",

@@ -18,6 +18,7 @@ import {
 } from "@/hooks/useCourseDetails";
 import { useLessonProgressForCourse } from "@/hooks/useLessonProgress";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import {
   Star,
   Users,
@@ -27,6 +28,7 @@ import {
   ArrowLeft,
   CheckCircle,
   Award,
+  ShoppingCart,
 } from "lucide-react";
 
 const CourseDetail = () => {
@@ -43,13 +45,22 @@ const CourseDetail = () => {
   const isEnrolled = !!enrollment;
   const totalDuration = lessons.reduce((acc, l) => acc + (l.duration_minutes || 0), 0);
 
+  const isFree = course?.price === 0 || course?.price === null;
+
   const handleEnroll = () => {
     if (!user) {
       navigate("/signin");
       return;
     }
-    if (id) {
-      enrollMutation.mutate(id);
+    
+    if (isFree) {
+      // Free course - enroll directly
+      if (id) {
+        enrollMutation.mutate(id);
+      }
+    } else {
+      // Paid course - show purchase message (Stripe integration needed)
+      toast.info("Payment integration coming soon. This is a paid course.");
     }
   };
 
@@ -232,7 +243,7 @@ const CourseDetail = () => {
                     ) : (
                       <>
                         <div className="text-3xl font-bold">
-                          {course.price === 0 || course.price === null
+                          {isFree
                             ? "Free"
                             : `$${course.price}`}
                         </div>
@@ -242,9 +253,16 @@ const CourseDetail = () => {
                           onClick={handleEnroll}
                           disabled={enrollMutation.isPending}
                         >
-                          {enrollMutation.isPending
-                            ? "Enrolling..."
-                            : "Enroll Now"}
+                          {enrollMutation.isPending ? (
+                            "Processing..."
+                          ) : isFree ? (
+                            "Enroll Now"
+                          ) : (
+                            <>
+                              <ShoppingCart className="h-5 w-5 mr-2" />
+                              Buy Course
+                            </>
+                          )}
                         </Button>
                       </>
                     )}
