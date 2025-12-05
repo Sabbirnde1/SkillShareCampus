@@ -7,7 +7,7 @@ import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 interface AppHeaderProps {
-  currentPage: "campus" | "activity" | "friends" | "messages" | "profile" | "notifications" | "admin";
+  currentPage: "campus" | "activity" | "friends" | "messages" | "profile" | "notifications" | "admin" | "courses";
 }
 
 export const AppHeader = ({ currentPage }: AppHeaderProps) => {
