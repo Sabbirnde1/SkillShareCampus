@@ -28,6 +28,9 @@ import CourseLearn from "./pages/CourseLearn";
 import MyCourses from "./pages/MyCourses";
 import CourseCertificate from "./pages/CourseCertificate";
 import CreateCourse from "./pages/CreateCourse";
+import AdminCourses from "./pages/AdminCourses";
+import EditCourse from "./pages/EditCourse";
+import ManageLessons from "./pages/ManageLessons";
 
 const queryClient = new QueryClient();
 
@@ -61,6 +64,9 @@ const App = () => (
             <Route path="/courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
             <Route path="/courses/:id/learn" element={<ProtectedRoute><CourseLearn /></ProtectedRoute>} />
             <Route path="/courses/:id/certificate" element={<ProtectedRoute><CourseCertificate /></ProtectedRoute>} />
+            <Route path="/admin/courses" element={<ProtectedRoute><AdminCourses /></ProtectedRoute>} />
+            <Route path="/admin/courses/:id/edit" element={<ProtectedRoute><EditCourse /></ProtectedRoute>} />
+            <Route path="/admin/courses/:id/lessons" element={<ProtectedRoute><ManageLessons /></ProtectedRoute>} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

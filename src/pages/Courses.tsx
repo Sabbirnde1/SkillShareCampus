@@ -7,9 +7,11 @@ import { CourseFilters } from "@/components/courses/CourseFilters";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useCourses, CourseFilters as Filters } from "@/hooks/useCourses";
-import { BookOpen, Plus } from "lucide-react";
+import { useUserRole } from "@/hooks/useUserRole";
+import { BookOpen, Plus, Settings } from "lucide-react";
 
 const Courses = () => {
+  const { isAdmin } = useUserRole();
   const [filters, setFilters] = useState<Filters>({
     category: "all",
     difficulty: "all",
@@ -40,12 +42,22 @@ const Courses = () => {
                 My Courses
               </Link>
             </Button>
-            <Button asChild>
-              <Link to="/courses/create">
-                <Plus className="h-4 w-4 mr-2" />
-                Create Course
-              </Link>
-            </Button>
+            {isAdmin && (
+              <>
+                <Button variant="outline" asChild>
+                  <Link to="/admin/courses">
+                    <Settings className="h-4 w-4 mr-2" />
+                    Manage
+                  </Link>
+                </Button>
+                <Button asChild>
+                  <Link to="/courses/create">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Create
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
 
