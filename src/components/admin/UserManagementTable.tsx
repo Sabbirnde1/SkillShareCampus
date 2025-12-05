@@ -46,9 +46,9 @@ export const UserManagementTable = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+      <div className="flex items-center gap-2">
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
@@ -58,25 +58,25 @@ export const UserManagementTable = () => {
               setSearchQuery(e.target.value);
               setPage(0);
             }}
-            className="pl-10 h-11 bg-background/50 border-border/50 focus:border-primary/50"
+            className="pl-10"
           />
         </div>
-        <Badge variant="secondary" className="w-fit px-4 py-2 text-sm">
+        <div className="text-sm text-muted-foreground">
           {totalCount} total users
-        </Badge>
+        </div>
       </div>
 
       {/* Users Table - Scrollable on mobile */}
-      <div className="border border-border/50 rounded-xl overflow-hidden bg-card/30">
+      <div className="border rounded-lg overflow-x-auto">
         <Table className="min-w-[800px]">
           <TableHeader>
-            <TableRow className="bg-muted/30 hover:bg-muted/30">
-              <TableHead className="font-semibold">User</TableHead>
-              <TableHead className="font-semibold">Roles</TableHead>
-              <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="font-semibold">Joined</TableHead>
-              <TableHead className="font-semibold">Last Seen</TableHead>
-              <TableHead className="text-right font-semibold">Actions</TableHead>
+            <TableRow>
+              <TableHead>User</TableHead>
+              <TableHead>Roles</TableHead>
+              <TableHead>Status</TableHead>
+              <TableHead>Joined</TableHead>
+              <TableHead>Last Seen</TableHead>
+              <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -94,17 +94,17 @@ export const UserManagementTable = () => {
               </TableRow>
             ) : (
               users.map((user) => (
-                <TableRow key={user.id} className="hover:bg-muted/20 transition-colors">
+                <TableRow key={user.id}>
                   <TableCell>
                     <div className="flex items-center gap-3">
                       <UserAvatar
                         avatarUrl={user.avatar_url}
                         fullName={user.full_name}
                         email={user.email}
-                        className="h-10 w-10 ring-2 ring-border/50"
+                        className="h-9 w-9"
                       />
                       <div>
-                        <div className="font-medium text-foreground">
+                        <div className="font-medium">
                           {user.full_name || "Anonymous User"}
                         </div>
                         <div className="text-xs text-muted-foreground">
@@ -114,13 +114,9 @@ export const UserManagementTable = () => {
                     </div>
                   </TableCell>
                   <TableCell>
-                    <div className="flex gap-1.5 flex-wrap">
+                    <div className="flex gap-1 flex-wrap">
                       {user.roles.map((role) => (
-                        <Badge 
-                          key={role} 
-                          variant={getRoleBadgeVariant(role)}
-                          className="capitalize"
-                        >
+                        <Badge key={role} variant={getRoleBadgeVariant(role)}>
                           {role}
                         </Badge>
                       ))}
@@ -128,12 +124,12 @@ export const UserManagementTable = () => {
                   </TableCell>
                   <TableCell>
                     {user.is_banned ? (
-                      <Badge variant="destructive" className="gap-1.5 bg-destructive/10 text-destructive border-destructive/20">
+                      <Badge variant="destructive" className="gap-1">
                         <ShieldAlert className="h-3 w-3" />
                         Banned
                       </Badge>
                     ) : (
-                      <Badge variant="secondary" className="gap-1.5 bg-green-500/10 text-green-600 border-green-500/20">
+                      <Badge variant="secondary" className="gap-1">
                         <ShieldCheck className="h-3 w-3" />
                         Active
                       </Badge>
@@ -153,12 +149,11 @@ export const UserManagementTable = () => {
                   </TableCell>
                   <TableCell className="text-right">
                     <Button
-                      variant="outline"
+                      variant="ghost"
                       size="sm"
                       onClick={() => setSelectedUserId(user.id)}
-                      className="gap-1.5 hover:bg-primary hover:text-primary-foreground transition-colors"
                     >
-                      <UserCog className="h-4 w-4" />
+                      <UserCog className="h-4 w-4 mr-1" />
                       Manage
                     </Button>
                   </TableCell>
