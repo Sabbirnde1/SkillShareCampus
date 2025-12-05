@@ -73,21 +73,34 @@ export const ContentModerationPanel = () => {
   };
 
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">Content Moderation</h2>
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         {selectedReports.size > 0 && (
-          <Button variant="outline" onClick={handleBulkDismiss}>
+          <Button 
+            variant="outline" 
+            onClick={handleBulkDismiss}
+            className="gap-2 border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+          >
+            <Trash2 className="h-4 w-4" />
             Dismiss {selectedReports.size} Selected
           </Button>
         )}
       </div>
 
       <Tabs value={status} onValueChange={(v) => setStatus(v as any)}>
-        <TabsList>
-          <TabsTrigger value="pending">Pending</TabsTrigger>
-          <TabsTrigger value="reviewed">Reviewed</TabsTrigger>
-          <TabsTrigger value="dismissed">Dismissed</TabsTrigger>
+        <TabsList className="bg-muted/50 p-1 rounded-lg">
+          <TabsTrigger value="pending" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2">
+            <AlertTriangle className="h-4 w-4" />
+            Pending
+          </TabsTrigger>
+          <TabsTrigger value="reviewed" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2">
+            <CheckCircle className="h-4 w-4" />
+            Reviewed
+          </TabsTrigger>
+          <TabsTrigger value="dismissed" className="rounded-md data-[state=active]:bg-background data-[state=active]:shadow-sm gap-2">
+            <XCircle className="h-4 w-4" />
+            Dismissed
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value={status} className="space-y-4 mt-4">
@@ -96,80 +109,83 @@ export const ContentModerationPanel = () => {
               <CardContent className="py-8 text-center">Loading reports...</CardContent>
             </Card>
           ) : reports.length === 0 ? (
-            <Card>
-              <CardContent className="py-8 text-center">
-                <CheckCircle className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                <p className="text-muted-foreground">No {status} reports</p>
+            <Card className="border-dashed border-2">
+              <CardContent className="py-12 text-center">
+                <div className="mx-auto w-16 h-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
+                  <CheckCircle className="h-8 w-8 text-muted-foreground" />
+                </div>
+                <p className="text-muted-foreground font-medium">No {status} reports</p>
+                <p className="text-sm text-muted-foreground/70 mt-1">All caught up!</p>
               </CardContent>
             </Card>
           ) : (
             <>
               <div className="grid gap-4">
                 {reports.map((report) => (
-                  <Card key={report.id}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
+                  <Card key={report.id} className="border-border/50 hover:shadow-md transition-shadow overflow-hidden">
+                    <CardHeader className="bg-muted/20">
+                      <div className="flex items-start justify-between gap-4">
                         <div className="flex items-start gap-3 flex-1">
                           {status === "pending" && (
                             <input
                               type="checkbox"
                               checked={selectedReports.has(report.id)}
                               onChange={() => toggleSelectReport(report.id)}
-                              className="mt-1"
+                              className="mt-1 h-4 w-4 rounded border-border accent-primary"
                             />
                           )}
                           <div className="flex-1">
-                            <CardTitle className="flex items-center gap-2 text-base">
+                            <CardTitle className="flex flex-wrap items-center gap-2 text-base">
                               {getReportTypeBadge(report.report_type)}
-                              <span className="text-sm text-muted-foreground">
-                                Reported{" "}
+                              <span className="text-xs text-muted-foreground font-normal">
                                 {formatDistanceToNow(new Date(report.created_at), {
                                   addSuffix: true,
                                 })}
                               </span>
                             </CardTitle>
-                            <CardDescription className="mt-1">
-                              By: {report.reporter?.full_name || "Anonymous"}
+                            <CardDescription className="mt-1 flex items-center gap-1">
+                              <span className="text-muted-foreground/70">Reported by:</span>
+                              <span className="font-medium">{report.reporter?.full_name || "Anonymous"}</span>
                             </CardDescription>
                           </div>
                         </div>
                         {status === "pending" && (
                           <Button
                             size="sm"
-                            variant="outline"
                             onClick={() => setSelectedReport(report.id)}
+                            className="gap-1.5"
                           >
                             Review
                           </Button>
                         )}
                       </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
-                      <div>
-                        <h4 className="text-sm font-semibold mb-1">Reason:</h4>
-                        <p className="text-sm text-muted-foreground">{report.reason}</p>
+                    <CardContent className="space-y-4 pt-4">
+                      <div className="bg-muted/30 rounded-lg p-3">
+                        <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-1.5">Reason</h4>
+                        <p className="text-sm">{report.reason}</p>
                       </div>
 
                       {report.post && (
-                        <div className="border rounded-lg p-3 bg-muted/50">
+                        <div className="border border-border/50 rounded-xl p-4 bg-background/50">
                           <div className="flex items-start gap-3">
                             <UserAvatar
                               avatarUrl={report.post.author?.avatar_url}
                               fullName={report.post.author?.full_name}
-                              className="h-9 w-9"
+                              className="h-10 w-10 ring-2 ring-border/50"
                             />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium">
+                              <p className="text-sm font-semibold">
                                 {report.post.author?.full_name || "Unknown User"}
                               </p>
-                              <p className="text-sm mt-1 line-clamp-3">
+                              <p className="text-sm mt-1.5 text-muted-foreground line-clamp-3">
                                 {report.post.content}
                               </p>
                               {report.post.image_url && (
                                 <img
                                   src={report.post.image_url}
                                   alt="Post"
-                                  className="mt-2 rounded-lg max-h-48 object-cover"
+                                  className="mt-3 rounded-lg max-h-48 object-cover border"
                                 />
                               )}
                             </div>
