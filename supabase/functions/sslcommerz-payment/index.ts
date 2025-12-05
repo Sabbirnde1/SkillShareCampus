@@ -10,13 +10,16 @@ interface PaymentRequest {
   course_id: string;
   course_title: string;
   amount: number;
+  final_amount: number;
+  discount_amount: number;
+  coupon_code?: string;
+  payment_method: string;
   user_id: string;
   user_email: string;
   user_name: string;
 }
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -29,7 +32,7 @@ serve(async (req) => {
     const url = new URL(req.url);
     const action = url.searchParams.get("action");
 
-    // Handle IPN (Instant Payment Notification) callback
+    // Handle IPN callback
     if (action === "ipn") {
       const formData = await req.formData();
       const status = formData.get("status") as string;
@@ -40,10 +43,21 @@ serve(async (req) => {
       console.log("SSLCommerz IPN received:", { status, tranId, valId, amount });
 
       if (status === "VALID" || status === "VALIDATED") {
-        // Extract course_id and user_id from transaction ID
-        const [courseId, userId] = tranId.split("_").slice(0, 2);
+        const parts = tranId.split("_");
+        const courseId = parts[0];
+        const userId = parts[1];
 
-        // Create enrollment after successful payment
+        // Update transaction status
+        await supabase
+          .from("payment_transactions")
+          .update({
+            status: "completed",
+            completed_at: new Date().toISOString(),
+            gateway_response: { status, valId, amount },
+          })
+          .eq("transaction_id", tranId);
+
+        // Create enrollment
         const { error: enrollError } = await supabase
           .from("enrollments")
           .insert({
@@ -56,7 +70,36 @@ serve(async (req) => {
         if (enrollError) {
           console.error("Failed to create enrollment:", enrollError);
         } else {
-          console.log("Enrollment created successfully for:", { courseId, userId });
+          console.log("Enrollment created successfully");
+
+          // Get coupon code from transaction and update usage
+          const { data: transaction } = await supabase
+            .from("payment_transactions")
+            .select("coupon_code")
+            .eq("transaction_id", tranId)
+            .maybeSingle();
+
+          if (transaction?.coupon_code) {
+            // Update coupon used_count manually
+            const { data: coupon } = await supabase
+              .from("coupons")
+              .select("id, used_count")
+              .eq("code", transaction.coupon_code)
+              .maybeSingle();
+
+            if (coupon) {
+              await supabase
+                .from("coupons")
+                .update({ used_count: (coupon.used_count || 0) + 1 })
+                .eq("id", coupon.id);
+
+              // Record coupon usage
+              await supabase.from("coupon_usage").insert({
+                coupon_id: coupon.id,
+                user_id: userId,
+              });
+            }
+          }
         }
       }
 
@@ -69,7 +112,6 @@ serve(async (req) => {
       const tranId = formData.get("tran_id") as string;
       const [courseId] = tranId.split("_");
       
-      // Redirect to course page with success message
       return new Response(null, {
         status: 302,
         headers: {
@@ -84,6 +126,12 @@ serve(async (req) => {
       const formData = await req.formData();
       const tranId = formData.get("tran_id") as string;
       const [courseId] = tranId.split("_");
+
+      // Update transaction status
+      await supabase
+        .from("payment_transactions")
+        .update({ status: "failed" })
+        .eq("transaction_id", tranId);
       
       return new Response(null, {
         status: 302,
@@ -99,6 +147,12 @@ serve(async (req) => {
       const formData = await req.formData();
       const tranId = formData.get("tran_id") as string;
       const [courseId] = tranId.split("_");
+
+      // Update transaction status
+      await supabase
+        .from("payment_transactions")
+        .update({ status: "cancelled" })
+        .eq("transaction_id", tranId);
       
       return new Response(null, {
         status: 302,
@@ -112,34 +166,58 @@ serve(async (req) => {
     // Initialize payment
     if (req.method === "POST") {
       const body: PaymentRequest = await req.json();
-      const { course_id, course_title, amount, user_id, user_email, user_name } = body;
+      const {
+        course_id,
+        course_title,
+        amount,
+        final_amount,
+        discount_amount,
+        coupon_code,
+        payment_method,
+        user_id,
+        user_email,
+        user_name,
+      } = body;
 
-      console.log("Initiating SSLCommerz payment:", { course_id, amount, user_email });
+      console.log("Initiating payment:", { course_id, amount, final_amount, payment_method, user_email });
 
-      // Check if credentials are configured
       const storeId = Deno.env.get("SSLCOMMERZ_STORE_ID");
       const storePassword = Deno.env.get("SSLCOMMERZ_STORE_PASSWORD");
 
-      // Generate unique transaction ID
       const tranId = `${course_id}_${user_id}_${Date.now()}`;
-      
-      // Base URL for callbacks
       const functionUrl = `${supabaseUrl}/functions/v1/sslcommerz-payment`;
+
+      // Create transaction record
+      const { error: txError } = await supabase.from("payment_transactions").insert({
+        user_id,
+        course_id,
+        amount,
+        discount_amount: discount_amount || 0,
+        final_amount,
+        payment_method,
+        transaction_id: tranId,
+        coupon_code: coupon_code || null,
+        status: "pending",
+      });
+
+      if (txError) {
+        console.error("Failed to create transaction:", txError);
+        throw new Error("Failed to create transaction record");
+      }
 
       // If no credentials, use sandbox mock mode
       if (!storeId || !storePassword) {
-        console.log("SSLCommerz credentials not configured, using mock mode");
+        console.log("Using mock payment mode");
         
-        // In mock mode, simulate successful payment for testing
-        // Create a mock payment page URL
-        const mockPaymentUrl = `${functionUrl}?action=mock&tran_id=${tranId}&amount=${amount}&course_title=${encodeURIComponent(course_title)}`;
+        const mockPaymentUrl = `${functionUrl}?action=mock&tran_id=${tranId}&amount=${final_amount}&course_title=${encodeURIComponent(course_title)}&method=${payment_method}`;
         
         return new Response(
           JSON.stringify({
             success: true,
             mode: "sandbox_mock",
             payment_url: mockPaymentUrl,
-            message: "Mock payment mode - SSLCommerz credentials not configured",
+            transaction_id: tranId,
+            message: "Mock payment mode",
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
@@ -151,7 +229,7 @@ serve(async (req) => {
       const paymentData = new URLSearchParams({
         store_id: storeId,
         store_passwd: storePassword,
-        total_amount: amount.toString(),
+        total_amount: final_amount.toString(),
         currency: "BDT",
         tran_id: tranId,
         success_url: `${functionUrl}?action=success`,
@@ -187,11 +265,18 @@ serve(async (req) => {
             success: true,
             mode: "sandbox",
             payment_url: result.GatewayPageURL,
+            transaction_id: tranId,
             session_key: result.sessionkey,
           }),
           { headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       } else {
+        // Update transaction as failed
+        await supabase
+          .from("payment_transactions")
+          .update({ status: "failed", gateway_response: result })
+          .eq("transaction_id", tranId);
+
         throw new Error(result.failedreason || "Failed to initiate payment");
       }
     }
@@ -201,7 +286,17 @@ serve(async (req) => {
       const tranId = url.searchParams.get("tran_id") || "";
       const amount = url.searchParams.get("amount") || "0";
       const courseTitle = url.searchParams.get("course_title") || "Course";
+      const method = url.searchParams.get("method") || "bkash";
       const [courseId, userId] = tranId.split("_");
+
+      const methodColors: Record<string, { bg: string; text: string; name: string }> = {
+        bkash: { bg: "#E2136E", text: "white", name: "bKash" },
+        nagad: { bg: "#F6921E", text: "white", name: "Nagad" },
+        card: { bg: "#1a73e8", text: "white", name: "Credit/Debit Card" },
+        bank: { bg: "#2e7d32", text: "white", name: "Bank Transfer" },
+      };
+
+      const selectedMethod = methodColors[method] || methodColors.bkash;
 
       const html = `
 <!DOCTYPE html>
@@ -209,12 +304,12 @@ serve(async (req) => {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>SSLCommerz Sandbox Payment</title>
+  <title>Payment - ${selectedMethod.name}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body { 
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      background: linear-gradient(135deg, ${selectedMethod.bg}22 0%, #f8f9fa 100%);
       min-height: 100vh;
       display: flex;
       align-items: center;
@@ -223,128 +318,190 @@ serve(async (req) => {
     }
     .container {
       background: white;
-      border-radius: 16px;
-      padding: 40px;
-      max-width: 450px;
+      border-radius: 20px;
+      padding: 0;
+      max-width: 420px;
       width: 100%;
-      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+      box-shadow: 0 25px 60px -12px rgba(0,0,0,0.15);
+      overflow: hidden;
     }
-    .logo {
+    .header {
+      background: ${selectedMethod.bg};
+      color: ${selectedMethod.text};
+      padding: 24px;
       text-align: center;
-      margin-bottom: 24px;
     }
-    .logo img { height: 50px; }
+    .header h1 { font-size: 24px; margin-bottom: 4px; }
+    .header p { opacity: 0.9; font-size: 14px; }
     .sandbox-badge {
-      background: #fef3c7;
-      color: #92400e;
-      padding: 8px 16px;
-      border-radius: 8px;
+      background: #fff3cd;
+      color: #856404;
+      padding: 12px 16px;
       text-align: center;
-      font-size: 14px;
-      margin-bottom: 24px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    h1 { font-size: 24px; text-align: center; margin-bottom: 8px; color: #1f2937; }
-    .course-name { text-align: center; color: #6b7280; margin-bottom: 24px; }
-    .amount {
+    .content { padding: 24px; }
+    .course-info {
+      background: #f8f9fa;
+      border-radius: 12px;
+      padding: 16px;
+      margin-bottom: 20px;
+    }
+    .course-info h3 { font-size: 15px; margin-bottom: 4px; }
+    .course-info p { color: #666; font-size: 13px; }
+    .amount-display {
       text-align: center;
-      font-size: 36px;
-      font-weight: bold;
-      color: #059669;
-      margin-bottom: 32px;
+      padding: 20px;
+      background: linear-gradient(135deg, ${selectedMethod.bg}11, ${selectedMethod.bg}05);
+      border-radius: 12px;
+      margin-bottom: 20px;
     }
-    .payment-methods {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 12px;
-      margin-bottom: 24px;
+    .amount-display .label { color: #666; font-size: 14px; margin-bottom: 4px; }
+    .amount-display .value { font-size: 36px; font-weight: 700; color: ${selectedMethod.bg}; }
+    .payment-form { margin-bottom: 16px; }
+    .input-group { margin-bottom: 16px; }
+    .input-group label { display: block; font-size: 13px; color: #666; margin-bottom: 6px; }
+    .input-group input {
+      width: 100%;
+      padding: 14px 16px;
+      border: 2px solid #e0e0e0;
+      border-radius: 10px;
+      font-size: 16px;
+      transition: border-color 0.2s;
     }
-    .method {
-      border: 2px solid #e5e7eb;
-      border-radius: 8px;
-      padding: 12px;
-      text-align: center;
-      cursor: pointer;
-      transition: all 0.2s;
+    .input-group input:focus {
+      outline: none;
+      border-color: ${selectedMethod.bg};
     }
-    .method:hover { border-color: #667eea; }
-    .method.selected { border-color: #667eea; background: #eef2ff; }
-    .method img { height: 30px; margin-bottom: 4px; }
-    .method span { display: block; font-size: 12px; color: #6b7280; }
     .btn {
       width: 100%;
       padding: 16px;
       border: none;
-      border-radius: 8px;
+      border-radius: 12px;
       font-size: 16px;
       font-weight: 600;
       cursor: pointer;
       transition: all 0.2s;
-      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    .btn-success { background: #059669; color: white; }
-    .btn-success:hover { background: #047857; }
-    .btn-cancel { background: #f3f4f6; color: #374151; }
-    .btn-cancel:hover { background: #e5e7eb; }
-    .note {
-      text-align: center;
-      font-size: 12px;
-      color: #9ca3af;
+    .btn-primary {
+      background: ${selectedMethod.bg};
+      color: ${selectedMethod.text};
+    }
+    .btn-primary:hover { opacity: 0.9; transform: translateY(-1px); }
+    .btn-secondary {
+      background: #f1f1f1;
+      color: #333;
+      margin-top: 10px;
+    }
+    .btn-secondary:hover { background: #e5e5e5; }
+    .security-info {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
       margin-top: 16px;
+      color: #888;
+      font-size: 12px;
     }
+    .security-info svg { width: 14px; height: 14px; }
+    .loading { display: none; }
+    .loading.active { display: flex; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner { animation: spin 1s linear infinite; }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="logo">
-      <svg width="200" height="50" viewBox="0 0 200 50" fill="none">
-        <text x="10" y="35" font-family="Arial" font-size="24" font-weight="bold" fill="#667eea">SSLCommerz</text>
+    <div class="header">
+      <h1>${selectedMethod.name}</h1>
+      <p>Secure Payment Gateway</p>
+    </div>
+    <div class="sandbox-badge">
+      <svg viewBox="0 0 24 24" width="16" height="16" fill="currentColor">
+        <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
       </svg>
+      Test Mode - No real payment will be processed
     </div>
-    <div class="sandbox-badge">🧪 Sandbox/Test Mode - No real payment</div>
-    <h1>Complete Payment</h1>
-    <p class="course-name">${courseTitle}</p>
-    <div class="amount">৳${amount}</div>
-    <div class="payment-methods">
-      <div class="method selected">
-        <span>💳 Card</span>
+    <div class="content">
+      <div class="course-info">
+        <h3>${courseTitle}</h3>
+        <p>Online Course Enrollment</p>
       </div>
-      <div class="method">
-        <span>📱 bKash</span>
+      <div class="amount-display">
+        <div class="label">Amount to Pay</div>
+        <div class="value">৳${amount}</div>
       </div>
-      <div class="method">
-        <span>🏦 Bank</span>
+      <form id="payForm" class="payment-form">
+        <div class="input-group">
+          <label>Phone Number (Demo)</label>
+          <input type="tel" placeholder="01XXXXXXXXX" value="01700000000" required>
+        </div>
+        <div class="input-group">
+          <label>PIN (Demo)</label>
+          <input type="password" placeholder="Enter PIN" value="1234" required>
+        </div>
+        <button type="submit" class="btn btn-primary" id="payBtn">
+          <span id="btnText">Confirm Payment ৳${amount}</span>
+          <svg class="loading spinner" id="loadingIcon" viewBox="0 0 24 24" width="20" height="20" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10" stroke-opacity="0.25"></circle>
+            <path d="M12 2a10 10 0 0 1 10 10" stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </form>
+      <form action="${supabaseUrl}/functions/v1/sslcommerz-payment?action=cancel" method="POST">
+        <input type="hidden" name="tran_id" value="${tranId}">
+        <button type="submit" class="btn btn-secondary">Cancel Payment</button>
+      </form>
+      <div class="security-info">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+          <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+        </svg>
+        Secured with 256-bit SSL encryption
       </div>
     </div>
-    <form action="${supabaseUrl}/functions/v1/sslcommerz-payment?action=ipn" method="POST" id="payForm">
-      <input type="hidden" name="status" value="VALID">
-      <input type="hidden" name="tran_id" value="${tranId}">
-      <input type="hidden" name="val_id" value="mock_${Date.now()}">
-      <input type="hidden" name="amount" value="${amount}">
-      <button type="submit" class="btn btn-success">Pay ৳${amount} (Mock Success)</button>
-    </form>
-    <form action="${supabaseUrl}/functions/v1/sslcommerz-payment?action=cancel" method="POST">
-      <input type="hidden" name="tran_id" value="${tranId}">
-      <button type="submit" class="btn btn-cancel">Cancel Payment</button>
-    </form>
-    <p class="note">This is a test payment page. Click "Pay" to simulate successful payment.</p>
   </div>
   <script>
-    document.querySelectorAll('.method').forEach(m => {
-      m.addEventListener('click', () => {
-        document.querySelectorAll('.method').forEach(x => x.classList.remove('selected'));
-        m.classList.add('selected');
-      });
-    });
     document.getElementById('payForm').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
+      const btn = document.getElementById('payBtn');
+      const text = document.getElementById('btnText');
+      const loading = document.getElementById('loadingIcon');
       
-      // Send IPN first
-      await fetch(form.action, { method: 'POST', body: formData });
+      btn.disabled = true;
+      text.textContent = 'Processing...';
+      loading.classList.add('active');
       
-      // Then redirect to success
-      window.location.href = '${Deno.env.get("PUBLIC_SITE_URL") || "https://vryacxigxopdxxgrhfkp.lovableproject.com"}/courses/${courseId}?payment=success';
+      // Send IPN
+      const formData = new FormData();
+      formData.append('status', 'VALID');
+      formData.append('tran_id', '${tranId}');
+      formData.append('val_id', 'mock_' + Date.now());
+      formData.append('amount', '${amount}');
+      
+      try {
+        await fetch('${supabaseUrl}/functions/v1/sslcommerz-payment?action=ipn', {
+          method: 'POST',
+          body: formData
+        });
+        
+        // Redirect to success
+        setTimeout(() => {
+          window.location.href = '${Deno.env.get("PUBLIC_SITE_URL") || "https://vryacxigxopdxxgrhfkp.lovableproject.com"}/courses/${courseId}?payment=success';
+        }, 1500);
+      } catch (err) {
+        text.textContent = 'Payment Failed';
+        btn.disabled = false;
+        loading.classList.remove('active');
+      }
     });
   </script>
 </body>
@@ -360,7 +517,7 @@ serve(async (req) => {
       { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   } catch (error: unknown) {
-    console.error("SSLCommerz payment error:", error);
+    console.error("Payment error:", error);
     const errorMessage = error instanceof Error ? error.message : "Unknown error";
     return new Response(
       JSON.stringify({ error: errorMessage }),

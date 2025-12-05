@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { LessonList } from "@/components/courses/LessonList";
 import { CourseReviews } from "@/components/courses/CourseReviews";
 import { ProgressBar } from "@/components/courses/ProgressBar";
+import { PaymentModal } from "@/components/courses/PaymentModal";
 import {
   useCourseDetails,
   useCourseLessons,
@@ -18,7 +19,6 @@ import {
   useEnrollInCourse,
 } from "@/hooks/useCourseDetails";
 import { useLessonProgressForCourse } from "@/hooks/useLessonProgress";
-import { useInitiatePayment } from "@/hooks/usePayment";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -45,7 +45,7 @@ const CourseDetail = () => {
   const { data: enrollment, refetch: refetchEnrollment } = useEnrollment(id);
   const { data: progress = [] } = useLessonProgressForCourse(id);
   const enrollMutation = useEnrollInCourse();
-  const paymentMutation = useInitiatePayment();
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   const isEnrolled = !!enrollment;
   const totalDuration = lessons.reduce((acc, l) => acc + (l.duration_minutes || 0), 0);
@@ -82,14 +82,8 @@ const CourseDetail = () => {
         enrollMutation.mutate(id);
       }
     } else {
-      // Paid course - initiate payment
-      if (id && course) {
-        paymentMutation.mutate({
-          courseId: id,
-          courseTitle: course.title,
-          amount: Number(course.price),
-        });
-      }
+      // Paid course - show payment modal
+      setShowPaymentModal(true);
     }
   };
 
@@ -280,9 +274,9 @@ const CourseDetail = () => {
                           className="w-full"
                           size="lg"
                           onClick={handleEnroll}
-                          disabled={enrollMutation.isPending || paymentMutation.isPending}
+                          disabled={enrollMutation.isPending}
                         >
-                          {enrollMutation.isPending || paymentMutation.isPending ? (
+                          {enrollMutation.isPending ? (
                             <>
                               <Loader2 className="h-5 w-5 mr-2 animate-spin" />
                               Processing...
@@ -341,6 +335,21 @@ const CourseDetail = () => {
       </main>
 
       <Footer />
+
+      {/* Payment Modal */}
+      {course && (
+        <PaymentModal
+          open={showPaymentModal}
+          onOpenChange={setShowPaymentModal}
+          course={{
+            id: course.id,
+            title: course.title,
+            price: Number(course.price),
+            thumbnail_url: course.thumbnail_url,
+            instructor: course.instructor,
+          }}
+        />
+      )}
     </div>
   );
 };
