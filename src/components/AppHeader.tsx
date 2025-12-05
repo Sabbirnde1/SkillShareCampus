@@ -17,7 +17,7 @@ export const AppHeader = ({ currentPage }: AppHeaderProps) => {
   const navItems = [
     { id: "campus", icon: Home, label: "Home", path: "/campus" },
     { id: "friends", icon: Users, label: "Requests", path: "/friends" },
-    { id: "courses", icon: BookOpen, label: "Courses", path: "/campus" },
+    { id: "courses", icon: BookOpen, label: "Courses", path: "/courses" },
     { id: "messages", icon: MessageSquare, label: "Messages", path: "/messages" },
   ];
 
@@ -25,6 +25,7 @@ export const AppHeader = ({ currentPage }: AppHeaderProps) => {
     if (itemId === "campus" && currentPage === "campus") return true;
     if (itemId === "friends" && currentPage === "friends") return true;
     if (itemId === "messages" && currentPage === "messages") return true;
+    if (itemId === "courses" && currentPage === "courses") return true;
     if (currentPage === "activity" && itemId === "campus") return false;
     return false;
   };
