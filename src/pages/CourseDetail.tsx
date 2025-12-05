@@ -1,4 +1,5 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useSearchParams } from "react-router-dom";
+import { useEffect } from "react";
 import { AppHeader } from "@/components/AppHeader";
 import Footer from "@/components/Footer";
 import { Button } from "@/components/ui/button";
@@ -17,6 +18,7 @@ import {
   useEnrollInCourse,
 } from "@/hooks/useCourseDetails";
 import { useLessonProgressForCourse } from "@/hooks/useLessonProgress";
+import { useInitiatePayment } from "@/hooks/usePayment";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import {
@@ -29,23 +31,44 @@ import {
   CheckCircle,
   Award,
   ShoppingCart,
+  Loader2,
 } from "lucide-react";
 
 const CourseDetail = () => {
   const { id } = useParams<{ id: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  const { data: course, isLoading: courseLoading } = useCourseDetails(id);
+  const { data: course, isLoading: courseLoading, refetch: refetchCourse } = useCourseDetails(id);
   const { data: lessons = [] } = useCourseLessons(id);
   const { data: reviews = [] } = useCourseReviews(id);
-  const { data: enrollment } = useEnrollment(id);
+  const { data: enrollment, refetch: refetchEnrollment } = useEnrollment(id);
   const { data: progress = [] } = useLessonProgressForCourse(id);
   const enrollMutation = useEnrollInCourse();
+  const paymentMutation = useInitiatePayment();
 
   const isEnrolled = !!enrollment;
   const totalDuration = lessons.reduce((acc, l) => acc + (l.duration_minutes || 0), 0);
 
   const isFree = course?.price === null || Number(course?.price) === 0;
+
+  // Handle payment callback
+  useEffect(() => {
+    const paymentStatus = searchParams.get("payment");
+    if (paymentStatus) {
+      if (paymentStatus === "success") {
+        toast.success("Payment successful! You are now enrolled in this course.");
+        refetchEnrollment();
+        refetchCourse();
+      } else if (paymentStatus === "failed") {
+        toast.error("Payment failed. Please try again.");
+      } else if (paymentStatus === "cancelled") {
+        toast.info("Payment was cancelled.");
+      }
+      // Clear the query param
+      setSearchParams({});
+    }
+  }, [searchParams, setSearchParams, refetchEnrollment, refetchCourse]);
 
   const handleEnroll = () => {
     if (!user) {
@@ -59,8 +82,14 @@ const CourseDetail = () => {
         enrollMutation.mutate(id);
       }
     } else {
-      // Paid course - show purchase message (Stripe integration needed)
-      toast.info("Payment integration coming soon. This is a paid course.");
+      // Paid course - initiate payment
+      if (id && course) {
+        paymentMutation.mutate({
+          courseId: id,
+          courseTitle: course.title,
+          amount: Number(course.price),
+        });
+      }
     }
   };
 
@@ -251,10 +280,13 @@ const CourseDetail = () => {
                           className="w-full"
                           size="lg"
                           onClick={handleEnroll}
-                          disabled={enrollMutation.isPending}
+                          disabled={enrollMutation.isPending || paymentMutation.isPending}
                         >
-                          {enrollMutation.isPending ? (
-                            "Processing..."
+                          {enrollMutation.isPending || paymentMutation.isPending ? (
+                            <>
+                              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                              Processing...
+                            </>
                           ) : isFree ? (
                             "Enroll Now"
                           ) : (
