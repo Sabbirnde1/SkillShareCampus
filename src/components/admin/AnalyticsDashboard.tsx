@@ -71,53 +71,61 @@ export const AnalyticsDashboard = () => {
     <div className="space-y-6">
       {/* Key Metrics */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        <Card>
+        <Card className="border-border/50 bg-gradient-to-br from-primary/5 to-transparent hover:shadow-lg transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Daily Active Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="h-9 w-9 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Users className="h-4 w-4 text-primary" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.dau}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold text-primary">{analytics.dau}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               Last 24 hours
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/50 bg-gradient-to-br from-accent/30 to-transparent hover:shadow-lg transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Monthly Active Users</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
+            <div className="h-9 w-9 rounded-lg bg-accent flex items-center justify-center">
+              <Users className="h-4 w-4 text-accent-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.mau}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold">{analytics.mau}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               Last 30 days
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/50 bg-gradient-to-br from-secondary/50 to-transparent hover:shadow-lg transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Daily Posts</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
+            <div className="h-9 w-9 rounded-lg bg-secondary flex items-center justify-center">
+              <FileText className="h-4 w-4 text-secondary-foreground" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.dailyPostRate}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold">{analytics.dailyPostRate}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               {analytics.weeklyPostRate} this week
             </p>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-border/50 bg-gradient-to-br from-destructive/5 to-transparent hover:shadow-lg transition-all">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium">Avg Engagement</CardTitle>
-            <Heart className="h-4 w-4 text-muted-foreground" />
+            <div className="h-9 w-9 rounded-lg bg-destructive/10 flex items-center justify-center">
+              <Heart className="h-4 w-4 text-destructive" />
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{analytics.avgEngagementRate.toFixed(1)}</div>
-            <p className="text-xs text-muted-foreground">
+            <div className="text-3xl font-bold">{analytics.avgEngagementRate.toFixed(1)}</div>
+            <p className="text-xs text-muted-foreground mt-1">
               Interactions per post
             </p>
           </CardContent>
@@ -127,9 +135,12 @@ export const AnalyticsDashboard = () => {
       {/* Charts Row */}
       <div className="grid gap-4 md:grid-cols-2">
         {/* Daily Active Users Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Daily Active Users</CardTitle>
+        <Card className="border-border/50 overflow-hidden">
+          <CardHeader className="bg-muted/20 border-b">
+            <CardTitle className="flex items-center gap-2">
+              <TrendingUp className="h-5 w-5 text-primary" />
+              Daily Active Users
+            </CardTitle>
             <CardDescription>User activity over the last 7 days</CardDescription>
           </CardHeader>
           <CardContent className="p-4 md:p-6">
@@ -161,9 +172,12 @@ export const AnalyticsDashboard = () => {
         </Card>
 
         {/* Post Creation Chart */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Post Creation</CardTitle>
+        <Card className="border-border/50 overflow-hidden">
+          <CardHeader className="bg-muted/20 border-b">
+            <CardTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-secondary-foreground" />
+              Post Creation
+            </CardTitle>
             <CardDescription>Posts created in the last 7 days</CardDescription>
           </CardHeader>
           <CardContent className="p-4 md:p-6">
