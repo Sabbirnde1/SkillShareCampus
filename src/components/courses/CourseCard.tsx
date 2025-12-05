@@ -103,7 +103,7 @@ export function CourseCard({ course }: CourseCardProps) {
           </div>
           
           {course.price !== null && course.price > 0 && (
-            <span className="font-bold text-primary">${course.price}</span>
+            <span className="font-bold text-primary">৳{course.price}</span>
           )}
         </CardFooter>
       </Card>
