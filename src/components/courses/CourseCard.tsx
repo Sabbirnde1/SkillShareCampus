@@ -31,7 +31,7 @@ export function CourseCard({ course }: CourseCardProps) {
               <BookOpen className="h-12 w-12 text-primary/40" />
             </div>
           )}
-          {course.price === 0 && (
+          {(course.price === null || Number(course.price) === 0) && (
             <Badge className="absolute top-2 right-2 bg-green-500 hover:bg-green-600">
               Free
             </Badge>
@@ -102,8 +102,8 @@ export function CourseCard({ course }: CourseCardProps) {
             )}
           </div>
           
-          {course.price !== null && course.price > 0 && (
-            <span className="font-bold text-primary">৳{course.price}</span>
+          {course.price !== null && Number(course.price) > 0 && (
+            <span className="font-bold text-primary">৳{Number(course.price)}</span>
           )}
         </CardFooter>
       </Card>

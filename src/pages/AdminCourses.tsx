@@ -219,10 +219,10 @@ const AdminCourses = () => {
                         </TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1">
-                            {course.price === 0 || course.price === null ? (
+                            {course.price === null || Number(course.price) === 0 ? (
                               <span className="text-green-600 font-medium">Free</span>
                             ) : (
-                              <span>৳{course.price}</span>
+                              <span>৳{Number(course.price)}</span>
                             )}
                           </div>
                         </TableCell>

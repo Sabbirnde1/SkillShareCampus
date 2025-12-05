@@ -45,7 +45,7 @@ const CourseDetail = () => {
   const isEnrolled = !!enrollment;
   const totalDuration = lessons.reduce((acc, l) => acc + (l.duration_minutes || 0), 0);
 
-  const isFree = course?.price === 0 || course?.price === null;
+  const isFree = course?.price === null || Number(course?.price) === 0;
 
   const handleEnroll = () => {
     if (!user) {
@@ -245,7 +245,7 @@ const CourseDetail = () => {
                         <div className="text-3xl font-bold">
                           {isFree
                             ? "Free"
-                            : `৳${course.price}`}
+                            : `৳${Number(course.price)}`}
                         </div>
                         <Button
                           className="w-full"
