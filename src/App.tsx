@@ -31,6 +31,7 @@ import CreateCourse from "./pages/CreateCourse";
 import AdminCourses from "./pages/AdminCourses";
 import EditCourse from "./pages/EditCourse";
 import ManageLessons from "./pages/ManageLessons";
+import PaymentHistory from "./pages/PaymentHistory";
 
 const queryClient = new QueryClient();
 
@@ -60,6 +61,7 @@ const App = () => (
             <Route path="/admin" element={<ProtectedRoute><Admin /></ProtectedRoute>} />
             <Route path="/courses" element={<ProtectedRoute><Courses /></ProtectedRoute>} />
             <Route path="/courses/my-courses" element={<ProtectedRoute><MyCourses /></ProtectedRoute>} />
+            <Route path="/courses/payment-history" element={<ProtectedRoute><PaymentHistory /></ProtectedRoute>} />
             <Route path="/courses/create" element={<ProtectedRoute><CreateCourse /></ProtectedRoute>} />
             <Route path="/courses/:id" element={<ProtectedRoute><CourseDetail /></ProtectedRoute>} />
             <Route path="/courses/:id/learn" element={<ProtectedRoute><CourseLearn /></ProtectedRoute>} />
