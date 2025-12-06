@@ -165,6 +165,30 @@ serve(async (req) => {
 
     // Initialize payment
     if (req.method === "POST") {
+      // SECURITY: Extract user_id from JWT instead of trusting client
+      const authHeader = req.headers.get("authorization");
+      if (!authHeader) {
+        console.error("Missing authorization header");
+        return new Response(
+          JSON.stringify({ success: false, error: "Authorization required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const token = authHeader.replace("Bearer ", "");
+      const { data: { user }, error: authError } = await supabase.auth.getUser(token);
+      
+      if (authError || !user) {
+        console.error("Invalid token:", authError);
+        return new Response(
+          JSON.stringify({ success: false, error: "Invalid or expired token" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const authenticatedUserId = user.id;
+      const authenticatedUserEmail = user.email || "";
+
       const body: PaymentRequest = await req.json();
       const {
         course_id,
@@ -174,12 +198,14 @@ serve(async (req) => {
         discount_amount,
         coupon_code,
         payment_method,
-        user_id,
-        user_email,
         user_name,
       } = body;
 
-      console.log("Initiating payment:", { course_id, amount, final_amount, payment_method, user_email });
+      // Use authenticated user's ID and email instead of client-provided values
+      const user_id = authenticatedUserId;
+      const user_email = authenticatedUserEmail;
+
+      console.log("Initiating payment:", { course_id, amount, final_amount, payment_method, user_email, user_id });
 
       const storeId = Deno.env.get("SSLCOMMERZ_STORE_ID");
       const storePassword = Deno.env.get("SSLCOMMERZ_STORE_PASSWORD");
