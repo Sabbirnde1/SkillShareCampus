@@ -54,9 +54,9 @@ const SearchUsers = () => {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="bg-white border-b px-6 py-3">
+      <header className="bg-background border-b px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-2">
+          <Link to="/campus" className="flex items-center gap-2">
             <h1 className="text-xl font-semibold text-primary">
               SkillShare<span className="text-sm align-top">Campus</span>
             </h1>
@@ -70,7 +70,7 @@ const SearchUsers = () => {
                   <Input 
                     ref={inputRef}
                     placeholder="Search users, posts, hashtags..." 
-                    className="pl-10 bg-gray-50"
+                    className="pl-10 bg-muted"
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     onFocus={() => setShowSuggestions(true)}
@@ -373,14 +373,14 @@ const SearchUsers = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-blue-100 py-6 px-6 mt-12">
+      <footer className="bg-muted py-6 px-6 mt-12">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="text-lg font-semibold text-primary">
               SkillShare<span className="text-sm align-top">Campus</span>
             </span>
           </div>
-          <p className="text-sm text-foreground/80">
+          <p className="text-sm text-muted-foreground">
             © 2025 SkillShareCampus. All rights reserved.
           </p>
         </div>

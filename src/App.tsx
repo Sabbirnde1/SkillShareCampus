@@ -33,7 +33,6 @@ import EditCourse from "./pages/EditCourse";
 import ManageLessons from "./pages/ManageLessons";
 import PaymentHistory from "./pages/PaymentHistory";
 import AuthCallback from "./pages/AuthCallback";
-import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
