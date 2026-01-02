@@ -32,6 +32,8 @@ import AdminCourses from "./pages/AdminCourses";
 import EditCourse from "./pages/EditCourse";
 import ManageLessons from "./pages/ManageLessons";
 import PaymentHistory from "./pages/PaymentHistory";
+import AuthCallback from "./pages/AuthCallback";
+import AuthCallback from "./pages/AuthCallback";
 
 const queryClient = new QueryClient();
 
@@ -48,6 +50,7 @@ const App = () => (
             <Route path="/join" element={<Join />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/auth/callback" element={<AuthCallback />} />
             <Route path="/campus" element={<ProtectedRoute><Campus /></ProtectedRoute>} />
             <Route path="/friends" element={<ProtectedRoute><Friends /></ProtectedRoute>} />
             <Route path="/pending-requests" element={<ProtectedRoute><PendingRequests /></ProtectedRoute>} />

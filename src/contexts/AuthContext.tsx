@@ -25,26 +25,36 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        setLoading(false);
+    let isMounted = true;
 
-        // Fetch user roles after state update (using setTimeout to avoid deadlock)
-        if (session?.user) {
-          setTimeout(() => {
-            getUserRoles(session.user.id).then(setUserRoles);
-          }, 0);
-        } else {
-          setUserRoles([]);
-        }
+    // Set up auth state listener
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      if (!isMounted) return;
+
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      // Fetch user roles after state update (using setTimeout to avoid deadlock)
+      if (session?.user) {
+        setTimeout(() => {
+          getUserRoles(session.user.id).then(setUserRoles);
+        }, 0);
+      } else {
+        setUserRoles([]);
       }
-    );
+
+      // Avoid flipping loading to false on INITIAL_SESSION; wait for getSession() to resolve.
+      if (event !== "INITIAL_SESSION") {
+        setLoading(false);
+      }
+    });
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!isMounted) return;
+
       setSession(session);
       setUser(session?.user ?? null);
       setLoading(false);
@@ -57,7 +67,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      isMounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   const signIn = async (email: string, password: string) => {
@@ -91,7 +104,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
       options: {
-        redirectTo: `${window.location.origin}/campus`,
+        // Use a dedicated callback route (not protected) to avoid redirect races.
+        redirectTo: `${window.location.origin}/auth/callback`,
       },
     });
     return { error };
