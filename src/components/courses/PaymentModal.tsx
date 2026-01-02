@@ -5,6 +5,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
@@ -21,6 +31,7 @@ import {
   Loader2,
   ShieldCheck,
   Lock,
+  AlertTriangle,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -51,6 +62,7 @@ export function PaymentModal({ open, onOpenChange, course }: PaymentModalProps) 
     discount: number;
     description: string;
   } | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState(false);
 
   const validateCoupon = useValidateCoupon();
   const initiatePayment = useInitiatePayment();
@@ -58,6 +70,8 @@ export function PaymentModal({ open, onOpenChange, course }: PaymentModalProps) 
   const originalPrice = Number(course.price);
   const discountAmount = appliedCoupon?.discount || 0;
   const finalPrice = Math.max(0, originalPrice - discountAmount);
+
+  const selectedMethodInfo = paymentMethods.find(m => m.id === selectedMethod);
 
   const handleApplyCoupon = async () => {
     if (!couponCode.trim()) {
@@ -92,7 +106,12 @@ export function PaymentModal({ open, onOpenChange, course }: PaymentModalProps) 
     setCouponCode("");
   };
 
-  const handlePayment = () => {
+  const handlePaymentClick = () => {
+    setShowConfirmation(true);
+  };
+
+  const handleConfirmPayment = () => {
+    setShowConfirmation(false);
     initiatePayment.mutate({
       courseId: course.id,
       courseTitle: course.title,
@@ -245,7 +264,7 @@ export function PaymentModal({ open, onOpenChange, course }: PaymentModalProps) 
           {/* Pay Button */}
           <Button
             className="w-full h-12 text-base font-semibold"
-            onClick={handlePayment}
+            onClick={handlePaymentClick}
             disabled={initiatePayment.isPending}
           >
             {initiatePayment.isPending ? (
@@ -261,6 +280,59 @@ export function PaymentModal({ open, onOpenChange, course }: PaymentModalProps) 
           </Button>
         </div>
       </DialogContent>
+
+      {/* Payment Confirmation Dialog */}
+      <AlertDialog open={showConfirmation} onOpenChange={setShowConfirmation}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2">
+              <AlertTriangle className="h-5 w-5 text-amber-500" />
+              Confirm Your Purchase
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p>
+                  You are about to purchase <strong>"{course.title}"</strong>
+                </p>
+                
+                <div className="bg-muted rounded-lg p-4 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span>Course Price:</span>
+                    <span>৳{originalPrice.toFixed(0)}</span>
+                  </div>
+                  {discountAmount > 0 && (
+                    <div className="flex justify-between text-sm text-green-600">
+                      <span>Discount:</span>
+                      <span>-৳{discountAmount.toFixed(0)}</span>
+                    </div>
+                  )}
+                  <Separator />
+                  <div className="flex justify-between font-bold">
+                    <span>Total Amount:</span>
+                    <span className="text-primary">৳{finalPrice.toFixed(0)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground pt-2">
+                    <span>Payment Method:</span>
+                    <Badge variant="secondary" className="capitalize">
+                      {selectedMethodInfo?.name}
+                    </Badge>
+                  </div>
+                </div>
+
+                <p className="text-sm text-muted-foreground">
+                  By confirming, you agree to proceed with the payment. This action cannot be undone once the payment is processed.
+                </p>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmPayment}>
+              Confirm & Pay ৳{finalPrice.toFixed(0)}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
