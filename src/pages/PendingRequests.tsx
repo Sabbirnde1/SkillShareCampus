@@ -10,9 +10,9 @@ const PendingRequests = () => {
   const { pendingRequests, acceptFriendRequest, rejectFriendRequest } = useFriends();
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#f0f6ff]">
+    <div className="min-h-screen flex flex-col bg-background">
       {/* Header */}
-      <header className="bg-white border-b px-6 py-3">
+      <header className="bg-background border-b px-6 py-3">
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
             <h1 className="text-xl font-semibold text-primary">
@@ -26,7 +26,7 @@ const PendingRequests = () => {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input 
                   placeholder="Search users..." 
-                  className="pl-10 bg-gray-50"
+                  className="pl-10 bg-muted"
                   readOnly
                 />
               </div>
@@ -88,7 +88,7 @@ const PendingRequests = () => {
               </div>
             ) : (
               pendingRequests.map((request: any) => (
-                <Card key={request.id} className="p-6 bg-white">
+                <Card key={request.id} className="p-6 bg-card">
                   <div className="flex items-start gap-4 mb-4">
                     <Avatar className="w-16 h-16 flex-shrink-0">
                       <AvatarImage src={request.profile?.avatar_url || ""} />
@@ -138,14 +138,14 @@ const PendingRequests = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-blue-100 py-6 px-6 mt-12">
+      <footer className="bg-muted py-6 px-6 mt-12">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="text-lg font-semibold text-primary">
               SkillShare<span className="text-sm align-top">Campus</span>
             </span>
           </div>
-          <p className="text-sm text-foreground/80">
+          <p className="text-sm text-muted-foreground">
             © 2025 SkillShareCampus. All rights reserved.
           </p>
         </div>

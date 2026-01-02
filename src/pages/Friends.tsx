@@ -145,7 +145,7 @@ const Friends = () => {
                           <AlertDialogFooter>
                             <AlertDialogCancel>Cancel</AlertDialogCancel>
                             <AlertDialogAction
-                              onClick={() => handleRemoveFriend(friend.profile.id)}
+                              onClick={() => handleRemoveFriend(friend.id)}
                               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                               disabled={removeFriend.isPending}
                             >
@@ -164,14 +164,14 @@ const Friends = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-blue-100 py-6 px-6 mt-12">
+      <footer className="bg-muted py-6 px-6 mt-12">
         <div className="max-w-7xl mx-auto text-center">
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="text-lg font-semibold text-primary">
               SkillShare<span className="text-sm align-top">Campus</span>
             </span>
           </div>
-          <p className="text-sm text-foreground/80">
+          <p className="text-sm text-muted-foreground">
             © 2025 SkillShareCampus. All rights reserved.
           </p>
         </div>
