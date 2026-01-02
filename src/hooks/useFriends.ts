@@ -127,6 +127,11 @@ export const useFriends = () => {
 
       if (fetchError) throw fetchError;
 
+      // Verify the current user is the recipient of the request
+      if (request.friend_id !== user.id) {
+        throw new Error("Not authorized to accept this request");
+      }
+
       // Update the original request to accepted
       const { error: updateError } = await supabase
         .from("friendships")
@@ -135,24 +140,41 @@ export const useFriends = () => {
 
       if (updateError) throw updateError;
 
-      // Create reciprocal friendship
-      const { error: insertError } = await supabase
+      // Check if reciprocal friendship already exists
+      const { data: existingReciprocal } = await supabase
         .from("friendships")
-        .insert({
-          user_id: request.friend_id,
-          friend_id: request.user_id,
-          status: "accepted",
-        });
+        .select("id")
+        .eq("user_id", request.friend_id)
+        .eq("friend_id", request.user_id)
+        .maybeSingle();
 
-      if (insertError) throw insertError;
+      // Only create reciprocal friendship if it doesn't exist
+      if (!existingReciprocal) {
+        const { error: insertError } = await supabase
+          .from("friendships")
+          .insert({
+            user_id: request.friend_id,
+            friend_id: request.user_id,
+            status: "accepted",
+          });
+
+        if (insertError) throw insertError;
+      } else {
+        // Update existing reciprocal to accepted if it exists
+        await supabase
+          .from("friendships")
+          .update({ status: "accepted" })
+          .eq("id", existingReciprocal.id);
+      }
     },
     onSuccess: () => {
       toast.success("Friend request accepted");
       queryClient.invalidateQueries({ queryKey: ["friends"] });
       queryClient.invalidateQueries({ queryKey: ["pending-requests"] });
+      queryClient.invalidateQueries({ queryKey: ["friend-suggestions"] });
     },
-    onError: () => {
-      toast.error("Failed to accept request");
+    onError: (error: Error) => {
+      toast.error(error.message || "Failed to accept request");
     },
   });
 
