@@ -65,6 +65,7 @@ const Profile = () => {
   };
 
   const handleCropComplete = async (croppedBlob: Blob) => {
+    console.log("Crop complete, blob size:", croppedBlob.size);
     setCropperOpen(false);
     
     // Show preview
@@ -73,12 +74,15 @@ const Profile = () => {
     
     // Convert blob to file
     const croppedFile = new File([croppedBlob], "cover.jpg", { type: "image/jpeg" });
+    console.log("Uploading cropped file:", croppedFile.name, croppedFile.size);
     
     // Upload cropped image
     try {
       await uploadCoverImage.mutateAsync(croppedFile);
+      console.log("Cover upload successful");
       setCoverPreviewUrl(null);
     } catch (error) {
+      console.error("Cover upload error:", error);
       setCoverPreviewUrl(null);
       // Error is handled in the mutation
     } finally {

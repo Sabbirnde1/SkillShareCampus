@@ -167,9 +167,10 @@ export const useUserProfile = (userId: string | undefined) => {
         throw new Error("File size exceeds 5MB limit.");
       }
 
-      // Create file path: userId/cover.extension
-      const fileExt = file.name.split(".").pop();
-      const filePath = `${userId}/cover.${fileExt}`;
+      // Create file path: userId/cover.extension with timestamp for cache busting
+      const fileExt = file.name.split(".").pop() || "jpg";
+      const timestamp = Date.now();
+      const filePath = `${userId}/cover_${timestamp}.${fileExt}`;
 
       // Delete old cover if exists
       const { data: existingFiles } = await supabase.storage
