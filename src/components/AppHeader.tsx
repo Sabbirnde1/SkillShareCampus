@@ -1,10 +1,12 @@
 import { Link } from "react-router-dom";
 import { Input } from "@/components/ui/input";
-import { Home, Users, BookOpen, MessageSquare, User, Search, Menu, X } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Search, Menu } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import NotificationBadge from "@/components/NotificationBadge";
 import { useState } from "react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { UserAvatar } from "@/components/UserAvatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 interface AppHeaderProps {
   currentPage: "campus" | "activity" | "friends" | "messages" | "profile" | "notifications" | "admin" | "courses";
@@ -12,6 +14,7 @@ interface AppHeaderProps {
 
 export const AppHeader = ({ currentPage }: AppHeaderProps) => {
   const { user } = useAuth();
+  const { profile } = useUserProfile(user?.id);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const navItems = [
@@ -116,7 +119,11 @@ export const AppHeader = ({ currentPage }: AppHeaderProps) => {
             }`}
           >
             <div className="h-5 flex items-center justify-center">
-              <User className="h-5 w-5" />
+              <UserAvatar 
+                avatarUrl={profile?.avatar_url} 
+                fullName={profile?.full_name} 
+                className="h-5 w-5 text-[8px]"
+              />
             </div>
             <span
               className={`text-xs ${
@@ -190,7 +197,11 @@ export const AppHeader = ({ currentPage }: AppHeaderProps) => {
                     : "text-foreground/70 hover:bg-accent"
                 }`}
               >
-                <User className="h-5 w-5" />
+              <UserAvatar 
+                avatarUrl={profile?.avatar_url} 
+                fullName={profile?.full_name} 
+                className="h-5 w-5 text-[8px]"
+              />
                 <span className={`text-base ${currentPage === "profile" || currentPage === "activity" ? "font-semibold" : ""}`}>
                   {currentPage === "activity" ? "Activity" : "Profile"}
                 </span>
