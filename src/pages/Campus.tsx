@@ -8,10 +8,10 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, MessageCircle, Share2, MoreVertical, Trash2, Edit, X, ImageIcon, Eye, Heart } from "lucide-react";
 import { EditPostDialog } from "@/components/EditPostDialog";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
 import { useAuth } from "@/contexts/AuthContext";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { ReactionPicker, type ReactionType } from "@/components/ReactionPicker";
 import {
@@ -52,6 +52,7 @@ import { toast } from "sonner";
 
 const Campus = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { posts, isLoading, createPost, toggleReaction, deletePost, editPost } = usePosts();
   const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
@@ -64,6 +65,30 @@ const Campus = () => {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPostForDelete, setSelectedPostForDelete] = useState<any>(null);
+  const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null);
+  const postRefs = useRef<Record<string, HTMLDivElement | null>>({});
+
+  // Handle scrolling to a specific post from notification
+  useEffect(() => {
+    const postId = searchParams.get('post');
+    if (postId && posts.length > 0) {
+      setHighlightedPostId(postId);
+      
+      // Scroll to the post after a short delay to ensure render
+      setTimeout(() => {
+        const postElement = postRefs.current[postId];
+        if (postElement) {
+          postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      }, 100);
+      
+      // Remove highlight after 3 seconds
+      setTimeout(() => {
+        setHighlightedPostId(null);
+        setSearchParams({}, { replace: true });
+      }, 3000);
+    }
+  }, [searchParams, posts]);
 
   const handleCreatePost = () => {
     if (!postContent.trim()) return;
@@ -377,7 +402,15 @@ const Campus = () => {
               ) : (
                 <div className="space-y-4">
                 {posts.map((post) => (
-                  <Card key={post.id} className="p-4">
+                  <Card 
+                    key={post.id} 
+                    ref={(el) => { postRefs.current[post.id] = el; }}
+                    className={`p-4 transition-all duration-300 ${
+                      highlightedPostId === post.id 
+                        ? 'ring-2 ring-primary bg-primary/5 animate-pulse' 
+                        : ''
+                    }`}
+                  >
                     <div className="flex items-start gap-3 mb-3">
                       <Link to={`/user/${post.author.id}`}>
                         <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
