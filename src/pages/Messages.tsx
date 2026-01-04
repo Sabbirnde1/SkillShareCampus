@@ -638,14 +638,21 @@ const Messages = () => {
           {/* Right Sidebar - Campus News - Hidden on mobile */}
           <div className="hidden lg:block lg:col-span-3">
             <Card className="p-4 mb-4">
-              <h3 className="font-semibold text-foreground mb-3">{newsItems[0].title}</h3>
-              <p className="text-xs text-muted-foreground mb-3">{newsItems[0].time}</p>
-              {newsItems.slice(1).map((news, index) => (
-                <div key={index} className="mb-3 last:mb-0">
-                  <p className="text-sm text-foreground font-medium">{news.title}</p>
-                  <p className="text-xs text-muted-foreground">{news.time}</p>
+              <h3 className="font-semibold text-sm mb-4">Campus News</h3>
+              <div className="space-y-3">
+                <div className="text-xs">
+                  <p className="text-muted-foreground">12 days ago</p>
+                  <p className="font-medium text-foreground">Appoint new VC</p>
                 </div>
-              ))}
+                <div className="text-xs">
+                  <p className="text-muted-foreground">15 days ago</p>
+                  <p className="font-medium text-foreground">Appoint new Department Head of CSE</p>
+                </div>
+                <div className="text-xs">
+                  <p className="text-muted-foreground">15 days ago</p>
+                  <p className="font-medium text-foreground">5 days Micro-scientist Courses</p>
+                </div>
+              </div>
             </Card>
 
             {/* Advertisement */}
