@@ -519,9 +519,20 @@ serve(async (req) => {
           body: formData
         });
         
-        // Redirect to success
+        text.textContent = 'Payment Successful!';
+        
+        // Redirect after short delay
         setTimeout(() => {
-          window.location.href = '${Deno.env.get("PUBLIC_SITE_URL") || "https://vryacxigxopdxxgrhfkp.lovableproject.com"}/courses/${courseId}?payment=success';
+          const successUrl = '${Deno.env.get("PUBLIC_SITE_URL") || "https://vryacxigxopdxxgrhfkp.lovableproject.com"}/courses/${courseId}?payment=success';
+          
+          // If opened as popup, try to redirect opener and close
+          if (window.opener && !window.opener.closed) {
+            window.opener.location.href = successUrl;
+            window.close();
+          } else {
+            // Fallback: redirect in same window
+            window.location.href = successUrl;
+          }
         }, 1500);
       } catch (err) {
         text.textContent = 'Payment Failed';
