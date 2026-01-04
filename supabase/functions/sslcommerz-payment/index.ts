@@ -521,19 +521,47 @@ serve(async (req) => {
         
         text.textContent = 'Payment Successful!';
         
-        // Redirect after short delay
-        setTimeout(() => {
-          const successUrl = '${Deno.env.get("PUBLIC_SITE_URL") || "https://vryacxigxopdxxgrhfkp.lovableproject.com"}/courses/${courseId}?payment=success';
-          
-          // If opened as popup, try to redirect opener and close
-          if (window.opener && !window.opener.closed) {
-            window.opener.location.href = successUrl;
-            window.close();
-          } else {
-            // Fallback: redirect in same window
-            window.location.href = successUrl;
+        const successUrl = '${Deno.env.get("PUBLIC_SITE_URL") || "https://vryacxigxopdxxgrhfkp.lovableproject.com"}/courses/${courseId}?payment=success';
+        
+        // Show countdown and redirect
+        let countdown = 3;
+        const countdownInterval = setInterval(() => {
+          countdown--;
+          if (countdown > 0) {
+            text.textContent = 'Redirecting in ' + countdown + '...';
           }
-        }, 1500);
+        }, 1000);
+        
+        setTimeout(() => {
+          clearInterval(countdownInterval);
+          
+          // Method 1: Try direct opener access
+          try {
+            if (window.opener && !window.opener.closed) {
+              window.opener.location.href = successUrl;
+              window.close();
+              return;
+            }
+          } catch (e) {
+            console.log('Direct opener access blocked:', e);
+          }
+          
+          // Method 2: Try postMessage
+          try {
+            if (window.opener) {
+              window.opener.postMessage({ type: 'payment_success', url: successUrl }, '*');
+              setTimeout(() => {
+                try { window.close(); } catch(e) {}
+              }, 500);
+              return;
+            }
+          } catch (e) {
+            console.log('postMessage failed:', e);
+          }
+          
+          // Method 3: Redirect in current window
+          window.location.href = successUrl;
+        }, 3000);
       } catch (err) {
         text.textContent = 'Payment Failed';
         btn.disabled = false;
