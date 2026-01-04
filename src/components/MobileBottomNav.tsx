@@ -1,13 +1,16 @@
 import { Link, useLocation } from "react-router-dom";
-import { Home, Users, BookOpen, MessageSquare, Bell, User } from "lucide-react";
+import { Home, Users, BookOpen, MessageSquare, Bell } from "lucide-react";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
+import { UserAvatar } from "@/components/UserAvatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const MobileBottomNav = () => {
   const location = useLocation();
   const { user } = useAuth();
   const { unreadCount } = useNotifications();
+  const { profile } = useUserProfile(user?.id);
 
   const navItems = [
     { id: "campus", icon: Home, label: "Home", path: "/campus" },
@@ -15,7 +18,7 @@ const MobileBottomNav = () => {
     { id: "courses", icon: BookOpen, label: "Courses", path: "/courses" },
     { id: "messages", icon: MessageSquare, label: "Messages", path: "/messages" },
     { id: "notifications", icon: Bell, label: "Notifications", path: "/notifications" },
-    { id: "profile", icon: User, label: "Me", path: "/profile" },
+    { id: "profile", icon: null, label: "Me", path: "/profile" },
   ];
 
   const isActive = (path: string) => {
@@ -44,7 +47,15 @@ const MobileBottomNav = () => {
               }`}
             >
               <div className="relative h-5 flex items-center justify-center">
-                <Icon className="h-5 w-5" />
+                {item.id === "profile" ? (
+                  <UserAvatar 
+                    avatarUrl={profile?.avatar_url} 
+                    fullName={profile?.full_name} 
+                    className="h-5 w-5 text-[8px]"
+                  />
+                ) : (
+                  <Icon className="h-5 w-5" />
+                )}
                 {isNotification && unreadCount > 0 && (
                   <Badge
                     variant="destructive"
