@@ -35,6 +35,7 @@ const Notifications = () => {
       case "friend_accepted":
         return <CheckCircle2 className="h-5 w-5" />;
       case "new_message":
+      case "message":
         return <MessageCircle className="h-5 w-5" />;
       case "post_like":
         return <ThumbsUp className="h-5 w-5" />;
@@ -54,6 +55,7 @@ const Notifications = () => {
       case "friend_accepted":
         return "bg-green-500";
       case "new_message":
+      case "message":
         return "bg-primary";
       case "post_like":
         return "bg-red-500";
@@ -74,6 +76,10 @@ const Notifications = () => {
       case "friend_request":
         return { label: "View Requests", path: "/pending-requests" };
       case "new_message":
+      case "message":
+        if (metadata.sender_id) {
+          return { label: "View Messages", path: `/messages?user=${metadata.sender_id}` };
+        }
         return { label: "View Messages", path: "/messages" };
       case "friend_accepted":
         return { label: "View Friends", path: "/friends" };
