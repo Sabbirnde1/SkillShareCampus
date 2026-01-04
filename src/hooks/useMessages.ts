@@ -259,14 +259,8 @@ export const useMessages = (selectedUserId?: string, searchQuery?: string) => {
 
         if (uploadError) throw uploadError;
 
-        // Use signed URL for private bucket (valid for 1 year)
-        const { data: signedData, error: signError } = await supabase.storage
-          .from("message-attachments")
-          .createSignedUrl(fileName, 60 * 60 * 24 * 365);
-
-        if (signError) throw signError;
-
-        attachmentUrl = signedData.signedUrl;
+        // Store only the object path (not the full URL) - signed URLs will be generated on display
+        attachmentUrl = fileName;
         attachmentType = file.type;
       }
 

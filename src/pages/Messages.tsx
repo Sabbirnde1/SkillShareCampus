@@ -7,7 +7,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Send, Paperclip, X, FileText, Download, Check, CheckCheck } from "lucide-react";
 import NotificationBadge from "@/components/NotificationBadge";
 import { Link, useSearchParams } from "react-router-dom";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useMessages } from "@/hooks/useMessages";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
@@ -19,6 +19,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { MessagesSkeleton } from "@/components/MessagesSkeleton";
 import { AppHeader } from "@/components/AppHeader";
+import { supabase } from "@/integrations/supabase/client";
 
 const Messages = () => {
   const { user } = useAuth();
@@ -135,9 +136,58 @@ const Messages = () => {
     setSelectedFile(file);
   };
 
+  // Cache for signed URLs to avoid regenerating them
+  const signedUrlCache = useRef<Map<string, string>>(new Map());
+
+  const getSignedUrl = useCallback(async (objectPath: string): Promise<string> => {
+    // Check if it's already a full URL (legacy data)
+    if (objectPath.startsWith('http')) {
+      return objectPath;
+    }
+    
+    // Check cache first
+    if (signedUrlCache.current.has(objectPath)) {
+      return signedUrlCache.current.get(objectPath)!;
+    }
+
+    // Generate signed URL (valid for 1 hour)
+    const { data, error } = await supabase.storage
+      .from("message-attachments")
+      .createSignedUrl(objectPath, 60 * 60);
+
+    if (error || !data?.signedUrl) {
+      console.error("Failed to get signed URL:", error);
+      return objectPath;
+    }
+
+    signedUrlCache.current.set(objectPath, data.signedUrl);
+    return data.signedUrl;
+  }, []);
+
+  // State to store resolved attachment URLs
+  const [attachmentUrls, setAttachmentUrls] = useState<Map<string, string>>(new Map());
+
+  // Resolve attachment URLs when messages change
+  useEffect(() => {
+    const resolveUrls = async () => {
+      const newUrls = new Map<string, string>();
+      for (const msg of messages) {
+        if (msg.attachment_url && !attachmentUrls.has(msg.id)) {
+          const url = await getSignedUrl(msg.attachment_url);
+          newUrls.set(msg.id, url);
+        }
+      }
+      if (newUrls.size > 0) {
+        setAttachmentUrls(prev => new Map([...prev, ...newUrls]));
+      }
+    };
+    resolveUrls();
+  }, [messages, getSignedUrl]);
+
   const renderAttachment = (message: any) => {
     if (!message.attachment_url) return null;
 
+    const resolvedUrl = attachmentUrls.get(message.id) || message.attachment_url;
     const isImage = message.attachment_type?.startsWith('image/');
     const isPdf = message.attachment_type === 'application/pdf';
 
@@ -145,14 +195,14 @@ const Messages = () => {
       <div className="mt-2">
         {isImage ? (
           <img 
-            src={message.attachment_url} 
+            src={resolvedUrl} 
             alt="Attachment" 
             className="max-w-xs rounded-lg cursor-pointer hover:opacity-90"
-            onClick={() => window.open(message.attachment_url, '_blank')}
+            onClick={() => window.open(resolvedUrl, '_blank')}
           />
         ) : (
           <a
-            href={message.attachment_url}
+            href={resolvedUrl}
             target="_blank"
             rel="noopener noreferrer"
             className="flex items-center gap-2 p-3 bg-accent/50 rounded-lg hover:bg-accent transition-colors"
