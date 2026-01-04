@@ -239,13 +239,6 @@ const Messages = () => {
     }
   };
 
-  const newsItems = [
-    { title: "Campus News", time: "Top news" },
-    { title: "Appoint new VC", time: "1 days ago" },
-    { title: "Appoint new Department Head of CSE", time: "15 days ago" },
-    { title: "Lunch Micro-csential Courses", time: "5 days ago" },
-  ];
-
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <OfflineBanner />
@@ -661,8 +654,8 @@ const Messages = () => {
                 <div className="mb-4">
                   <BookOpen className="h-16 w-16 mx-auto text-amber-800" />
                 </div>
-                <h4 className="font-bold text-xl text-amber-900 mb-2">NijerCart</h4>
-                <p className="text-sm text-amber-800 mb-4">Mindset</p>
+                <h4 className="font-bold text-xl text-amber-900 mb-2">MINDSET</h4>
+                <p className="text-sm text-amber-800 mb-4">Nijgram</p>
                 <p className="text-xs text-amber-700 mb-4">Old Books | Best Value | New Readers</p>
                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Explore</Button>
               </div>
