@@ -28,6 +28,8 @@ const Messages = () => {
   );
   const [messageText, setMessageText] = useState("");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showSearchResults, setShowSearchResults] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const {
@@ -39,7 +41,9 @@ const Messages = () => {
     loadMoreMessages,
     hasMoreMessages,
     isLoadingMore,
-  } = useMessages(selectedUserId);
+    searchResults,
+    isSearching,
+  } = useMessages(selectedUserId, searchQuery);
   const { unreadCount } = useNotifications();
   const { isUserOnline, isUserTyping, updateTypingStatus } = usePresence("messages-presence");
   const [typingTimeout, setTypingTimeout] = useState<NodeJS.Timeout | null>(null);
@@ -194,11 +198,88 @@ const Messages = () => {
           {/* Left Sidebar - Contacts - Show as full width on mobile */}
           <div className={`col-span-1 lg:col-span-3 ${selectedUserId ? 'hidden lg:block' : ''}`}>
             <Card className="p-0">
-              <div className="p-4 border-b">
+              <div className="p-4 border-b space-y-3">
                 <h2 className="font-semibold text-lg">Messages</h2>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Search messages..."
+                    value={searchQuery}
+                    onChange={(e) => {
+                      setSearchQuery(e.target.value);
+                      setShowSearchResults(e.target.value.length >= 2);
+                    }}
+                    className="pl-9"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => {
+                        setSearchQuery("");
+                        setShowSearchResults(false);
+                      }}
+                      className="absolute right-3 top-1/2 -translate-y-1/2"
+                    >
+                      <X className="h-4 w-4 text-muted-foreground hover:text-foreground" />
+                    </button>
+                  )}
+                </div>
               </div>
-              <ScrollArea className="h-[calc(600px-57px)]">
-                {conversations.length === 0 ? (
+              <ScrollArea className="h-[calc(600px-105px)]">
+                {showSearchResults && searchQuery.length >= 2 ? (
+                  // Search Results
+                  <div className="p-2">
+                    {isSearching ? (
+                      <div className="p-4 text-center">
+                        <p className="text-sm text-muted-foreground">Searching...</p>
+                      </div>
+                    ) : searchResults.length === 0 ? (
+                      <div className="p-8 text-center">
+                        <Search className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                        <p className="text-muted-foreground text-sm">No messages found</p>
+                        <p className="text-muted-foreground text-xs mt-2">
+                          Try a different search term
+                        </p>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-xs text-muted-foreground px-3 py-2">
+                          {searchResults.length} result{searchResults.length !== 1 ? 's' : ''} found
+                        </p>
+                        {searchResults.map((result) => (
+                          <div
+                            key={result.id}
+                            onClick={() => {
+                              setSelectedUserId(result.other_user_id);
+                              setShowSearchResults(false);
+                              setSearchQuery("");
+                            }}
+                            className="flex items-start gap-3 p-3 hover:bg-accent rounded-lg cursor-pointer transition-colors"
+                          >
+                            <Avatar className="w-10 h-10 flex-shrink-0">
+                              <AvatarImage src={result.other_user_avatar || ""} />
+                              <AvatarFallback>
+                                <User className="h-5 w-5" />
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center justify-between mb-1">
+                                <h3 className="font-semibold text-sm text-foreground truncate">
+                                  {result.other_user_name}
+                                </h3>
+                                <span className="text-xs text-muted-foreground flex-shrink-0 ml-2">
+                                  {formatMessageTime(result.created_at)}
+                                </span>
+                              </div>
+                              <p className="text-xs text-muted-foreground line-clamp-2">
+                                {result.content}
+                              </p>
+                            </div>
+                          </div>
+                        ))}
+                      </>
+                    )}
+                  </div>
+                ) : conversations.length === 0 ? (
                   <div className="p-8 text-center">
                     <MessageSquare className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                     <p className="text-muted-foreground text-sm">No conversations yet</p>

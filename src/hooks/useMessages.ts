@@ -36,10 +36,63 @@ export interface Conversation {
   unread_count: number;
 }
 
-export const useMessages = (selectedUserId?: string) => {
+export interface MessageSearchResult {
+  id: string;
+  content: string;
+  created_at: string;
+  sender_id: string;
+  receiver_id: string;
+  other_user_id: string;
+  other_user_name: string;
+  other_user_avatar: string;
+}
+
+export const useMessages = (selectedUserId?: string, searchQuery?: string) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const { checkLimit, status, formatTimeRemaining } = useRateLimit("send_message");
+
+  // Search messages query
+  const { data: searchResults, isLoading: searchLoading } = useQuery({
+    queryKey: ["messages-search", user?.id, searchQuery],
+    queryFn: async () => {
+      if (!user || !searchQuery || searchQuery.length < 2) return [];
+
+      const { data, error } = await supabase
+        .from("messages")
+        .select(`
+          id,
+          content,
+          created_at,
+          sender_id,
+          receiver_id,
+          sender:profiles!messages_sender_id_fkey(id, full_name, avatar_url),
+          receiver:profiles!messages_receiver_id_fkey(id, full_name, avatar_url)
+        `)
+        .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
+        .ilike("content", `%${searchQuery}%`)
+        .order("created_at", { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      return (data || []).map((msg: any) => {
+        const isReceived = msg.receiver_id === user.id;
+        const otherUser = isReceived ? msg.sender : msg.receiver;
+        return {
+          id: msg.id,
+          content: msg.content,
+          created_at: msg.created_at,
+          sender_id: msg.sender_id,
+          receiver_id: msg.receiver_id,
+          other_user_id: isReceived ? msg.sender_id : msg.receiver_id,
+          other_user_name: otherUser?.full_name || "Unknown",
+          other_user_avatar: otherUser?.avatar_url || "",
+        } as MessageSearchResult;
+      });
+    },
+    enabled: !!user && !!searchQuery && searchQuery.length >= 2,
+  });
 
   const { data: conversations, isLoading: conversationsLoading } = useQuery({
     queryKey: ["conversations", user?.id],
@@ -276,5 +329,7 @@ export const useMessages = (selectedUserId?: string) => {
     loadMoreMessages: fetchNextPage,
     hasMoreMessages: hasNextPage,
     isLoadingMore: isFetchingNextPage,
+    searchResults: searchResults || [],
+    isSearching: searchLoading,
   };
 };
