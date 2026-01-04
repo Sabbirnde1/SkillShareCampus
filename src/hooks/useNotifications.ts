@@ -18,11 +18,12 @@ export const useNotifications = () => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
-  const { data: notifications = [], isLoading } = useQuery({
+  const { data: notifications = [], isLoading, error } = useQuery({
     queryKey: ["notifications", user?.id],
     queryFn: async () => {
       if (!user) return [];
 
+      console.log("Fetching notifications for user:", user.id);
       const { data, error } = await supabase
         .from("notifications")
         .select("*")
@@ -30,11 +31,20 @@ export const useNotifications = () => {
         .order("created_at", { ascending: false })
         .limit(50);
 
-      if (error) throw error;
+      if (error) {
+        console.error("Error fetching notifications:", error);
+        throw error;
+      }
+      console.log("Fetched notifications:", data?.length);
       return data as Notification[];
     },
     enabled: !!user,
   });
+
+  // Log any query error
+  if (error) {
+    console.error("useNotifications query error:", error);
+  }
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
