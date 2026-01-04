@@ -144,6 +144,24 @@ export const skillSchema = z.object({
     .max(50, "Skill name must be less than 50 characters"),
 });
 
+export const achievementSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(2, "Title must be at least 2 characters")
+    .max(100, "Title must be less than 100 characters"),
+  description: z
+    .string()
+    .trim()
+    .max(300, "Description must be less than 300 characters")
+    .optional(),
+  icon: z
+    .string()
+    .trim()
+    .max(50, "Icon must be less than 50 characters")
+    .optional(),
+});
+
 // Authentication validation schemas
 export const signUpSchema = z.object({
   fullName: z

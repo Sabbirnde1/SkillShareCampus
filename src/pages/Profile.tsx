@@ -397,6 +397,7 @@ const Profile = () => {
         education={education || []}
         experience={experience || []}
         skills={skills || []}
+        achievements={achievements || []}
       />
 
       {/* Cover Image Cropper */}
