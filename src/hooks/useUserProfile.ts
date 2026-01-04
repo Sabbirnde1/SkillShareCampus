@@ -72,6 +72,23 @@ export const useUserProfile = (userId: string | undefined) => {
     enabled: !!userId,
   });
 
+  const { data: achievements, isLoading: achievementsLoading } = useQuery({
+    queryKey: ["user-achievements", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+
+      const { data, error } = await supabase
+        .from("achievements")
+        .select("*")
+        .eq("user_id", userId)
+        .order("achieved_at", { ascending: false });
+
+      if (error) throw error;
+      return data;
+    },
+    enabled: !!userId,
+  });
+
   const { data: friendCount } = useQuery({
     queryKey: ["user-friend-count", userId],
     queryFn: async () => {
@@ -221,8 +238,9 @@ export const useUserProfile = (userId: string | undefined) => {
     education: education || [],
     skills: skills || [],
     experience: experience || [],
+    achievements: achievements || [],
     friendCount: friendCount || 0,
-    isLoading: profileLoading || educationLoading || skillsLoading || experienceLoading,
+    isLoading: profileLoading || educationLoading || skillsLoading || experienceLoading || achievementsLoading,
     uploadAvatar,
     uploadCoverImage,
   };
