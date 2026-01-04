@@ -600,7 +600,7 @@ const Campus = () => {
                 <h4 className="font-semibold text-sm mb-2">Nijercart</h4>
                 <p className="text-xs text-muted-foreground mb-3">Old Books | Real Value | New Readers</p>
                 <Button className="w-full bg-[hsl(var(--link-blue))] hover:bg-[hsl(var(--link-blue))]/90">
-                  01725929393
+                  Mobile: 01725929393
                 </Button>
               </div>
             </Card>
