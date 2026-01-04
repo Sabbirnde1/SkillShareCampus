@@ -10,14 +10,27 @@ import { formatDistanceToNow } from "date-fns";
 interface PostCommentsProps {
   postId: string;
   commentsCount: number;
+  showToggleButton?: boolean;
+  isExpanded?: boolean;
+  onToggle?: () => void;
 }
 
-export const PostComments = ({ postId, commentsCount }: PostCommentsProps) => {
+export const PostComments = ({ 
+  postId, 
+  commentsCount, 
+  showToggleButton = true,
+  isExpanded,
+  onToggle,
+}: PostCommentsProps) => {
   const { user } = useAuth();
   const { comments, isLoading, createComment, deleteComment } = useComments(postId);
-  const [showComments, setShowComments] = useState(false);
+  const [internalShowComments, setInternalShowComments] = useState(false);
   const [newComment, setNewComment] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Use controlled state if provided, otherwise use internal state
+  const showComments = isExpanded !== undefined ? isExpanded : internalShowComments;
+  const setShowComments = onToggle || setInternalShowComments;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,15 +47,17 @@ export const PostComments = ({ postId, commentsCount }: PostCommentsProps) => {
 
   return (
     <div className="space-y-3">
-      <Button
-        variant="ghost"
-        size="sm"
-        onClick={() => setShowComments(!showComments)}
-        className="text-muted-foreground hover:text-foreground"
-      >
-        <MessageCircle className="h-4 w-4 mr-2" />
-        {commentsCount} {commentsCount === 1 ? "Comment" : "Comments"}
-      </Button>
+      {showToggleButton && (
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setShowComments(!showComments)}
+          className="text-muted-foreground hover:text-foreground"
+        >
+          <MessageCircle className="h-4 w-4 mr-2" />
+          {commentsCount} {commentsCount === 1 ? "Comment" : "Comments"}
+        </Button>
+      )}
 
       {showComments && (
         <div className="space-y-4 pl-4 border-l-2 border-border">
