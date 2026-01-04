@@ -6,15 +6,32 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
-import { profileBasicInfoSchema, educationSchema, experienceSchema, skillSchema } from "@/lib/validation";
+import { profileBasicInfoSchema, educationSchema, experienceSchema, skillSchema, achievementSchema } from "@/lib/validation";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
-import { Plus, Trash2, Loader2 } from "lucide-react";
+import { Plus, Trash2, Loader2, Trophy, Award, Star, Medal, Target, Zap, Crown, Heart } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+
+const ACHIEVEMENT_ICONS = [
+  { value: "trophy", label: "Trophy", icon: Trophy },
+  { value: "award", label: "Award", icon: Award },
+  { value: "star", label: "Star", icon: Star },
+  { value: "medal", label: "Medal", icon: Medal },
+  { value: "target", label: "Target", icon: Target },
+  { value: "zap", label: "Lightning", icon: Zap },
+  { value: "crown", label: "Crown", icon: Crown },
+  { value: "heart", label: "Heart", icon: Heart },
+];
+
+const getIconComponent = (iconName: string) => {
+  const iconItem = ACHIEVEMENT_ICONS.find(i => i.value === iconName);
+  return iconItem?.icon || Trophy;
+};
 
 interface EditProfileDialogProps {
   open: boolean;
@@ -23,9 +40,10 @@ interface EditProfileDialogProps {
   education: any[];
   experience: any[];
   skills: any[];
+  achievements: any[];
 }
 
-export const EditProfileDialog = ({ open, onOpenChange, profile, education, experience, skills }: EditProfileDialogProps) => {
+export const EditProfileDialog = ({ open, onOpenChange, profile, education, experience, skills, achievements }: EditProfileDialogProps) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -55,6 +73,9 @@ export const EditProfileDialog = ({ open, onOpenChange, profile, education, expe
   const [newSkill, setNewSkill] = useState("");
   const [skillSuggestions, setSkillSuggestions] = useState<string[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
+
+  // Achievements Forms
+  const [newAchievement, setNewAchievement] = useState({ title: "", description: "", icon: "trophy" });
 
   // Fetch skill suggestions from database
   const fetchSkillSuggestions = async (query: string) => {
@@ -237,22 +258,64 @@ export const EditProfileDialog = ({ open, onOpenChange, profile, education, expe
     }
   };
 
+  const handleAddAchievement = async () => {
+    if (!user || !newAchievement.title.trim()) return;
+
+    try {
+      const validated = achievementSchema.parse(newAchievement);
+      
+      const { error } = await supabase
+        .from("achievements")
+        .insert({
+          user_id: user.id,
+          title: validated.title,
+          description: validated.description || null,
+          icon: validated.icon || "trophy",
+        });
+
+      if (error) throw error;
+
+      toast.success("Achievement added successfully");
+      setNewAchievement({ title: "", description: "", icon: "trophy" });
+      queryClient.invalidateQueries({ queryKey: ["user-achievements", user.id] });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to add achievement");
+    }
+  };
+
+  const handleDeleteAchievement = async (id: string) => {
+    try {
+      const { error } = await supabase
+        .from("achievements")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+
+      toast.success("Achievement deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["user-achievements", user.id] });
+    } catch (error: any) {
+      toast.error(error.message || "Failed to delete achievement");
+    }
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Edit Profile</DialogTitle>
           <DialogDescription>
-            Update your profile information, education, experience, and skills
+            Update your profile information, education, experience, skills, and achievements
           </DialogDescription>
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="basic">Basic Info</TabsTrigger>
+          <TabsList className="grid w-full grid-cols-5">
+            <TabsTrigger value="basic">Basic</TabsTrigger>
             <TabsTrigger value="education">Education</TabsTrigger>
             <TabsTrigger value="experience">Experience</TabsTrigger>
             <TabsTrigger value="skills">Skills</TabsTrigger>
+            <TabsTrigger value="achievements">Achievements</TabsTrigger>
           </TabsList>
 
           {/* Basic Info Tab */}
@@ -550,6 +613,99 @@ export const EditProfileDialog = ({ open, onOpenChange, profile, education, expe
                 >
                   <Plus className="mr-2 h-4 w-4" />
                   Add Skill
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* Achievements Tab */}
+          <TabsContent value="achievements" className="space-y-4">
+            {/* Existing Achievements */}
+            {achievements.map((achievement) => {
+              const IconComponent = getIconComponent(achievement.icon || "trophy");
+              return (
+                <Card key={achievement.id}>
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start gap-3">
+                        <div className="p-2 rounded-full bg-primary/10">
+                          <IconComponent className="h-5 w-5 text-primary" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-base">{achievement.title}</CardTitle>
+                          {achievement.description && (
+                            <CardDescription>{achievement.description}</CardDescription>
+                          )}
+                        </div>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={() => handleDeleteAchievement(achievement.id)}
+                      >
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    </div>
+                  </CardHeader>
+                </Card>
+              );
+            })}
+
+            {/* Add New Achievement */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Plus className="h-4 w-4" />
+                  Add Achievement
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="achievement_title">Title *</Label>
+                  <Input
+                    id="achievement_title"
+                    value={newAchievement.title}
+                    onChange={(e) => setNewAchievement({ ...newAchievement, title: e.target.value })}
+                    placeholder="e.g., Dean's List, Best Innovation Award"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="achievement_description">Description</Label>
+                  <Textarea
+                    id="achievement_description"
+                    value={newAchievement.description}
+                    onChange={(e) => setNewAchievement({ ...newAchievement, description: e.target.value })}
+                    placeholder="Brief description of your achievement..."
+                    rows={2}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="achievement_icon">Icon</Label>
+                  <Select
+                    value={newAchievement.icon}
+                    onValueChange={(value) => setNewAchievement({ ...newAchievement, icon: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an icon" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {ACHIEVEMENT_ICONS.map((item) => {
+                        const Icon = item.icon;
+                        return (
+                          <SelectItem key={item.value} value={item.value}>
+                            <div className="flex items-center gap-2">
+                              <Icon className="h-4 w-4" />
+                              <span>{item.label}</span>
+                            </div>
+                          </SelectItem>
+                        );
+                      })}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button onClick={handleAddAchievement} className="w-full">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Achievement
                 </Button>
               </CardContent>
             </Card>
