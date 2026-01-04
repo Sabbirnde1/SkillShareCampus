@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import Footer from "@/components/Footer";
+import { CampusNews } from "@/components/CampusNews";
 import { usePosts } from "@/hooks/usePosts";
 import { useState } from "react";
 import { formatDistanceToNow } from "date-fns";
@@ -509,23 +510,7 @@ const Activity = () => {
             {/* Sidebar */}
             <div className="space-y-6">
               {/* Campus News */}
-              <Card className="p-4">
-                <h3 className="font-semibold text-sm mb-4">Campus News</h3>
-                <div className="space-y-3">
-                  <div className="text-xs">
-                    <p className="text-muted-foreground">12 days ago</p>
-                    <p className="font-medium text-foreground">Appoint new VC</p>
-                  </div>
-                  <div className="text-xs">
-                    <p className="text-muted-foreground">15 days ago</p>
-                    <p className="font-medium text-foreground">Appoint new Department Head of CSE</p>
-                  </div>
-                  <div className="text-xs">
-                    <p className="text-muted-foreground">15 days ago</p>
-                    <p className="font-medium text-foreground">5 days Micro-scientist Courses</p>
-                  </div>
-                </div>
-              </Card>
+              <CampusNews />
 
               {/* Trending Hashtags */}
               <TrendingHashtags />
