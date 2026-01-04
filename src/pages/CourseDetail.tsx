@@ -70,6 +70,18 @@ const CourseDetail = () => {
     }
   }, [searchParams, setSearchParams, refetchEnrollment, refetchCourse]);
 
+  // Listen for payment success messages from popup window
+  useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "payment_success" && event.data?.url) {
+        window.location.href = event.data.url;
+      }
+    };
+    
+    window.addEventListener("message", handleMessage);
+    return () => window.removeEventListener("message", handleMessage);
+  }, []);
+
   const handleEnroll = () => {
     if (!user) {
       navigate("/signin");

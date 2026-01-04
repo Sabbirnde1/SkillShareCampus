@@ -170,9 +170,9 @@ export function useInitiatePayment() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["payment-transactions"] });
       if (data.mode === "sandbox_mock") {
-        toast.info("Opening test payment page in new window...");
-        // Open in new window for mock mode to avoid iframe issues
-        const paymentWindow = window.open(data.payment_url, "_blank", "noopener,noreferrer");
+        toast.info("Opening test payment page...");
+        // Open without noopener to allow window.opener communication
+        const paymentWindow = window.open(data.payment_url, "_blank");
         if (!paymentWindow) {
           // Fallback if popup blocked
           window.location.href = data.payment_url;
