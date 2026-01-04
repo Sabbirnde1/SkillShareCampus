@@ -6,7 +6,24 @@ import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Home, Users, BookOpen, MessageSquare, Bell, User, MessageCircle, Share2, MoreVertical, Trash2, Edit, X, ImageIcon, Eye, Heart } from "lucide-react";
+import {
+  Search,
+  Home,
+  Users,
+  BookOpen,
+  MessageSquare,
+  Bell,
+  User,
+  MessageCircle,
+  Share2,
+  MoreVertical,
+  Trash2,
+  Edit,
+  X,
+  ImageIcon,
+  Eye,
+  Heart,
+} from "lucide-react";
 import { EditPostDialog } from "@/components/EditPostDialog";
 import { Link, useSearchParams } from "react-router-dom";
 import { usePosts } from "@/hooks/usePosts";
@@ -25,13 +42,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -71,18 +82,18 @@ const Campus = () => {
 
   // Handle scrolling to a specific post from notification
   useEffect(() => {
-    const postId = searchParams.get('post');
+    const postId = searchParams.get("post");
     if (postId && posts.length > 0) {
       setHighlightedPostId(postId);
-      
+
       // Scroll to the post after a short delay to ensure render
       setTimeout(() => {
         const postElement = postRefs.current[postId];
         if (postElement) {
-          postElement.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          postElement.scrollIntoView({ behavior: "smooth", block: "center" });
         }
       }, 100);
-      
+
       // Remove highlight after 3 seconds
       setTimeout(() => {
         setHighlightedPostId(null);
@@ -104,7 +115,7 @@ const Campus = () => {
           setImagePreview(null);
           setIsDialogOpen(false);
         },
-      }
+      },
     );
   };
 
@@ -113,19 +124,19 @@ const Campus = () => {
     if (!file) return;
 
     // Validate file type
-    if (!file.type.startsWith('image/')) {
-      toast.error('Please select an image file');
+    if (!file.type.startsWith("image/")) {
+      toast.error("Please select an image file");
       return;
     }
 
     // Validate file size (max 5MB)
     if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be less than 5MB');
+      toast.error("Image must be less than 5MB");
       return;
     }
 
     setSelectedImage(file);
-    
+
     // Create preview
     const reader = new FileReader();
     reader.onloadend = () => {
@@ -160,13 +171,13 @@ const Campus = () => {
           setEditDialogOpen(false);
           setSelectedPostForEdit(null);
         },
-      }
+      },
     );
   };
 
   const handleDeletePost = () => {
     if (!selectedPostForDelete) return;
-    
+
     deletePost.mutate(selectedPostForDelete.id, {
       onSuccess: () => {
         setDeleteDialogOpen(false);
@@ -188,7 +199,7 @@ const Campus = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Sidebar - Hidden on mobile */}
           <aside className="hidden lg:block lg:col-span-3">
-            <Card className="overflow-hidden">
+            {/* <Card className="overflow-hidden">
               <div className="relative h-24 bg-gradient-to-r from-blue-900 to-blue-700">
                 <img 
                   src="https://images.unsplash.com/photo-1498050108023-c5249f4df085?w=400&h=200&fit=crop" 
@@ -205,7 +216,7 @@ const Campus = () => {
                 <p className="text-xs text-muted-foreground mt-1">Beula Juwel Odhika</p>
                 <p className="text-xs text-muted-foreground">Exponent NanGain Ltd</p>
               </div>
-            </Card>
+            </Card> */}
           </aside>
 
           {/* Main Feed */}
@@ -215,13 +226,11 @@ const Campus = () => {
               <div className="flex items-center gap-3 mb-4">
                 <Avatar>
                   <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
-                  <AvatarFallback>
-                    {user?.user_metadata?.full_name?.[0] || user?.email?.[0] || "U"}
-                  </AvatarFallback>
+                  <AvatarFallback>{user?.user_metadata?.full_name?.[0] || user?.email?.[0] || "U"}</AvatarFallback>
                 </Avatar>
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
-                    <Input 
+                    <Input
                       placeholder="Start a post"
                       className="flex-1 rounded-full bg-gray-50 border-gray-300 cursor-pointer"
                       readOnly
@@ -239,7 +248,7 @@ const Campus = () => {
                           Preview
                         </TabsTrigger>
                       </TabsList>
-                      
+
                       <TabsContent value="write" className="space-y-4 mt-4">
                         <div className="flex gap-3">
                           <Avatar className="h-10 w-10">
@@ -249,9 +258,7 @@ const Campus = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1">
-                            <p className="font-semibold text-sm">
-                              {user?.user_metadata?.full_name || user?.email}
-                            </p>
+                            <p className="font-semibold text-sm">{user?.user_metadata?.full_name || user?.email}</p>
                           </div>
                         </div>
                         <Textarea
@@ -304,7 +311,7 @@ const Campus = () => {
                           </Button>
                         </div>
                       </TabsContent>
-                      
+
                       <TabsContent value="preview" className="mt-4">
                         <Card className="p-4">
                           <div className="flex items-start gap-3 mb-3">
@@ -315,13 +322,11 @@ const Campus = () => {
                               </AvatarFallback>
                             </Avatar>
                             <div className="flex-1">
-                              <h4 className="font-semibold text-sm">
-                                {user?.user_metadata?.full_name || user?.email}
-                              </h4>
+                              <h4 className="font-semibold text-sm">{user?.user_metadata?.full_name || user?.email}</h4>
                               <p className="text-xs text-muted-foreground">Just now</p>
                             </div>
                           </div>
-                          
+
                           {postContent.trim() ? (
                             <p className="text-sm mb-3 whitespace-pre-wrap">
                               {postContent.split(/(\s+)/).map((word, i) => {
@@ -340,28 +345,23 @@ const Campus = () => {
                               Your post content will appear here...
                             </p>
                           )}
-                          
+
                           {imagePreview && (
                             <div className="mb-3 rounded-lg overflow-hidden">
-                              <img 
-                                src={imagePreview} 
-                                alt="Post preview" 
-                                className="w-full max-h-96 object-cover"
-                              />
+                              <img src={imagePreview} alt="Post preview" className="w-full max-h-96 object-cover" />
                             </div>
                           )}
-                          
+
                           <div className="flex items-center justify-between py-2 border-t border-gray-200 mb-2">
                             <span className="text-sm text-muted-foreground flex items-center gap-1">
-                              <Heart className="w-4 h-4" />
-                              0 reactions
+                              <Heart className="w-4 h-4" />0 reactions
                             </span>
                             <div className="flex gap-3">
                               <span className="text-sm text-muted-foreground">0 comments</span>
                               <span className="text-sm text-muted-foreground">0 shares</span>
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center justify-around">
                             <button className="flex items-center gap-2 text-muted-foreground px-4 py-2 rounded-md flex-1 justify-center">
                               <Heart className="w-5 h-5" />
@@ -373,7 +373,7 @@ const Campus = () => {
                             </button>
                           </div>
                         </Card>
-                        
+
                         <div className="flex justify-end gap-2 mt-4 pt-4 border-t">
                           <Button
                             onClick={handleCreatePost}
@@ -402,175 +402,163 @@ const Campus = () => {
                 </Card>
               ) : (
                 <div className="space-y-4">
-                {posts.map((post) => (
-                  <Card 
-                    key={post.id} 
-                    ref={(el) => { postRefs.current[post.id] = el; }}
-                    className={`p-4 transition-all duration-300 ${
-                      highlightedPostId === post.id 
-                        ? 'ring-2 ring-primary bg-primary/5 animate-pulse' 
-                        : ''
-                    }`}
-                  >
-                    <div className="flex items-start gap-3 mb-3">
-                      <Link to={`/user/${post.author.id}`}>
-                        <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
-                          <AvatarImage src={post.author.avatar_url || ""} />
-                          <AvatarFallback>
-                            {post.author.full_name?.[0] || "U"}
-                          </AvatarFallback>
-                        </Avatar>
-                      </Link>
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between">
-                          <div>
-                            <Link to={`/user/${post.author.id}`}>
-                              <h4 className="font-semibold text-sm hover:text-[hsl(var(--link-blue))] transition-colors">
-                                {post.author.full_name || "Unknown User"}
-                              </h4>
-                            </Link>
-                            {post.author.bio && (
-                              <p className="text-xs text-muted-foreground line-clamp-1">
-                                {post.author.bio}
-                              </p>
-                            )}
-                            <p className="text-xs text-muted-foreground mt-1">
-                              {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
-                              {post.edited_at && (
-                                <span className="ml-2 text-xs text-muted-foreground">· Edited</span>
+                  {posts.map((post) => (
+                    <Card
+                      key={post.id}
+                      ref={(el) => {
+                        postRefs.current[post.id] = el;
+                      }}
+                      className={`p-4 transition-all duration-300 ${
+                        highlightedPostId === post.id ? "ring-2 ring-primary bg-primary/5 animate-pulse" : ""
+                      }`}
+                    >
+                      <div className="flex items-start gap-3 mb-3">
+                        <Link to={`/user/${post.author.id}`}>
+                          <Avatar className="cursor-pointer hover:opacity-80 transition-opacity">
+                            <AvatarImage src={post.author.avatar_url || ""} />
+                            <AvatarFallback>{post.author.full_name?.[0] || "U"}</AvatarFallback>
+                          </Avatar>
+                        </Link>
+                        <div className="flex-1">
+                          <div className="flex items-start justify-between">
+                            <div>
+                              <Link to={`/user/${post.author.id}`}>
+                                <h4 className="font-semibold text-sm hover:text-[hsl(var(--link-blue))] transition-colors">
+                                  {post.author.full_name || "Unknown User"}
+                                </h4>
+                              </Link>
+                              {post.author.bio && (
+                                <p className="text-xs text-muted-foreground line-clamp-1">{post.author.bio}</p>
                               )}
-                            </p>
-                          </div>
-                          {user?.id === post.author_id && (
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreVertical className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                {canEditPost(post.created_at) && (
+                              <p className="text-xs text-muted-foreground mt-1">
+                                {formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}
+                                {post.edited_at && <span className="ml-2 text-xs text-muted-foreground">· Edited</span>}
+                              </p>
+                            </div>
+                            {user?.id === post.author_id && (
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <Button variant="ghost" size="icon" className="h-8 w-8">
+                                    <MoreVertical className="h-4 w-4" />
+                                  </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  {canEditPost(post.created_at) && (
+                                    <DropdownMenuItem
+                                      onClick={() => {
+                                        setSelectedPostForEdit(post);
+                                        setEditDialogOpen(true);
+                                      }}
+                                    >
+                                      <Edit className="h-4 w-4 mr-2" />
+                                      Edit post
+                                    </DropdownMenuItem>
+                                  )}
                                   <DropdownMenuItem
                                     onClick={() => {
-                                      setSelectedPostForEdit(post);
-                                      setEditDialogOpen(true);
+                                      setSelectedPostForDelete(post);
+                                      setDeleteDialogOpen(true);
                                     }}
+                                    className="text-destructive"
                                   >
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    Edit post
+                                    <Trash2 className="h-4 w-4 mr-2" />
+                                    Delete post
                                   </DropdownMenuItem>
-                                )}
-                                 <DropdownMenuItem
-                                   onClick={() => {
-                                     setSelectedPostForDelete(post);
-                                     setDeleteDialogOpen(true);
-                                   }}
-                                   className="text-destructive"
-                                 >
-                                   <Trash2 className="h-4 w-4 mr-2" />
-                                   Delete post
-                                 </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          )}
+                                </DropdownMenuContent>
+                              </DropdownMenu>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    <p className="text-sm mb-3 whitespace-pre-wrap">
-                      {post.content.split(/(\s+)/).map((word, i) => {
-                        if (word.match(/^#\w+/)) {
-                          const tag = word.replace(/^#/, '');
-                          return (
-                            <Link 
-                              key={i}
-                              to={`/hashtag/${tag}`}
-                              className="text-[hsl(var(--link-blue))] hover:underline font-medium"
-                            >
-                              {word}
-                            </Link>
-                          );
-                        }
-                        return word;
-                      })}
-                    </p>
-                    
-                    {post.image_url && (
-                      <div className="mb-3 rounded-lg overflow-hidden">
-                        <img 
-                          src={post.image_url} 
-                          alt="Post attachment" 
-                          className="w-full max-h-96 object-cover"
-                        />
-                      </div>
-                    )}
-                    
-                    <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
-                      <span className="text-sm text-muted-foreground flex items-center gap-1">
-                        <Heart className="w-4 h-4" />
-                        {post.likes_count} {post.likes_count === 1 ? "reaction" : "reactions"}
-                      </span>
-                      <div className="flex gap-3">
-                        <span className="text-sm text-muted-foreground">
-                          {post.comments_count} {post.comments_count === 1 ? "comment" : "comments"}
-                        </span>
-                        <span className="text-sm text-muted-foreground">
-                          {post.shared_count || 0} {post.shared_count === 1 ? "share" : "shares"}
-                        </span>
-                      </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-around mb-3">
-                      <ReactionPicker
-                        postId={post.id}
-                        userReaction={post.user_reaction || null}
-                        reactionCounts={post.reaction_counts || {
-                          like: 0,
-                          celebrate: 0,
-                          support: 0,
-                          love: 0,
-                          insightful: 0,
-                          funny: 0,
-                        }}
-                        onReact={(postId, reactionType, currentReaction) => {
-                          toggleReaction.mutate({ postId, reactionType, currentReaction });
-                        }}
-                        disabled={toggleReaction.isPending}
-                      />
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setExpandedCommentsPostId(
-                          expandedCommentsPostId === post.id ? null : post.id
-                        )}
-                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground flex-1 justify-center"
-                      >
-                        <MessageCircle className="w-5 h-5" />
-                        <span className="text-sm font-medium">{post.comments_count} Comments</span>
-                      </Button>
-                      <button 
-                        onClick={() => {
-                          setSelectedPostForShare(post);
-                          setShareDialogOpen(true);
-                        }}
-                        className="flex items-center gap-2 text-muted-foreground hover:bg-accent px-4 py-2 rounded-md flex-1 justify-center transition-colors"
-                      >
-                        <Share2 className="w-5 h-5" />
-                        <span className="text-sm font-medium">Share</span>
-                      </button>
-                    </div>
-                    
-                    <PostComments 
-                      postId={post.id} 
-                      commentsCount={post.comments_count}
-                      showToggleButton={false}
-                      isExpanded={expandedCommentsPostId === post.id}
-                      onToggle={() => setExpandedCommentsPostId(
-                        expandedCommentsPostId === post.id ? null : post.id
+
+                      <p className="text-sm mb-3 whitespace-pre-wrap">
+                        {post.content.split(/(\s+)/).map((word, i) => {
+                          if (word.match(/^#\w+/)) {
+                            const tag = word.replace(/^#/, "");
+                            return (
+                              <Link
+                                key={i}
+                                to={`/hashtag/${tag}`}
+                                className="text-[hsl(var(--link-blue))] hover:underline font-medium"
+                              >
+                                {word}
+                              </Link>
+                            );
+                          }
+                          return word;
+                        })}
+                      </p>
+
+                      {post.image_url && (
+                        <div className="mb-3 rounded-lg overflow-hidden">
+                          <img src={post.image_url} alt="Post attachment" className="w-full max-h-96 object-cover" />
+                        </div>
                       )}
-                    />
-                  </Card>
-                ))}
+
+                      <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
+                        <span className="text-sm text-muted-foreground flex items-center gap-1">
+                          <Heart className="w-4 h-4" />
+                          {post.likes_count} {post.likes_count === 1 ? "reaction" : "reactions"}
+                        </span>
+                        <div className="flex gap-3">
+                          <span className="text-sm text-muted-foreground">
+                            {post.comments_count} {post.comments_count === 1 ? "comment" : "comments"}
+                          </span>
+                          <span className="text-sm text-muted-foreground">
+                            {post.shared_count || 0} {post.shared_count === 1 ? "share" : "shares"}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-around mb-3">
+                        <ReactionPicker
+                          postId={post.id}
+                          userReaction={post.user_reaction || null}
+                          reactionCounts={
+                            post.reaction_counts || {
+                              like: 0,
+                              celebrate: 0,
+                              support: 0,
+                              love: 0,
+                              insightful: 0,
+                              funny: 0,
+                            }
+                          }
+                          onReact={(postId, reactionType, currentReaction) => {
+                            toggleReaction.mutate({ postId, reactionType, currentReaction });
+                          }}
+                          disabled={toggleReaction.isPending}
+                        />
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setExpandedCommentsPostId(expandedCommentsPostId === post.id ? null : post.id)}
+                          className="flex items-center gap-2 text-muted-foreground hover:text-foreground flex-1 justify-center"
+                        >
+                          <MessageCircle className="w-5 h-5" />
+                          <span className="text-sm font-medium">{post.comments_count} Comments</span>
+                        </Button>
+                        <button
+                          onClick={() => {
+                            setSelectedPostForShare(post);
+                            setShareDialogOpen(true);
+                          }}
+                          className="flex items-center gap-2 text-muted-foreground hover:bg-accent px-4 py-2 rounded-md flex-1 justify-center transition-colors"
+                        >
+                          <Share2 className="w-5 h-5" />
+                          <span className="text-sm font-medium">Share</span>
+                        </button>
+                      </div>
+
+                      <PostComments
+                        postId={post.id}
+                        commentsCount={post.comments_count}
+                        showToggleButton={false}
+                        isExpanded={expandedCommentsPostId === post.id}
+                        onToggle={() => setExpandedCommentsPostId(expandedCommentsPostId === post.id ? null : post.id)}
+                      />
+                    </Card>
+                  ))}
                 </div>
               )}
             </ErrorBoundary>
@@ -603,8 +591,8 @@ const Campus = () => {
             </Card>
 
             <Card className="p-0 mt-4 overflow-hidden">
-              <img 
-                src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop" 
+              <img
+                src="https://images.unsplash.com/photo-1481627834876-b7833e8f5570?w=400&h=300&fit=crop"
                 alt="Mindset"
                 className="w-full h-48 object-cover"
               />
@@ -622,11 +610,7 @@ const Campus = () => {
 
       {/* Share Dialog */}
       {selectedPostForShare && (
-        <SharePostDialog
-          open={shareDialogOpen}
-          onOpenChange={setShareDialogOpen}
-          post={selectedPostForShare}
-        />
+        <SharePostDialog open={shareDialogOpen} onOpenChange={setShareDialogOpen} post={selectedPostForShare} />
       )}
 
       {/* Edit Post Dialog */}
@@ -647,16 +631,12 @@ const Campus = () => {
             <AlertDialogDescription>
               Are you sure you want to delete this post? This action cannot be undone.
               {selectedPostForDelete?.image_url && (
-                <span className="block mt-2 text-sm">
-                  The attached image will also be permanently deleted.
-                </span>
+                <span className="block mt-2 text-sm">The attached image will also be permanently deleted.</span>
               )}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={deletePost.isPending}>
-              Cancel
-            </AlertDialogCancel>
+            <AlertDialogCancel disabled={deletePost.isPending}>Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeletePost}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
