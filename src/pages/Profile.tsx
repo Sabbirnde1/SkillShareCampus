@@ -2,14 +2,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserAvatar } from "@/components/UserAvatar";
-import { Input } from "@/components/ui/input";
-import { Home, Users, BookOpen, MessageSquare, Bell, User, Search, Pencil, LogOut, Camera } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Pencil, LogOut, Camera } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
 import { EmailVerificationBanner } from "@/components/EmailVerificationBanner";
 import { useNotifications } from "@/hooks/useNotifications";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +16,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { AppHeader } from "@/components/AppHeader";
 import { EditProfileDialog } from "@/components/EditProfileDialog";
+import { CoverImageCropper } from "@/components/CoverImageCropper";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -29,6 +27,8 @@ const Profile = () => {
   const [avatarPreviewUrl, setAvatarPreviewUrl] = useState<string | null>(null);
   const [coverPreviewUrl, setCoverPreviewUrl] = useState<string | null>(null);
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [cropperOpen, setCropperOpen] = useState(false);
+  const [cropperImageSrc, setCropperImageSrc] = useState<string>("");
 
   const handleAvatarFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -51,24 +51,39 @@ const Profile = () => {
     }
   };
 
-  const handleCoverFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleCoverFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
-    // Create preview
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      setCoverPreviewUrl(reader.result as string);
-    };
-    reader.readAsDataURL(file);
+    // Create object URL for cropper
+    const imageUrl = URL.createObjectURL(file);
+    setCropperImageSrc(imageUrl);
+    setCropperOpen(true);
+    
+    // Reset file input so the same file can be selected again
+    event.target.value = "";
+  };
 
-    // Upload immediately
+  const handleCropComplete = async (croppedBlob: Blob) => {
+    setCropperOpen(false);
+    
+    // Show preview
+    const previewUrl = URL.createObjectURL(croppedBlob);
+    setCoverPreviewUrl(previewUrl);
+    
+    // Convert blob to file
+    const croppedFile = new File([croppedBlob], "cover.jpg", { type: "image/jpeg" });
+    
+    // Upload cropped image
     try {
-      await uploadCoverImage.mutateAsync(file);
+      await uploadCoverImage.mutateAsync(croppedFile);
       setCoverPreviewUrl(null);
     } catch (error) {
       setCoverPreviewUrl(null);
       // Error is handled in the mutation
+    } finally {
+      // Clean up object URLs
+      URL.revokeObjectURL(cropperImageSrc);
     }
   };
 
@@ -347,6 +362,14 @@ const Profile = () => {
         education={education || []}
         experience={experience || []}
         skills={skills || []}
+      />
+
+      {/* Cover Image Cropper */}
+      <CoverImageCropper
+        open={cropperOpen}
+        onOpenChange={setCropperOpen}
+        imageSrc={cropperImageSrc}
+        onCropComplete={handleCropComplete}
       />
     </div>
   );
