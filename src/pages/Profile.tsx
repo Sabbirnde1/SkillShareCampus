@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserAvatar } from "@/components/UserAvatar";
-import { Pencil, LogOut, Camera } from "lucide-react";
+import { Pencil, LogOut, Camera, Trophy, Award, Star, Medal } from "lucide-react";
 import Footer from "@/components/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
@@ -20,7 +20,7 @@ import { CoverImageCropper } from "@/components/CoverImageCropper";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
-  const { profile, education, skills, experience, friendCount, isLoading, uploadAvatar, uploadCoverImage } = useUserProfile(user?.id);
+  const { profile, education, skills, experience, achievements, friendCount, isLoading, uploadAvatar, uploadCoverImage } = useUserProfile(user?.id);
   const { unreadCount } = useNotifications();
   const avatarFileInputRef = useRef<HTMLInputElement>(null);
   const coverFileInputRef = useRef<HTMLInputElement>(null);
@@ -301,6 +301,37 @@ const Profile = () => {
                           {skill.skill_name}
                         </Badge>
                       ))}
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* Achievements Section */}
+              {achievements && achievements.length > 0 && (
+                <Card className="mt-6">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <h3 className="text-xl font-semibold text-foreground">Achievements</h3>
+                    </div>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                      {achievements.map((achievement) => {
+                        const IconComponent = 
+                          achievement.icon === 'award' ? Award :
+                          achievement.icon === 'star' ? Star :
+                          achievement.icon === 'medal' ? Medal : Trophy;
+                        
+                        return (
+                          <div key={achievement.id} className="flex flex-col items-center p-4 bg-accent/50 rounded-lg text-center">
+                            <div className="p-3 bg-primary/10 rounded-full mb-2">
+                              <IconComponent className="h-6 w-6 text-primary" />
+                            </div>
+                            <h4 className="font-medium text-sm text-foreground">{achievement.title}</h4>
+                            {achievement.description && (
+                              <p className="text-xs text-muted-foreground mt-1">{achievement.description}</p>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>
