@@ -170,11 +170,18 @@ export function useInitiatePayment() {
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["payment-transactions"] });
       if (data.mode === "sandbox_mock") {
-        toast.info("Opening test payment page...");
+        toast.info("Opening test payment page in new window...");
+        // Open in new window for mock mode to avoid iframe issues
+        const paymentWindow = window.open(data.payment_url, "_blank", "noopener,noreferrer");
+        if (!paymentWindow) {
+          // Fallback if popup blocked
+          window.location.href = data.payment_url;
+        }
       } else {
         toast.info("Redirecting to payment gateway...");
+        // For real payment gateway, redirect in same window
+        window.location.href = data.payment_url;
       }
-      window.location.href = data.payment_url;
     },
     onError: (error) => {
       console.error("Payment initiation error:", error);
