@@ -66,6 +66,7 @@ const Campus = () => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [selectedPostForDelete, setSelectedPostForDelete] = useState<any>(null);
   const [highlightedPostId, setHighlightedPostId] = useState<string | null>(null);
+  const [expandedCommentsPostId, setExpandedCommentsPostId] = useState<string | null>(null);
   const postRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
   // Handle scrolling to a specific post from notification
@@ -519,7 +520,7 @@ const Campus = () => {
                       </div>
                     </div>
                     
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center justify-around mb-3">
                       <ReactionPicker
                         postId={post.id}
                         userReaction={post.user_reaction || null}
@@ -536,19 +537,38 @@ const Campus = () => {
                         }}
                         disabled={toggleReaction.isPending}
                       />
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => setExpandedCommentsPostId(
+                          expandedCommentsPostId === post.id ? null : post.id
+                        )}
+                        className="flex items-center gap-2 text-muted-foreground hover:text-foreground flex-1 justify-center"
+                      >
+                        <MessageCircle className="w-5 h-5" />
+                        <span className="text-sm font-medium">{post.comments_count} Comments</span>
+                      </Button>
                       <button 
                         onClick={() => {
                           setSelectedPostForShare(post);
                           setShareDialogOpen(true);
                         }}
-                        className="flex items-center gap-2 text-muted-foreground hover:bg-gray-50 px-4 py-2 rounded-md flex-1 justify-center transition-colors"
+                        className="flex items-center gap-2 text-muted-foreground hover:bg-accent px-4 py-2 rounded-md flex-1 justify-center transition-colors"
                       >
                         <Share2 className="w-5 h-5" />
                         <span className="text-sm font-medium">Share</span>
                       </button>
                     </div>
-
-                    <PostComments postId={post.id} commentsCount={post.comments_count} />
+                    
+                    <PostComments 
+                      postId={post.id} 
+                      commentsCount={post.comments_count}
+                      showToggleButton={false}
+                      isExpanded={expandedCommentsPostId === post.id}
+                      onToggle={() => setExpandedCommentsPostId(
+                        expandedCommentsPostId === post.id ? null : post.id
+                      )}
+                    />
                   </Card>
                 ))}
                 </div>
