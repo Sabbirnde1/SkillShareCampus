@@ -661,8 +661,8 @@ const Messages = () => {
                 <div className="mb-4">
                   <BookOpen className="h-16 w-16 mx-auto text-amber-800" />
                 </div>
-                <h4 className="font-bold text-xl text-amber-900 mb-2">MINDSET</h4>
-                <p className="text-sm text-amber-800 mb-4">NijerCart</p>
+                <h4 className="font-bold text-xl text-amber-900 mb-2">NijerCart</h4>
+                <p className="text-sm text-amber-800 mb-4">Mindset</p>
                 <p className="text-xs text-amber-700 mb-4">Old Books | Best Value | New Readers</p>
                 <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground">Explore</Button>
               </div>
