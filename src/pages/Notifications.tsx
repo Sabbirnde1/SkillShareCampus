@@ -38,6 +38,10 @@ const Notifications = () => {
         return <MessageCircle className="h-5 w-5" />;
       case "post_like":
         return <ThumbsUp className="h-5 w-5" />;
+      case "post_comment":
+        return <MessageSquare className="h-5 w-5" />;
+      case "mention":
+        return <User className="h-5 w-5" />;
       default:
         return <Bell className="h-5 w-5" />;
     }
@@ -53,12 +57,19 @@ const Notifications = () => {
         return "bg-primary";
       case "post_like":
         return "bg-red-500";
+      case "post_comment":
+        return "bg-orange-500";
+      case "mention":
+        return "bg-purple-500";
       default:
         return "bg-gray-500";
     }
   };
 
-  const getNotificationAction = (type: string) => {
+  const getNotificationAction = (notification: any) => {
+    const type = notification.type;
+    const metadata = notification.metadata || {};
+    
     switch (type) {
       case "friend_request":
         return { label: "View Requests", path: "/pending-requests" };
@@ -66,6 +77,13 @@ const Notifications = () => {
         return { label: "View Messages", path: "/messages" };
       case "friend_accepted":
         return { label: "View Friends", path: "/friends" };
+      case "post_like":
+      case "post_comment":
+      case "mention":
+        if (metadata.post_id) {
+          return { label: "View Post", path: `/campus?post=${metadata.post_id}` };
+        }
+        return null;
       default:
         return null;
     }
@@ -76,7 +94,7 @@ const Notifications = () => {
       markAsRead.mutate(notification.id);
     }
     
-    const action = getNotificationAction(notification.type);
+    const action = getNotificationAction(notification);
     if (action) {
       navigate(action.path);
     }
@@ -128,7 +146,7 @@ const Notifications = () => {
               </Card>
             ) : (
               notifications.map((notification) => {
-                const action = getNotificationAction(notification.type);
+                const action = getNotificationAction(notification);
                 
                 return (
                   <Card
