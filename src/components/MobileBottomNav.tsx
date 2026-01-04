@@ -27,7 +27,7 @@ const MobileBottomNav = () => {
 
   return (
     <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-[hsl(var(--header-bg))] border-t border-border z-50">
-      <div className="flex items-center justify-around py-2">
+      <div className="flex items-center justify-between px-2 py-2">
         {navItems.map((item) => {
           const Icon = item.icon;
           const active = isActive(item.path);
@@ -37,7 +37,7 @@ const MobileBottomNav = () => {
             <Link
               key={item.id}
               to={item.path}
-              className={`flex flex-col items-center justify-center px-1 py-1 min-w-[52px] transition-colors ${
+              className={`flex-1 min-w-0 flex flex-col items-center justify-center py-1 transition-colors ${
                 active
                   ? "text-primary"
                   : "text-foreground/60 hover:text-foreground"
@@ -46,15 +46,19 @@ const MobileBottomNav = () => {
               <div className="relative h-5 flex items-center justify-center">
                 <Icon className="h-5 w-5" />
                 {isNotification && unreadCount > 0 && (
-                  <Badge 
-                    variant="destructive" 
+                  <Badge
+                    variant="destructive"
                     className="absolute -top-1 -right-2.5 h-4 min-w-4 flex items-center justify-center p-0 text-[10px] font-medium"
                   >
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </Badge>
                 )}
               </div>
-              <span className={`text-[10px] leading-none mt-1 text-center truncate max-w-full ${active ? "font-semibold" : ""}`}>
+              <span
+                className={`mt-1 w-full text-center whitespace-nowrap leading-none truncate ${
+                  item.id === "notifications" ? "text-[9px] tracking-tight" : "text-[10px]"
+                } ${active ? "font-semibold" : ""}`}
+              >
                 {item.label}
               </span>
             </Link>
