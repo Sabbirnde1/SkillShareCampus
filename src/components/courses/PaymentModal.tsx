@@ -110,8 +110,11 @@ export function PaymentModal({ open, onOpenChange, course }: PaymentModalProps) 
     setShowConfirmation(true);
   };
 
-  const handleConfirmPayment = () => {
+  const handleConfirmPayment = (e: React.MouseEvent) => {
+    e.preventDefault();
     setShowConfirmation(false);
+    onOpenChange(false); // Close the main payment modal too
+    
     initiatePayment.mutate({
       courseId: course.id,
       courseTitle: course.title,
@@ -327,9 +330,16 @@ export function PaymentModal({ open, onOpenChange, course }: PaymentModalProps) 
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmPayment}>
-              Confirm & Pay ৳{finalPrice.toFixed(0)}
-            </AlertDialogAction>
+            <Button onClick={handleConfirmPayment} disabled={initiatePayment.isPending}>
+              {initiatePayment.isPending ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Processing...
+                </>
+              ) : (
+                `Confirm & Pay ৳${finalPrice.toFixed(0)}`
+              )}
+            </Button>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
