@@ -64,9 +64,12 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { PostsFeedSkeleton } from "@/components/PostsFeedSkeleton";
 import { AppHeader } from "@/components/AppHeader";
 import { toast } from "sonner";
+import { UserAvatar } from "@/components/UserAvatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 
 const Activity = () => {
   const { user } = useAuth();
+  const { profile } = useUserProfile(user?.id);
   const { posts, isLoading, createPost, toggleReaction, deletePost, editPost } = usePosts();
   const { unreadCount } = useNotifications();
   const [postContent, setPostContent] = useState("");
@@ -188,12 +191,12 @@ const Activity = () => {
               <Card>
                 <CardContent className="p-4">
                   <div className="flex gap-3">
-                    <Avatar className="h-10 w-10">
-                      <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
-                      <AvatarFallback>
-                        <User className="h-5 w-5" />
-                      </AvatarFallback>
-                    </Avatar>
+                    <UserAvatar 
+                      avatarUrl={profile?.avatar_url} 
+                      fullName={profile?.full_name} 
+                      email={user?.email}
+                      className="h-10 w-10"
+                    />
                     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                       <DialogTrigger asChild>
                         <Button 
@@ -209,12 +212,12 @@ const Activity = () => {
                         </DialogHeader>
                         <div className="space-y-4">
                           <div className="flex gap-3">
-                            <Avatar className="h-10 w-10">
-                              <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
-                              <AvatarFallback>
-                                <User className="h-5 w-5" />
-                              </AvatarFallback>
-                            </Avatar>
+                            <UserAvatar 
+                              avatarUrl={profile?.avatar_url} 
+                              fullName={profile?.full_name} 
+                              email={user?.email}
+                              className="h-10 w-10"
+                            />
                             <div className="flex-1">
                               <p className="font-semibold text-sm">
                                 {user?.user_metadata?.full_name || user?.email}
