@@ -2,6 +2,7 @@ import { useState } from "react";
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
@@ -133,6 +134,9 @@ export function PaymentModal({ open, onOpenChange, course }: PaymentModalProps) 
         <div className="bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6">
           <DialogHeader>
             <DialogTitle className="text-xl">Complete Your Purchase</DialogTitle>
+            <DialogDescription className="sr-only">
+              Purchase {course.title} for ৳{finalPrice.toFixed(0)}
+            </DialogDescription>
           </DialogHeader>
           
           {/* Course Info */}
