@@ -75,7 +75,9 @@ export const AppHeader = ({ currentPage }: AppHeaderProps) => {
                     : "text-foreground/70 hover:text-foreground"
                 }`}
               >
-                <Icon className="h-5 w-5" />
+                <div className="h-5 flex items-center justify-center">
+                  <Icon className="h-5 w-5" />
+                </div>
                 <span className={`text-xs ${active ? "font-semibold" : ""}`}>
                   {item.label}
                 </span>
@@ -84,18 +86,25 @@ export const AppHeader = ({ currentPage }: AppHeaderProps) => {
           })}
 
           {/* Notifications with Badge */}
-          <div className="flex flex-col items-center gap-1">
-            <NotificationBadge />
+          <Link
+            to="/notifications"
+            className={`flex flex-col items-center gap-1 transition-colors ${
+              currentPage === "notifications"
+                ? "text-primary"
+                : "text-foreground/70 hover:text-foreground"
+            }`}
+          >
+            <div className="relative h-5 flex items-center justify-center">
+              <NotificationBadge />
+            </div>
             <span
               className={`text-xs ${
-                currentPage === "notifications"
-                  ? "font-semibold text-primary"
-                  : "text-foreground/70"
+                currentPage === "notifications" ? "font-semibold" : ""
               }`}
             >
               Notifications
             </span>
-          </div>
+          </Link>
 
           {/* Profile */}
           <Link
@@ -106,7 +115,9 @@ export const AppHeader = ({ currentPage }: AppHeaderProps) => {
                 : "text-foreground/70 hover:text-foreground"
             }`}
           >
-            <User className="h-5 w-5" />
+            <div className="h-5 flex items-center justify-center">
+              <User className="h-5 w-5" />
+            </div>
             <span
               className={`text-xs ${
                 currentPage === "profile" || currentPage === "activity"
