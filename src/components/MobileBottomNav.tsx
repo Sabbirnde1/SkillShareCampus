@@ -37,24 +37,24 @@ const MobileBottomNav = () => {
             <Link
               key={item.id}
               to={item.path}
-              className={`flex flex-col items-center gap-0.5 px-2 py-1 min-w-[60px] transition-colors ${
+              className={`flex flex-col items-center justify-center px-1 py-1 min-w-[52px] transition-colors ${
                 active
                   ? "text-primary"
                   : "text-foreground/60 hover:text-foreground"
               }`}
             >
-              <div className="relative">
+              <div className="relative h-5 flex items-center justify-center">
                 <Icon className="h-5 w-5" />
                 {isNotification && unreadCount > 0 && (
                   <Badge 
                     variant="destructive" 
-                    className="absolute -top-1.5 -right-2 h-4 min-w-4 flex items-center justify-center p-0 text-[10px] font-medium"
+                    className="absolute -top-1 -right-2.5 h-4 min-w-4 flex items-center justify-center p-0 text-[10px] font-medium"
                   >
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </Badge>
                 )}
               </div>
-              <span className={`text-[10px] leading-tight ${active ? "font-semibold" : ""}`}>
+              <span className={`text-[10px] leading-none mt-1 text-center truncate max-w-full ${active ? "font-semibold" : ""}`}>
                 {item.label}
               </span>
             </Link>
