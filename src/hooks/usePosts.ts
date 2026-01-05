@@ -140,9 +140,21 @@ export const usePosts = () => {
           `)
           .in("id", sharedPostIds);
 
-        if (!sharedError && sharedPosts) {
+      if (!sharedError && sharedPosts) {
           sharedPostsMap = sharedPosts.reduce((acc, post) => {
-            acc[post.id] = post as SharedPost;
+            // Properly transform the author data from Supabase join
+            const authorData = Array.isArray(post.author) ? post.author[0] : post.author;
+            acc[post.id] = {
+              id: post.id,
+              content: post.content,
+              image_url: post.image_url,
+              created_at: post.created_at,
+              author: {
+                id: authorData?.id || '',
+                full_name: authorData?.full_name || 'Unknown User',
+                avatar_url: authorData?.avatar_url || ''
+              }
+            };
             return acc;
           }, {} as Record<string, SharedPost>);
         }
