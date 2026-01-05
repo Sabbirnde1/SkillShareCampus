@@ -998,6 +998,7 @@ export type Database = {
           image_url: string | null
           likes_count: number
           shared_count: number
+          shared_post_id: string | null
           updated_at: string
         }
         Insert: {
@@ -1011,6 +1012,7 @@ export type Database = {
           image_url?: string | null
           likes_count?: number
           shared_count?: number
+          shared_post_id?: string | null
           updated_at?: string
         }
         Update: {
@@ -1024,6 +1026,7 @@ export type Database = {
           image_url?: string | null
           likes_count?: number
           shared_count?: number
+          shared_post_id?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -1032,6 +1035,13 @@ export type Database = {
             columns: ["author_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "posts_shared_post_id_fkey"
+            columns: ["shared_post_id"]
+            isOneToOne: false
+            referencedRelation: "posts"
             referencedColumns: ["id"]
           },
         ]

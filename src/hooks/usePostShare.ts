@@ -43,10 +43,11 @@ export const usePostShare = () => {
     mutationFn: async ({ postId, content }: { postId: string; content: string }) => {
       if (!user) throw new Error("Not authenticated");
 
-      // Create a new post as a repost
+      // Create a new post as a repost with reference to original post
       const { error: postError } = await supabase.from("posts").insert({
         author_id: user.id,
         content: content,
+        shared_post_id: postId,
       });
 
       if (postError) throw postError;

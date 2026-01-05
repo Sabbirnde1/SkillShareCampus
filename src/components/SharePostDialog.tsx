@@ -22,6 +22,7 @@ interface SharePostDialogProps {
   post: {
     id: string;
     content: string;
+    image_url?: string | null;
     author: {
       full_name: string;
       avatar_url?: string;
@@ -139,6 +140,13 @@ export const SharePostDialog = ({ open, onOpenChange, post }: SharePostDialogPro
               <p className="text-sm text-muted-foreground line-clamp-3">
                 {post.content}
               </p>
+              {post.image_url && (
+                <img 
+                  src={post.image_url} 
+                  alt="Post image" 
+                  className="mt-2 w-full h-24 object-cover rounded"
+                />
+              )}
             </div>
 
             <Textarea
