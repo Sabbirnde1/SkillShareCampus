@@ -9,6 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow } from "date-fns";
 import { PostComments } from "@/components/PostComments";
 import { SharePostDialog } from "@/components/SharePostDialog";
+import { SharedPostEmbed } from "@/components/SharedPostEmbed";
 import { useState, useMemo } from "react";
 import NotificationBadge from "@/components/NotificationBadge";
 import { Input } from "@/components/ui/input";
@@ -175,23 +176,42 @@ const HashtagPage = () => {
                   </div>
                 </div>
                 
-                <p className="text-sm mb-3 whitespace-pre-wrap">
-                  {post.content.split(/(\s+)/).map((word, i) => {
-                    if (word.match(/^#\w+/)) {
-                      const tag = word.replace(/^#/, '');
-                      return (
-                        <Link 
-                          key={i}
-                          to={`/hashtag/${tag}`}
-                          className="text-[hsl(var(--link-blue))] hover:underline font-medium"
-                        >
-                          {word}
-                        </Link>
-                      );
-                    }
-                    return word;
-                  })}
-                </p>
+                {post.content.trim() && (
+                  <p className="text-sm mb-3 whitespace-pre-wrap">
+                    {post.content.split(/(\s+)/).map((word, i) => {
+                      if (word.match(/^#\w+/)) {
+                        const tag = word.replace(/^#/, '');
+                        return (
+                          <Link 
+                            key={i}
+                            to={`/hashtag/${tag}`}
+                            className="text-[hsl(var(--link-blue))] hover:underline font-medium"
+                          >
+                            {word}
+                          </Link>
+                        );
+                      }
+                      return word;
+                    })}
+                  </p>
+                )}
+
+                {post.image_url && (
+                  <div className="mb-3 rounded-lg overflow-hidden">
+                    <img src={post.image_url} alt="Post attachment" className="w-full max-h-96 object-cover" />
+                  </div>
+                )}
+
+                {/* Embedded shared post */}
+                {post.shared_post ? (
+                  <div className="mb-3">
+                    <SharedPostEmbed sharedPost={post.shared_post} />
+                  </div>
+                ) : post.shared_post_id ? (
+                  <div className="mb-3 p-3 bg-muted/50 rounded-lg border text-sm text-muted-foreground">
+                    Original post is no longer available
+                  </div>
+                ) : null}
                 
                 <div className="flex items-center justify-between py-2 border-t border-b border-gray-200 mb-2">
                   <span className="text-sm text-muted-foreground flex items-center gap-1">

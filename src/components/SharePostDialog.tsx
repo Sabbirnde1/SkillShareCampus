@@ -47,7 +47,7 @@ export const SharePostDialog = ({ open, onOpenChange, post }: SharePostDialogPro
     repostToFeed.mutate(
       {
         postId: post.id,
-        content: repostText || `Shared: ${post.content.substring(0, 100)}...`,
+        content: repostText.trim(), // Only use user-typed content, empty string if none
       },
       {
         onSuccess: () => {
