@@ -17,6 +17,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { AppHeader } from "@/components/AppHeader";
 import { EditProfileDialog } from "@/components/EditProfileDialog";
 import { CoverImageCropper } from "@/components/CoverImageCropper";
+import { ProfileRecentPosts } from "@/components/ProfileRecentPosts";
 
 const Profile = () => {
   const { user, signOut } = useAuth();
@@ -237,6 +238,9 @@ const Profile = () => {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Recent Posts Section */}
+              <ProfileRecentPosts userId={user?.id} />
 
               {/* Education Section */}
               {education && education.length > 0 && (
