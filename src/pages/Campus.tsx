@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Textarea } from "@/components/ui/textarea";
+import { UserAvatar } from "@/components/UserAvatar";
+import { useUserProfile } from "@/hooks/useUserProfile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -64,6 +66,7 @@ import { toast } from "sonner";
 
 const Campus = () => {
   const { user } = useAuth();
+  const { profile } = useUserProfile(user?.id);
   const [searchParams, setSearchParams] = useSearchParams();
   const { posts, isLoading, createPost, toggleReaction, deletePost, editPost } = usePosts();
   const { unreadCount } = useNotifications();
@@ -225,10 +228,12 @@ const Campus = () => {
             {/* Create Post */}
             <Card className="p-4 mb-4">
               <div className="flex items-center gap-3 mb-4">
-                <Avatar>
-                  <AvatarImage src={user?.user_metadata?.avatar_url || ""} />
-                  <AvatarFallback>{user?.user_metadata?.full_name?.[0] || user?.email?.[0] || "U"}</AvatarFallback>
-                </Avatar>
+                <UserAvatar
+                  avatarUrl={profile?.avatar_url}
+                  fullName={profile?.full_name}
+                  email={user?.email}
+                  className="h-10 w-10"
+                />
                 <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
                   <DialogTrigger asChild>
                     <Input
