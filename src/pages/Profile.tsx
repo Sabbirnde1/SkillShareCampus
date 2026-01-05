@@ -223,6 +223,9 @@ const Profile = () => {
                 </CardContent>
               </Card>
 
+              {/* Recent Posts Section */}
+              <ProfileRecentPosts userId={user?.id} />
+
               {profile?.bio && (
                 <Card className="mt-6">
                   <CardContent className="p-6">
@@ -238,9 +241,6 @@ const Profile = () => {
                   </CardContent>
                 </Card>
               )}
-
-              {/* Recent Posts Section */}
-              <ProfileRecentPosts userId={user?.id} />
 
               {/* Education Section */}
               {education && education.length > 0 && (
