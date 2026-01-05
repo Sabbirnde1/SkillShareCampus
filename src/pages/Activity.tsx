@@ -66,6 +66,7 @@ import { AppHeader } from "@/components/AppHeader";
 import { toast } from "sonner";
 import { UserAvatar } from "@/components/UserAvatar";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { SharedPostEmbed } from "@/components/SharedPostEmbed";
 
 const Activity = () => {
   const { user } = useAuth();
@@ -462,6 +463,13 @@ const Activity = () => {
                                 alt="Post attachment" 
                                 className="w-full max-h-96 object-cover"
                               />
+                            </div>
+                          )}
+                          
+                          {/* Shared/Embedded Post */}
+                          {post.shared_post && (
+                            <div className="mt-3">
+                              <SharedPostEmbed sharedPost={post.shared_post} />
                             </div>
                           )}
                         </div>

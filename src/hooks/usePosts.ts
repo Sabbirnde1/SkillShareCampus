@@ -25,6 +25,18 @@ export interface ReactionCounts {
   funny: number;
 }
 
+export interface SharedPost {
+  id: string;
+  content: string;
+  image_url: string | null;
+  created_at: string;
+  author: {
+    id: string;
+    full_name: string;
+    avatar_url: string;
+  };
+}
+
 export interface Post {
   id: string;
   author_id: string;
@@ -36,6 +48,7 @@ export interface Post {
   shared_count: number;
   created_at: string;
   edited_at: string | null;
+  shared_post_id: string | null;
   author: {
     id: string;
     full_name: string;
@@ -45,6 +58,7 @@ export interface Post {
   post_likes?: PostLike[];
   user_reaction?: ReactionType | null;
   reaction_counts?: ReactionCounts;
+  shared_post?: SharedPost | null;
 }
 
 export const usePosts = () => {
@@ -83,6 +97,7 @@ export const usePosts = () => {
           shared_count,
           created_at,
           edited_at,
+          shared_post_id,
           author:profiles!posts_author_id_fkey(
             id,
             full_name,
@@ -99,6 +114,39 @@ export const usePosts = () => {
         `)
         .in("id", postIds)
         .order("created_at", { ascending: false });
+
+      if (error) throw error;
+
+      // Fetch shared posts data
+      const sharedPostIds = data
+        ?.filter(post => post.shared_post_id)
+        .map(post => post.shared_post_id) || [];
+
+      let sharedPostsMap: Record<string, SharedPost> = {};
+      
+      if (sharedPostIds.length > 0) {
+        const { data: sharedPosts, error: sharedError } = await supabase
+          .from("posts")
+          .select(`
+            id,
+            content,
+            image_url,
+            created_at,
+            author:profiles!posts_author_id_fkey(
+              id,
+              full_name,
+              avatar_url
+            )
+          `)
+          .in("id", sharedPostIds);
+
+        if (!sharedError && sharedPosts) {
+          sharedPostsMap = sharedPosts.reduce((acc, post) => {
+            acc[post.id] = post as SharedPost;
+            return acc;
+          }, {} as Record<string, SharedPost>);
+        }
+      }
 
       if (error) throw error;
       
@@ -126,6 +174,7 @@ export const usePosts = () => {
           ...post,
           user_reaction: userLike?.reaction_type || null,
           reaction_counts: reactionCounts,
+          shared_post: post.shared_post_id ? sharedPostsMap[post.shared_post_id] || null : null,
         };
       }) as Post[];
       
